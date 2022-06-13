@@ -7,7 +7,7 @@ EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
 
-PROFILES=("fsextinfo" "fsextinfo_fs");
+PROFILES=("fsfatinfo" "fsfatinfo_fs");
 OPTIONS_PER_PROFILE=("" "-H");
 OPTION_SETS="offset";
 
@@ -18,11 +18,11 @@ then
 	exit ${EXIT_IGNORE};
 fi
 
-TEST_EXECUTABLE="../fsexttools/fsextinfo";
+TEST_EXECUTABLE="../fsfattools/fsfatinfo";
 
 if ! test -x "${TEST_EXECUTABLE}";
 then
-	TEST_EXECUTABLE="../fsexttools/fsextinfo.exe";
+	TEST_EXECUTABLE="../fsfattools/fsfatinfo.exe";
 fi
 
 if ! test -x "${TEST_EXECUTABLE}";
@@ -89,7 +89,7 @@ do
 		fi
 		TEST_SET_DIRECTORY=$(get_test_set_directory "${TEST_PROFILE_DIRECTORY}" "${TEST_SET_INPUT_DIRECTORY}");
 
-		run_test_on_test_set_with_options "${TEST_SET_DIRECTORY}" "fsextinfo" "with_stdout_reference" "${OPTION_SETS}" "${TEST_EXECUTABLE}" "${OPTIONS[@]}";
+		run_test_on_test_set_with_options "${TEST_SET_DIRECTORY}" "fsfatinfo" "with_stdout_reference" "${OPTION_SETS}" "${TEST_EXECUTABLE}" "${OPTIONS[@]}";
 		RESULT=$?;
 
 		# Ignore failures due to corrupted data.

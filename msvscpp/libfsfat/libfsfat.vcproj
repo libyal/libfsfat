@@ -174,11 +174,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libfsfat\libfsfat_allocation_table.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libfsfat\libfsfat_boot_record.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\libfsfat\libfsfat_debug.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_directory.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_directory_entry.c"
 				>
 			</File>
 			<File
@@ -216,6 +228,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libfsfat\fsfat_directory_entry.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_allocation_table.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libfsfat\libfsfat_boot_record.h"
 				>
 			</File>
@@ -225,6 +245,14 @@
 			</File>
 			<File
 				RelativePath="..\..\libfsfat\libfsfat_definitions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_directory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_directory_entry.h"
 				>
 			</File>
 			<File

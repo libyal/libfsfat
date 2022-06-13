@@ -7,7 +7,7 @@ EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
 
-LIBRARY_TESTS="boot_record error file_entry io_handle notify";
+LIBRARY_TESTS="allocation_table boot_record directory_entry error file_entry io_handle notify";
 LIBRARY_TESTS_WITH_INPUT="support volume";
 OPTION_SETS="offset";
 
@@ -18,7 +18,7 @@ run_test()
 	local TEST_NAME=$1;
 
 	local TEST_DESCRIPTION="Testing: ${TEST_NAME}";
-	local TEST_EXECUTABLE="./fsext_test_${TEST_NAME}";
+	local TEST_EXECUTABLE="./fsfat_test_${TEST_NAME}";
 
 	if ! test -x "${TEST_EXECUTABLE}";
 	then
@@ -37,7 +37,7 @@ run_test_with_input()
 	local TEST_NAME=$1;
 
 	local TEST_DESCRIPTION="Testing: ${TEST_NAME}";
-	local TEST_EXECUTABLE="./fsext_test_${TEST_NAME}";
+	local TEST_EXECUTABLE="./fsfat_test_${TEST_NAME}";
 
 	if ! test -x "${TEST_EXECUTABLE}";
 	then
@@ -59,7 +59,7 @@ run_test_with_input()
 		return ${EXIT_IGNORE};
 	fi
 
-	local TEST_PROFILE_DIRECTORY=$(get_test_profile_directory "input" "libfsext");
+	local TEST_PROFILE_DIRECTORY=$(get_test_profile_directory "input" "libfsfat");
 
 	local IGNORE_LIST=$(read_ignore_list "${TEST_PROFILE_DIRECTORY}");
 

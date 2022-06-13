@@ -1,5 +1,16 @@
 TODO:
 * implement library and Python bindings
+* convert directory entries into file (system) entries
+* add volume label API functions
+* add volume (label) last modification time API function
+* complete file entry API
+  - add support for sub file entries
+  - add support for 10ns precision creation time (add libfdatetime_fat_datetime with nanoseconds)
+  - add support for reading file content
+  - complete support for get file entry by path functions
+* complete info tool
+  - map file attributes to file mode
+* complete mount tool
 
 20210928
 * see `git log' for more recent change log

@@ -6,7 +6,7 @@ $ExitSuccess = 0
 $ExitFailure = 1
 $ExitIgnore = 77
 
-$Profiles = @("fsextinfo", "fsextinfo_fs")
+$Profiles = @("fsfatinfo", "fsfatinfo_fs")
 $OptionsPerProfile = @("", "-H")
 $OptionSets = "offset"
 
@@ -63,7 +63,7 @@ If (-Not (Test-Path ${TestExecutablesDirectory}))
 	Exit ${ExitFailure}
 }
 
-$TestExecutable = "${TestExecutablesDirectory}\fsextinfo.exe"
+$TestExecutable = "${TestExecutablesDirectory}\fsfatinfo.exe"
 
 If (-Not (Test-Path -Path "input"))
 {

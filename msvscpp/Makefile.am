@@ -8,7 +8,9 @@ MSVSCPP_FILES = \
 	fsext_test_tools_output/fsext_test_tools_output.vcproj \
 	fsext_test_tools_signal/fsext_test_tools_signal.vcproj \
 	fsext_test_volume/fsext_test_volume.vcproj \
+	fsfat_test_allocation_table/fsfat_test_allocation_table.vcproj \
 	fsfat_test_boot_record/fsfat_test_boot_record.vcproj \
+	fsfat_test_directory_entry/fsfat_test_directory_entry.vcproj \
 	fsfatinfo/fsfatinfo.vcproj \
 	fsfatmount/fsfatmount.vcproj \
 	libbfio/libbfio.vcproj \

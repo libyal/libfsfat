@@ -2,7 +2,7 @@
 #
 # Python-bindings volume type test script
 #
-# Copyright (C) 2010-2022, Joachim Metz <joachim.metz@gmail.com>
+# Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
 #
 # Refer to AUTHORS for acknowledgements.
 #
@@ -24,7 +24,7 @@ import os
 import sys
 import unittest
 
-import pyfsext
+import pyfsfat
 
 
 class DataRangeFileObject(object):
@@ -151,9 +151,9 @@ class VolumeTypeTests(unittest.TestCase):
 
   def test_signal_abort(self):
     """Tests the signal_abort function."""
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
-    fsext_volume.signal_abort()
+    fsfat_volume.signal_abort()
 
   def test_open(self):
     """Tests the open function."""
@@ -164,20 +164,20 @@ class VolumeTypeTests(unittest.TestCase):
     if unittest.offset:
       raise unittest.SkipTest("source defines offset")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
-    fsext_volume.open(test_source)
+    fsfat_volume.open(test_source)
 
     with self.assertRaises(IOError):
-      fsext_volume.open(test_source)
+      fsfat_volume.open(test_source)
 
-    fsext_volume.close()
+    fsfat_volume.close()
 
     with self.assertRaises(TypeError):
-      fsext_volume.open(None)
+      fsfat_volume.open(None)
 
     with self.assertRaises(ValueError):
-      fsext_volume.open(test_source, mode="w")
+      fsfat_volume.open(test_source, mode="w")
 
   def test_open_file_object(self):
     """Tests the open_file_object function."""
@@ -188,23 +188,23 @@ class VolumeTypeTests(unittest.TestCase):
     if not os.path.isfile(test_source):
       raise unittest.SkipTest("source not a regular file")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     with DataRangeFileObject(
         test_source, unittest.offset or 0, None) as file_object:
 
-      fsext_volume.open_file_object(file_object)
+      fsfat_volume.open_file_object(file_object)
 
       with self.assertRaises(IOError):
-        fsext_volume.open_file_object(file_object)
+        fsfat_volume.open_file_object(file_object)
 
-      fsext_volume.close()
+      fsfat_volume.close()
 
       with self.assertRaises(TypeError):
-        fsext_volume.open_file_object(None)
+        fsfat_volume.open_file_object(None)
 
       with self.assertRaises(ValueError):
-        fsext_volume.open_file_object(file_object, mode="w")
+        fsfat_volume.open_file_object(file_object, mode="w")
 
   def test_close(self):
     """Tests the close function."""
@@ -212,10 +212,10 @@ class VolumeTypeTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     with self.assertRaises(IOError):
-      fsext_volume.close()
+      fsfat_volume.close()
 
   def test_open_close(self):
     """Tests the open and close functions."""
@@ -226,31 +226,31 @@ class VolumeTypeTests(unittest.TestCase):
     if unittest.offset:
       raise unittest.SkipTest("source defines offset")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     # Test open and close.
-    fsext_volume.open(test_source)
-    fsext_volume.close()
+    fsfat_volume.open(test_source)
+    fsfat_volume.close()
 
     # Test open and close a second time to validate clean up on close.
-    fsext_volume.open(test_source)
-    fsext_volume.close()
+    fsfat_volume.open(test_source)
+    fsfat_volume.close()
 
     if os.path.isfile(test_source):
       with open(test_source, "rb") as file_object:
 
         # Test open_file_object and close.
-        fsext_volume.open_file_object(file_object)
-        fsext_volume.close()
+        fsfat_volume.open_file_object(file_object)
+        fsfat_volume.close()
 
         # Test open_file_object and close a second time to validate clean up on close.
-        fsext_volume.open_file_object(file_object)
-        fsext_volume.close()
+        fsfat_volume.open_file_object(file_object)
+        fsfat_volume.close()
 
         # Test open_file_object and close and dereferencing file_object.
-        fsext_volume.open_file_object(file_object)
+        fsfat_volume.open_file_object(file_object)
         del file_object
-        fsext_volume.close()
+        fsfat_volume.close()
 
   def test_get_label(self):
     """Tests the get_label function and label property."""
@@ -258,20 +258,20 @@ class VolumeTypeTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     with DataRangeFileObject(
         test_source, unittest.offset or 0, None) as file_object:
 
-      fsext_volume = pyfsext.volume()
-      fsext_volume.open_file_object(file_object)
+      fsfat_volume = pyfsfat.volume()
+      fsfat_volume.open_file_object(file_object)
 
-      label = fsext_volume.get_label()
+      label = fsfat_volume.get_label()
       self.assertIsNotNone(label)
 
-      self.assertIsNotNone(fsext_volume.label)
+      self.assertIsNotNone(fsfat_volume.label)
 
-      fsext_volume.close()
+      fsfat_volume.close()
 
   def test_get_last_mount_time(self):
     """Tests the get_last_mount_time function and last_mount_time property."""
@@ -279,20 +279,20 @@ class VolumeTypeTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     with DataRangeFileObject(
         test_source, unittest.offset or 0, None) as file_object:
 
-      fsext_volume = pyfsext.volume()
-      fsext_volume.open_file_object(file_object)
+      fsfat_volume = pyfsfat.volume()
+      fsfat_volume.open_file_object(file_object)
 
-      last_mount_time = fsext_volume.get_last_mount_time()
+      last_mount_time = fsfat_volume.get_last_mount_time()
       self.assertIsNotNone(last_mount_time)
 
-      self.assertIsNotNone(fsext_volume.last_mount_time)
+      self.assertIsNotNone(fsfat_volume.last_mount_time)
 
-      fsext_volume.close()
+      fsfat_volume.close()
 
   def test_get_last_written_time(self):
     """Tests the get_last_written_time function and last_written_time property."""
@@ -300,20 +300,20 @@ class VolumeTypeTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     with DataRangeFileObject(
         test_source, unittest.offset or 0, None) as file_object:
 
-      fsext_volume = pyfsext.volume()
-      fsext_volume.open_file_object(file_object)
+      fsfat_volume = pyfsfat.volume()
+      fsfat_volume.open_file_object(file_object)
 
-      last_written_time = fsext_volume.get_last_written_time()
+      last_written_time = fsfat_volume.get_last_written_time()
       self.assertIsNotNone(last_written_time)
 
-      self.assertIsNotNone(fsext_volume.last_written_time)
+      self.assertIsNotNone(fsfat_volume.last_written_time)
 
-      fsext_volume.close()
+      fsfat_volume.close()
 
   def test_get_number_of_file_entries(self):
     """Tests the get_number_of_file_entries function and number_of_file_entries property."""
@@ -321,20 +321,20 @@ class VolumeTypeTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     with DataRangeFileObject(
         test_source, unittest.offset or 0, None) as file_object:
 
-      fsext_volume = pyfsext.volume()
-      fsext_volume.open_file_object(file_object)
+      fsfat_volume = pyfsfat.volume()
+      fsfat_volume.open_file_object(file_object)
 
-      number_of_file_entries = fsext_volume.get_number_of_file_entries()
+      number_of_file_entries = fsfat_volume.get_number_of_file_entries()
       self.assertIsNotNone(number_of_file_entries)
 
-      self.assertIsNotNone(fsext_volume.number_of_file_entries)
+      self.assertIsNotNone(fsfat_volume.number_of_file_entries)
 
-      fsext_volume.close()
+      fsfat_volume.close()
 
   def test_get_root_directory(self):
     """Tests the get_root_directory function and root_directory property."""
@@ -342,20 +342,20 @@ class VolumeTypeTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    fsext_volume = pyfsext.volume()
+    fsfat_volume = pyfsfat.volume()
 
     with DataRangeFileObject(
         test_source, unittest.offset or 0, None) as file_object:
 
-      fsext_volume = pyfsext.volume()
-      fsext_volume.open_file_object(file_object)
+      fsfat_volume = pyfsfat.volume()
+      fsfat_volume.open_file_object(file_object)
 
-      root_directory = fsext_volume.get_root_directory()
+      root_directory = fsfat_volume.get_root_directory()
       self.assertIsNotNone(root_directory)
 
-      self.assertIsNotNone(fsext_volume.root_directory)
+      self.assertIsNotNone(fsfat_volume.root_directory)
 
-      fsext_volume.close()
+      fsfat_volume.close()
 
 
 if __name__ == "__main__":

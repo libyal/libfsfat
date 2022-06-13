@@ -2,7 +2,7 @@
 #
 # Python-bindings support functions test script
 #
-# Copyright (C) 2010-2022, Joachim Metz <joachim.metz@gmail.com>
+# Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
 #
 # Refer to AUTHORS for acknowledgements.
 #
@@ -24,7 +24,7 @@ import os
 import sys
 import unittest
 
-import pyfsext
+import pyfsfat
 
 
 class SupportFunctionsTests(unittest.TestCase):
@@ -32,7 +32,7 @@ class SupportFunctionsTests(unittest.TestCase):
 
   def test_get_version(self):
     """Tests the get_version function."""
-    version = pyfsext.get_version()
+    version = pyfsfat.get_version()
     self.assertIsNotNone(version)
 
   def test_check_volume_signature(self):
@@ -41,7 +41,7 @@ class SupportFunctionsTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    result = pyfsext.check_volume_signature(test_source)
+    result = pyfsfat.check_volume_signature(test_source)
     self.assertTrue(result)
 
   def test_check_volume_signature_file_object(self):
@@ -51,7 +51,7 @@ class SupportFunctionsTests(unittest.TestCase):
       raise unittest.SkipTest("missing source")
 
     with open(test_source, "rb") as file_object:
-      result = pyfsext.check_volume_signature_file_object(file_object)
+      result = pyfsfat.check_volume_signature_file_object(file_object)
       self.assertTrue(result)
 
   def test_open(self):
@@ -60,16 +60,16 @@ class SupportFunctionsTests(unittest.TestCase):
     if not test_source:
       raise unittest.SkipTest("missing source")
 
-    fsext_volume = pyfsext.open(test_source)
-    self.assertIsNotNone(fsext_volume)
+    fsfat_volume = pyfsfat.open(test_source)
+    self.assertIsNotNone(fsfat_volume)
 
-    fsext_volume.close()
+    fsfat_volume.close()
 
     with self.assertRaises(TypeError):
-      pyfsext.open(None)
+      pyfsfat.open(None)
 
     with self.assertRaises(ValueError):
-      pyfsext.open(test_source, mode="w")
+      pyfsfat.open(test_source, mode="w")
 
   def test_open_file_object(self):
     """Tests the open_file_object function."""
@@ -81,16 +81,16 @@ class SupportFunctionsTests(unittest.TestCase):
       raise unittest.SkipTest("source not a regular file")
 
     with open(test_source, "rb") as file_object:
-      fsext_volume = pyfsext.open_file_object(file_object)
-      self.assertIsNotNone(fsext_volume)
+      fsfat_volume = pyfsfat.open_file_object(file_object)
+      self.assertIsNotNone(fsfat_volume)
 
-      fsext_volume.close()
+      fsfat_volume.close()
 
       with self.assertRaises(TypeError):
-        pyfsext.open_file_object(None)
+        pyfsfat.open_file_object(None)
 
       with self.assertRaises(ValueError):
-        pyfsext.open_file_object(file_object, mode="w")
+        pyfsfat.open_file_object(file_object, mode="w")
 
 
 if __name__ == "__main__":

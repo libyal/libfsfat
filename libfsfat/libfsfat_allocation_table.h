@@ -1,5 +1,5 @@
 /*
- * Debug functions
+ * Allocation table functions
  *
  * Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,12 +19,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _LIBFSFAT_DEBUG_H )
-#define _LIBFSFAT_DEBUG_H
+#if !defined( _LIBFSFAT_ALLOCATION_TABLE_H )
+#define _LIBFSFAT_ALLOCATION_TABLE_H
 
 #include <common.h>
 #include <types.h>
 
+#include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
 
@@ -32,29 +33,44 @@
 extern "C" {
 #endif
 
-#if defined( HAVE_DEBUG_OUTPUT )
+typedef struct libfsfat_allocation_table libfsfat_allocation_table_t;
 
-void libfsfat_debug_print_file_attribute_flags(
-      uint8_t file_attribute_flags );
+struct libfsfat_allocation_table
+{
+	/* The number of cluster identifiers
+	 */
+	int number_of_cluster_identifiers;
 
-int libfsfat_debug_print_fat_date_time_value(
-     const char *function_name,
-     const char *value_name,
-     const uint8_t *byte_stream,
-     size_t byte_stream_size,
-     int byte_order,
-     uint32_t string_format_flags,
+	/* The cluster identifiers
+	 */
+	uint32_t *cluster_identifiers;
+};
+
+int libfsfat_allocation_table_initialize(
+     libfsfat_allocation_table_t **allocation_table,
      libcerror_error_t **error );
 
-int libfsfat_debug_print_read_offsets(
+int libfsfat_allocation_table_free(
+     libfsfat_allocation_table_t **allocation_table,
+     libcerror_error_t **error );
+
+int libfsfat_allocation_table_read_file_io_handle(
+     libfsfat_allocation_table_t *allocation_table,
+     libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
+     off64_t file_offset,
+     size64_t size,
      libcerror_error_t **error );
 
-#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+int libfsfat_allocation_table_get_cluster_identifier_by_index(
+     libfsfat_allocation_table_t *allocation_table,
+     int entry_index,
+     uint32_t *cluster_identifier,
+     libcerror_error_t **error );
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _LIBFSFAT_DEBUG_H ) */
+#endif /* !defined( _LIBFSFAT_ALLOCATION_TABLE_H ) */
 

@@ -22,10 +22,14 @@ lib_LTLIBRARIES = libfsfat.la
 
 libfsfat_la_SOURCES = \
 	fsfat_boot_record.h \
+	fsfat_directory_entry.h \
 	libfsfat.c \
+	libfsfat_allocation_table.c libfsfat_allocation_table.h \
 	libfsfat_boot_record.c libfsfat_boot_record.h \
 	libfsfat_debug.c libfsfat_debug.h \
 	libfsfat_definitions.h \
+	libfsfat_directory.c libfsfat_directory.h \
+	libfsfat_directory_entry.c libfsfat_directory_entry.h \
 	libfsfat_error.c libfsfat_error.h \
 	libfsfat_extern.h \
 	libfsfat_file_entry.c libfsfat_file_entry.h \

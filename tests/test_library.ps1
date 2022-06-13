@@ -6,7 +6,7 @@ $ExitSuccess = 0
 $ExitFailure = 1
 $ExitIgnore = 77
 
-$LibraryTests = "boot_record error file_entry io_handle notify"
+$LibraryTests = "allocation_table boot_record directory_entry error file_entry io_handle notify"
 $LibraryTestsWithInput = "support volume"
 $OptionSets = "offset"
 
@@ -59,7 +59,7 @@ Function RunTest
 	param( [string]$TestType )
 
 	$TestDescription = "Testing: ${TestName}"
-	$TestExecutable = "${TestExecutablesDirectory}\fsext_test_${TestName}.exe"
+	$TestExecutable = "${TestExecutablesDirectory}\fsfat_test_${TestName}.exe"
 
 	If (-Not (Test-Path -Path ${TestExecutable} -PathType "Leaf"))
 	{
@@ -96,7 +96,7 @@ Function RunTestWithInput
 	param( [string]$TestType )
 
 	$TestDescription = "Testing: ${TestName}"
-	$TestExecutable = "${TestExecutablesDirectory}\fsext_test_${TestName}.exe"
+	$TestExecutable = "${TestExecutablesDirectory}\fsfat_test_${TestName}.exe"
 
 	If (-Not (Test-Path -Path ${TestExecutable} -PathType "Leaf"))
 	{
@@ -106,7 +106,7 @@ Function RunTestWithInput
 
 		Return ${ExitIgnore}
 	}
-	$TestProfileDirectory = "input\.libfsext"
+	$TestProfileDirectory = "input\.libfsfat"
 
 	If (-Not (Test-Path -Path ${TestProfileDirectory} -PathType "Container"))
 	{

@@ -1010,24 +1010,16 @@ int info_handle_file_entry_value_with_name_fprint(
 		'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
 		0 };
 
-	char file_mode_string[ 11 ]              = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 0 };
+	char file_mode_string[ 11 ]    = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 0 };
 
-	system_character_t *symbolic_link_target = NULL;
-	static char *function                    = "info_handle_file_entry_value_with_name_fprint";
-	size64_t size                            = 0;
-	size_t symbolic_link_target_size         = 0;
-	int64_t access_time                      = 0;
-	int64_t creation_time                    = 0;
-	int64_t inode_change_time                = 0;
-	int64_t modification_time                = 0;
-	uint32_t file_entry_identifier           = 0;
-	uint32_t group_identifier                = 0;
-	uint32_t owner_identifier                = 0;
-	int32_t deletion_time                    = 0;
-	uint16_t file_mode                       = 0;
-	uint16_t number_of_links                 = 0;
-	uint8_t has_creation_time                = 0;
-	int result                               = 0;
+	static char *function          = "info_handle_file_entry_value_with_name_fprint";
+	size64_t size                  = 0;
+	int64_t access_time            = 0;
+	int64_t creation_time          = 0;
+	int64_t modification_time      = 0;
+	uint32_t file_entry_identifier = 0;
+	uint8_t file_attribute_flags   = 0;
+	int result                     = 0;
 
 	if( info_handle == NULL )
 	{
@@ -1053,8 +1045,10 @@ int info_handle_file_entry_value_with_name_fprint(
 		 "%s: unable to retrieve inode number.",
 		 function );
 
-		goto on_error;
+		return( -1 );
 	}
+#endif /* TODO */
+#ifdef TODO
 	if( libfsfat_file_entry_get_modification_time(
 	     file_entry,
 	     &modification_time,
@@ -1067,21 +1061,7 @@ int info_handle_file_entry_value_with_name_fprint(
 		 "%s: unable to retrieve modification time.",
 		 function );
 
-		goto on_error;
-	}
-	if( libfsfat_file_entry_get_inode_change_time(
-	     file_entry,
-	     &inode_change_time,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve inode change time.",
-		 function );
-
-		goto on_error;
+		return( -1 );
 	}
 	if( libfsfat_file_entry_get_access_time(
 	     file_entry,
@@ -1095,14 +1075,12 @@ int info_handle_file_entry_value_with_name_fprint(
 		 "%s: unable to retrieve access time.",
 		 function );
 
-		goto on_error;
+		return( -1 );
 	}
-	result = libfsfat_file_entry_get_creation_time(
-	          file_entry,
-	          &creation_time,
-	          error );
-
-	if( result == -1 )
+	if( libfsfat_file_entry_get_creation_time(
+	     file_entry,
+	     &creation_time,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1111,51 +1089,23 @@ int info_handle_file_entry_value_with_name_fprint(
 		 "%s: unable to retrieve creation time.",
 		 function );
 
-		goto on_error;
+		return( -1 );
 	}
-	has_creation_time = (uint8_t) result;
-
-	if( libfsfat_file_entry_get_owner_identifier(
+#endif /* TODO */
+#ifdef TODO
+	if( libfsfat_file_entry_get_file_attribute_flags(
 	     file_entry,
-	     &owner_identifier,
+	     &file_attribute_flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve owner identifier.",
+		 "%s: unable to retrieve file attribute flags.",
 		 function );
 
-		goto on_error;
-	}
-	if( libfsfat_file_entry_get_group_identifier(
-	     file_entry,
-	     &group_identifier,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve group identifier.",
-		 function );
-
-		goto on_error;
-	}
-	if( libfsfat_file_entry_get_file_mode(
-	     file_entry,
-	     &file_mode,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve file mode.",
-		 function );
-
-		goto on_error;
+		return( -1 );
 	}
 /* TODO move into function */
 	if( ( file_mode & 0x0001 ) != 0 )
@@ -1223,69 +1173,6 @@ int info_handle_file_entry_value_with_name_fprint(
 		default:
 			break;
 	}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-	result = libfsfat_file_entry_get_utf16_symbolic_link_target_size(
-	          file_entry,
-	          &symbolic_link_target_size,
-	          error );
-#else
-	result = libfsfat_file_entry_get_utf8_symbolic_link_target_size(
-	          file_entry,
-	          &symbolic_link_target_size,
-	          error );
-#endif
-	if( result == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve symbolic link target string size.",
-		 function );
-
-		goto on_error;
-	}
-	else if( result != 0 )
-	{
-		symbolic_link_target = system_string_allocate(
-		                        symbolic_link_target_size );
-
-		if( symbolic_link_target == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-			 "%s: unable to create symbolic link target string.",
-			 function );
-
-			goto on_error;
-		}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-		result = libfsfat_file_entry_get_utf16_symbolic_link_target(
-		          file_entry,
-		          (uint16_t *) symbolic_link_target,
-		          symbolic_link_target_size,
-		          error );
-#else
-		result = libfsfat_file_entry_get_utf8_symbolic_link_target(
-		          file_entry,
-		          (uint8_t *) symbolic_link_target,
-		          symbolic_link_target_size,
-		          error );
-#endif
-		if( result != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve symbolic link target string.",
-			 function );
-
-			goto on_error;
-		}
-	}
 	if( libfsfat_file_entry_get_size(
 	     file_entry,
 	     &size,
@@ -1298,15 +1185,18 @@ int info_handle_file_entry_value_with_name_fprint(
 		 "%s: unable to retrieve size.",
 		 function );
 
-		goto on_error;
+		return( -1 );
 	}
+#endif /* TODO */
 	if( info_handle->bodyfile_stream != NULL )
 	{
 		if( info_handle->calculate_md5 == 0 )
 		{
 			md5_string[ 1 ] = 0;
 		}
-		else if( ( file_mode & 0xf000 ) == 0x8000 )
+		else if( ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 )
+		      && ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
+		      && ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) != 0 ) )
 		{
 			if( info_handle_file_entry_calculate_md5(
 			     info_handle,
@@ -1322,7 +1212,7 @@ int info_handle_file_entry_value_with_name_fprint(
 				 "%s: unable to retreive MD5 string.",
 				 function );
 
-				goto on_error;
+				return( -1 );
 			}
 		}
 		/* Colums in a Sleuthkit 3.x and later bodyfile
@@ -1348,7 +1238,7 @@ int info_handle_file_entry_value_with_name_fprint(
 				 "%s: unable to print path string.",
 				 function );
 
-				goto on_error;
+				return( -1 );
 			}
 		}
 		if( ( file_entry_name != NULL )
@@ -1367,49 +1257,19 @@ int info_handle_file_entry_value_with_name_fprint(
 				 "%s: unable to print file entry name string.",
 				 function );
 
-				goto on_error;
+				return( -1 );
 			}
 		}
-		if( symbolic_link_target != NULL )
-		{
-			fprintf(
-			 info_handle->bodyfile_stream,
-			 " -> %" PRIs_SYSTEM "",
-			 symbolic_link_target );
-		}
-		if( has_creation_time != 0 )
-		{
-			fprintf(
-			 info_handle->bodyfile_stream,
-			 "|%" PRIu32 "|%s|%" PRIu32 "|%" PRIu32 "|%" PRIu64 "|%" PRIi64 ".%09" PRIi64 "|%" PRIi64 ".%09" PRIi64 "|%" PRIi64 ".%09" PRIi64 "|%" PRIi64 ".%09" PRIi64 "\n",
-			 file_entry_identifier,
-			 file_mode_string,
-			 owner_identifier,
-			 group_identifier,
-			 size,
-			 access_time / 1000000000,
-			 access_time - ( ( access_time / 1000000000 ) * 1000000000 ),
-			 modification_time / 1000000000,
-			 modification_time - ( ( modification_time / 1000000000 ) * 1000000000 ),
-			 inode_change_time / 1000000000,
-			 inode_change_time - ( ( inode_change_time / 1000000000 ) * 1000000000 ),
-			 creation_time / 1000000000,
-			 creation_time - ( ( creation_time / 1000000000 ) * 1000000000 ) );
-		}
-		else
-		{
-			fprintf(
-			 info_handle->bodyfile_stream,
-			 "|%" PRIu32 "|%s|%" PRIu32 "|%" PRIu32 "|%" PRIu64 "|%" PRIi64 "|%" PRIi64 "|%" PRIi64 "|0\n",
-			 file_entry_identifier,
-			 file_mode_string,
-			 owner_identifier,
-			 group_identifier,
-			 size,
-			 access_time / 1000000000,
-			 modification_time / 1000000000,
-			 inode_change_time / 1000000000 );
-		}
+		fprintf(
+		 info_handle->bodyfile_stream,
+		 "|%" PRIu32 "|%s|0|0|%" PRIu64 "|%" PRIi64 "|%" PRIi64 "|0|%" PRIi64 ".%09" PRIi64 "\n",
+		 file_entry_identifier,
+		 file_mode_string,
+		 size,
+		 access_time / 1000000000,
+		 modification_time / 1000000000,
+		 creation_time / 1000000000,
+		 0 );
 	}
 	else
 	{
@@ -1439,7 +1299,7 @@ int info_handle_file_entry_value_with_name_fprint(
 					 "%s: unable to print path string.",
 					 function );
 
-					goto on_error;
+					return( -1 );
 				}
 			}
 			if( ( file_entry_name != NULL )
@@ -1458,7 +1318,7 @@ int info_handle_file_entry_value_with_name_fprint(
 					 "%s: unable to print file entry name string.",
 					 function );
 
-					goto on_error;
+					return( -1 );
 				}
 			}
 			fprintf(
@@ -1470,123 +1330,26 @@ int info_handle_file_entry_value_with_name_fprint(
 		 "\tSize\t\t\t: %" PRIu64 "\n",
 		 size );
 
-		if( has_creation_time != 0 )
-		{
-			result = info_handle_posix_time_in_nano_seconds_value_fprint(
-			          info_handle,
-			          "\tModification time\t",
-			          modification_time,
-			          error );
-		}
-		else
-		{
-			result = info_handle_posix_time_in_seconds_value_fprint(
-			          info_handle,
-			          "\tModification time\t",
-			          (int32_t) ( modification_time / 1000000000 ),
-			          error );
-		}
-		if( result != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-			 "%s: unable to print POSIX time value.",
-			 function );
-
-			goto on_error;
-		}
-		if( has_creation_time != 0 )
-		{
-			result = info_handle_posix_time_in_nano_seconds_value_fprint(
-			          info_handle,
-			          "\tInode change time\t",
-			          inode_change_time,
-			          error );
-		}
-		else
-		{
-			result = info_handle_posix_time_in_seconds_value_fprint(
-			          info_handle,
-			          "\tInode change time\t",
-			          (int32_t) ( inode_change_time / 1000000000 ),
-			          error );
-		}
-		if( result != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-			 "%s: unable to print POSIX time value.",
-			 function );
-
-			goto on_error;
-		}
-		if( has_creation_time != 0 )
-		{
-			result = info_handle_posix_time_in_nano_seconds_value_fprint(
-			          info_handle,
-			          "\tAccess time\t\t",
-			          access_time,
-			          error );
-		}
-		else
-		{
-			result = info_handle_posix_time_in_seconds_value_fprint(
-			          info_handle,
-			          "\tAccess time\t\t",
-			          (int32_t) ( access_time / 1000000000 ),
-			          error );
-		}
-		if( result != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-			 "%s: unable to print POSIX time value.",
-			 function );
-
-			goto on_error;
-		}
-		if( has_creation_time != 0 )
-		{
-			if( info_handle_posix_time_in_nano_seconds_value_fprint(
-			     info_handle,
-			     "\tCreation time\t\t",
-			     creation_time,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-				 "%s: unable to print POSIX time value.",
-				 function );
-
-				goto on_error;
-			}
-		}
-		if( libfsfat_file_entry_get_deletion_time(
-		     file_entry,
-		     &deletion_time,
+#ifdef TODO
+		if( info_handle_posix_time_in_seconds_value_fprint(
+		     info_handle,
+		     "\tModification time\t",
+		     (int32_t) ( modification_time / 1000000000 ),
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve deletion time.",
+			 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+			 "%s: unable to print POSIX time value.",
 			 function );
 
-			goto on_error;
+			return( -1 );
 		}
 		if( info_handle_posix_time_in_seconds_value_fprint(
 		     info_handle,
-		     "\tDeletion time\t\t",
-		     deletion_time,
+		     "\tAccess time\t\t",
+		     (int32_t) ( access_time / 1000000000 ),
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1596,68 +1359,30 @@ int info_handle_file_entry_value_with_name_fprint(
 			 "%s: unable to print POSIX time value.",
 			 function );
 
-			goto on_error;
+			return( -1 );
 		}
-		if( libfsfat_file_entry_get_number_of_links(
-		     file_entry,
-		     &number_of_links,
+		if( info_handle_posix_time_in_seconds_value_fprint(
+		     info_handle,
+		     "\tCreation time\t\t",
+		     creation_time,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve number of links.",
+			 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+			 "%s: unable to print POSIX time value.",
 			 function );
 
-			goto on_error;
+			return( -1 );
 		}
+#endif /* TODO */
 		fprintf(
 		 info_handle->notify_stream,
-		 "\tNumber of links\t\t: %" PRIu16 "\n",
-		 number_of_links );
-
-		fprintf(
-		 info_handle->notify_stream,
-		 "\tOwner identifier\t: %" PRIu32 "\n",
-		 owner_identifier );
-
-		fprintf(
-		 info_handle->notify_stream,
-		 "\tGroup identifier\t: %" PRIu32 "\n",
-		 group_identifier );
-
-		fprintf(
-		 info_handle->notify_stream,
-		 "\tFile mode\t\t: %s (%07" PRIo16 ")\n",
-		 file_mode_string,
-		 file_mode );
-
-		if( symbolic_link_target != NULL )
-		{
-			fprintf(
-			 info_handle->notify_stream,
-			 "\tSymbolic link target\t: %" PRIs_SYSTEM "\n",
-			 symbolic_link_target );
-		}
+		 "\tFile attribute flags\t\t: %" PRIu8 "\n",
+		 file_attribute_flags );
 	}
-	if( symbolic_link_target != NULL )
-	{
-		memory_free(
-		 symbolic_link_target );
-
-		symbolic_link_target = NULL;
-	}
-#endif
 	return( 1 );
-
-on_error:
-	if( symbolic_link_target != NULL )
-	{
-		memory_free(
-		 symbolic_link_target );
-	}
-	return( -1 );
 }
 
 /* Prints file entry information as part of the file system hierarchy

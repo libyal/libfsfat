@@ -36,37 +36,17 @@ typedef struct libfsfat_io_handle libfsfat_io_handle_t;
 
 struct libfsfat_io_handle
 {
-	/* The format version
+	/* The file system type
 	 */
-	int format_version;
+	int8_t file_system_type;
 
-	/* The block size
+	/* The bytes per sector
 	 */
-	uint32_t block_size;
+	uint16_t bytes_per_sector;
 
-	/* Inode size
+	/* The total number of clusters
 	 */
-	uint16_t inode_size;
-
-	/* Group descriptor size
-	 */
-	uint16_t group_descriptor_size;
-
-	/* The format revision
-	 */
-	uint32_t format_revision;
-
-	/* The compatible features flags
-	 */
-	uint32_t compatible_features_flags;
-
-	/* The incompatible features flags
-	 */
-	uint32_t incompatible_features_flags;
-
-	/* The read-only compatible features flags
-	 */
-	uint32_t read_only_compatible_features_flags;
+	uint32_t total_number_of_clusters;
 
 	/* Value to indicate if abort was signalled
 	 */

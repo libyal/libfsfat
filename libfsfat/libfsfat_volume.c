@@ -25,9 +25,11 @@
 #include <types.h>
 #include <wide_string.h>
 
+#include "libfsfat_allocation_table.h"
 #include "libfsfat_boot_record.h"
 #include "libfsfat_debug.h"
 #include "libfsfat_definitions.h"
+#include "libfsfat_directory.h"
 #include "libfsfat_file_entry.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libcerror.h"
@@ -894,6 +896,38 @@ int libfsfat_volume_close(
 
 		result = -1;
 	}
+	if( internal_volume->allocation_table != NULL )
+	{
+		if( libfsfat_allocation_table_free(
+		     &( internal_volume->allocation_table ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free allocation table.",
+			 function );
+
+			result = -1;
+		}
+	}
+	if( internal_volume->root_directory != NULL )
+	{
+		if( libfsfat_directory_free(
+		     &( internal_volume->root_directory ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free root directory.",
+			 function );
+
+			result = -1;
+		}
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_volume->read_write_lock,
@@ -945,11 +979,33 @@ int libfsfat_internal_volume_open_read(
 
 		return( -1 );
 	}
+	if( internal_volume->allocation_table != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid volume - allocation table value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_volume->root_directory != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid volume - root directory value already set.",
+		 function );
+
+		return( -1 );
+	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
 		libcnotify_printf(
-		 "%s: reading boot eecord.\n",
+		 "%s: reading boot record.\n",
 		 function );
 	}
 #endif
@@ -981,7 +1037,84 @@ int libfsfat_internal_volume_open_read(
 
 		goto on_error;
 	}
-/* TODO */
+	internal_volume->io_handle->file_system_type         = boot_record->file_system_type;
+	internal_volume->io_handle->bytes_per_sector         = boot_record->bytes_per_sector;
+	internal_volume->io_handle->total_number_of_clusters = boot_record->total_number_of_clusters;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: reading allocation table.\n",
+		 function );
+	}
+#endif
+	if( libfsfat_allocation_table_initialize(
+	     &( internal_volume->allocation_table ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create allocation table.",
+		 function );
+
+		goto on_error;
+	}
+	if( libfsfat_allocation_table_read_file_io_handle(
+	     internal_volume->allocation_table,
+	     internal_volume->io_handle,
+	     file_io_handle,
+	     boot_record->allocation_table_offset,
+	     boot_record->allocation_table_size,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_READ_FAILED,
+		 "%s: unable to read allocation table.",
+		 function );
+
+		goto on_error;
+	}
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: reading root directory.\n",
+		 function );
+	}
+#endif
+	if( libfsfat_directory_initialize(
+	     &( internal_volume->root_directory ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create root directory.",
+		 function );
+
+		goto on_error;
+	}
+	if( libfsfat_directory_read_file_io_handle(
+	     internal_volume->root_directory,
+	     file_io_handle,
+	     boot_record->root_directory_offset,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_READ_FAILED,
+		 "%s: unable to read root directory.",
+		 function );
+
+		goto on_error;
+	}
 	if( libfsfat_boot_record_free(
 	     &boot_record,
 	     error ) != 1 )
@@ -998,6 +1131,18 @@ int libfsfat_internal_volume_open_read(
 	return( 1 );
 
 on_error:
+	if( internal_volume->root_directory != NULL )
+	{
+		libfsfat_directory_free(
+		 &( internal_volume->root_directory ),
+		 NULL );
+	}
+	if( internal_volume->allocation_table != NULL )
+	{
+		libfsfat_directory_free(
+		 &( internal_volume->allocation_table ),
+		 NULL );
+	}
 	if( boot_record != NULL )
 	{
 		libfsfat_boot_record_free(
@@ -1007,15 +1152,362 @@ on_error:
 	return( -1 );
 }
 
+/* Retrieves the size of the UTF-8 encoded label
+ * The returned size includes the end of string character
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_volume_get_utf8_label_size(
+     libfsfat_volume_t *volume,
+     size_t *utf8_string_size,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_volume_t *internal_volume = NULL;
+	static char *function                       = "libfsfat_volume_get_utf8_label_size";
+	size_t safe_utf8_string_size                = 1;
+	int result                                  = 1;
+
+	if( volume == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid volume.",
+		 function );
+
+		return( -1 );
+	}
+	internal_volume = (libfsfat_internal_volume_t *) volume;
+
+	if( utf8_string_size == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid UTF-8 string size.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+/* TODO implement */
+
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( result == 1 )
+	{
+		*utf8_string_size = safe_utf8_string_size;
+	}
+	return( result );
+}
+
+/* Retrieves the UTF-8 encoded label
+ * The size should include the end of string character
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_volume_get_utf8_label(
+     libfsfat_volume_t *volume,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_volume_t *internal_volume = NULL;
+	static char *function                       = "libfsfat_volume_get_utf8_label";
+	int result                                  = 1;
+
+	if( volume == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid volume.",
+		 function );
+
+		return( -1 );
+	}
+	internal_volume = (libfsfat_internal_volume_t *) volume;
+
+	if( utf8_string == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid UTF-8 string.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf8_string_size == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_SMALL,
+		 "%s: invalid UTF-8 string size value too small.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf8_string_size > (size_t) SSIZE_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid UTF-8 string size value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+/* TODO implement */
+
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
+/* Retrieves the size of the UTF-16 encoded label
+ * The returned size includes the end of string character
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_volume_get_utf16_label_size(
+     libfsfat_volume_t *volume,
+     size_t *utf16_string_size,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_volume_t *internal_volume = NULL;
+	static char *function                       = "libfsfat_volume_get_utf16_label_size";
+	size_t safe_utf16_string_size               = 1;
+	int result                                  = 1;
+
+	if( volume == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid volume.",
+		 function );
+
+		return( -1 );
+	}
+	internal_volume = (libfsfat_internal_volume_t *) volume;
+
+	if( utf16_string_size == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid UTF-16 string size.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+/* TODO implement */
+
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( result == 1 )
+	{
+		*utf16_string_size = safe_utf16_string_size;
+	}
+	return( result );
+}
+
+/* Retrieves the UTF-16 encoded label
+ * The size should include the end of string character
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_volume_get_utf16_label(
+     libfsfat_volume_t *volume,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_volume_t *internal_volume = NULL;
+	static char *function                       = "libfsfat_volume_get_utf16_label";
+	int result                                  = 1;
+
+	if( volume == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid volume.",
+		 function );
+
+		return( -1 );
+	}
+	internal_volume = (libfsfat_internal_volume_t *) volume;
+
+	if( utf16_string == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid UTF-16 string.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf16_string_size == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_SMALL,
+		 "%s: invalid UTF-16 string size value too small.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf16_string_size > (size_t) SSIZE_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid UTF-16 string size value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+/* TODO implement */
+
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
 /* Retrieves the root directory file entry
  * Returns 1 if successful, 0 if not available or -1 on error
  */
 int libfsfat_internal_volume_get_root_directory(
      libfsfat_internal_volume_t *internal_volume,
+     libbfio_handle_t *file_io_handle,
+     off64_t directory_offset,
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_internal_volume_get_root_directory";
+	libfsfat_directory_t *directory = NULL;
+	static char *function           = "libfsfat_internal_volume_get_root_directory";
 
 	if( internal_volume == NULL )
 	{
@@ -1050,52 +1542,43 @@ int libfsfat_internal_volume_get_root_directory(
 
 		return( -1 );
 	}
-/* TODO
-	if( libfsfat_inode_table_get_inode_by_number(
-	     internal_volume->inode_table,
-	     internal_volume->file_io_handle,
-	     LIBFSFAT_INODE_NUMBER_ROOT_DIRECTORY,
-	     &inode,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve inode: %d.",
-		 function,
-		 LIBFSFAT_INODE_NUMBER_ROOT_DIRECTORY );
-
-		goto on_error;
-	}
-*/
-	/* libfsfat_file_entry_initialize takes over management of inode
-	 */
-/* TODO
-	if( libfsfat_file_entry_initialize(
-	     file_entry,
-	     internal_volume->io_handle,
-	     internal_volume->file_io_handle,
-	     internal_volume->inode_table,
-	     LIBFSFAT_INODE_NUMBER_ROOT_DIRECTORY,
-	     safe_inode,
-	     NULL,
-	     0,
+	if( libfsfat_directory_initialize(
+	     &directory,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create file entry.",
+		 "%s: unable to create directory.",
 		 function );
 
 		goto on_error;
 	}
-*/
+	if( libfsfat_directory_read_file_io_handle(
+	     directory,
+	     file_io_handle,
+	     directory_offset,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_READ_FAILED,
+		 "%s: unable to read directory.",
+		 function );
+
+		goto on_error;
+	}
 	return( 1 );
 
 on_error:
+	if( directory != NULL )
+	{
+		libfsfat_directory_free(
+		 &directory,
+		 NULL );
+	}
 	return( -1 );
 }
 
@@ -1124,6 +1607,17 @@ int libfsfat_volume_get_root_directory(
 	}
 	internal_volume = (libfsfat_internal_volume_t *) volume;
 
+	if( internal_volume->root_directory == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid internal volume - missing root directory.",
+		 function );
+
+		return( -1 );
+	}
 	if( file_entry == NULL )
 	{
 		libcerror_error_set(
@@ -1161,18 +1655,19 @@ int libfsfat_volume_get_root_directory(
 		return( -1 );
 	}
 #endif
-	result = libfsfat_internal_volume_get_root_directory(
-	          internal_volume,
-	          file_entry,
-	          error );
-
-	if( result == -1 )
+	if( libfsfat_file_entry_initialize(
+	     file_entry,
+	     internal_volume->io_handle,
+	     internal_volume->file_io_handle,
+	     internal_volume->root_directory,
+	     NULL,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve root directory.",
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create file entry.",
 		 function );
 
 		result = -1;
@@ -1281,9 +1776,9 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 			utf8_string_index++;
 		}
 	}
+/* TODO
 	inode_number = LIBFSFAT_INODE_NUMBER_ROOT_DIRECTORY;
 
-/* TODO
 	if( libfsfat_inode_table_get_inode_by_number(
 	     internal_volume->inode_table,
 	     internal_volume->file_io_handle,
@@ -1662,9 +2157,9 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 			utf16_string_index++;
 		}
 	}
+/* TODO
 	inode_number = LIBFSFAT_INODE_NUMBER_ROOT_DIRECTORY;
 
-/* TODO
 	if( libfsfat_inode_table_get_inode_by_number(
 	     internal_volume->inode_table,
 	     internal_volume->file_io_handle,

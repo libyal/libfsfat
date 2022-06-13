@@ -20,22 +20,22 @@ AM_CPPFLAGS = \
 	@LIBCRYPTO_CPPFLAGS@ \
 	@LIBHMAC_CPPFLAGS@ \
 	@PTHREAD_CPPFLAGS@ \
-	@LIBFSEXT_DLL_IMPORT@
+	@LIBFSFAT_DLL_IMPORT@
 
 if HAVE_PYTHON_TESTS
-TESTS_PYFSEXT = \
+TESTS_PYFSFAT = \
 	test_python_module.sh
 endif
 
 TESTS = \
 	test_library.sh \
 	test_tools.sh \
-	test_fsextinfo.sh \
-	$(TESTS_PYFSEXT)
+	test_fsfatinfo.sh \
+	$(TESTS_PYFSFAT)
 
 check_SCRIPTS = \
-	pyfsext_test_support.py \
-	test_fsextinfo.sh \
+	pyfsfat_test_support.py \
+	test_fsfatinfo.sh \
 	test_library.sh \
 	test_manpage.sh \
 	test_python_module.sh \
@@ -46,16 +46,30 @@ EXTRA_DIST = \
 	$(check_SCRIPTS)
 
 check_PROGRAMS = \
+	fsfat_test_allocation_table \
 	fsfat_test_boot_record \
-	fsext_test_error \
-	fsext_test_file_entry \
-	fsext_test_io_handle \
-	fsext_test_notify \
-	fsext_test_support \
-	fsext_test_tools_info_handle \
-	fsext_test_tools_output \
-	fsext_test_tools_signal \
-	fsext_test_volume
+	fsfat_test_directory_entry \
+	fsfat_test_error \
+	fsfat_test_file_entry \
+	fsfat_test_io_handle \
+	fsfat_test_notify \
+	fsfat_test_support \
+	fsfat_test_tools_info_handle \
+	fsfat_test_tools_output \
+	fsfat_test_tools_signal \
+	fsfat_test_volume
+
+fsfat_test_allocation_table_SOURCES = \
+	fsfat_test_allocation_table.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_allocation_table_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
 
 fsfat_test_boot_record_SOURCES = \
 	fsfat_test_boot_record.c \
@@ -79,65 +93,17 @@ fsfat_test_boot_record_LDADD = \
 	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@
 
-fsext_test_error_SOURCES = \
-	fsext_test_error.c \
-	fsext_test_libfsext.h \
-	fsext_test_macros.h \
-	fsext_test_unused.h
+fsfat_test_directory_entry_SOURCES = \
+	fsfat_test_directory_entry.c \
+	fsfat_test_functions.c fsfat_test_functions.h \
+	fsfat_test_libbfio.h \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
 
-fsext_test_error_LDADD = \
-	../libfsext/libfsext.la
-
-fsext_test_file_entry_SOURCES = \
-	fsext_test_file_entry.c \
-	fsext_test_libcerror.h \
-	fsext_test_libfsext.h \
-	fsext_test_macros.h \
-	fsext_test_memory.c fsext_test_memory.h \
-	fsext_test_unused.h
-
-fsext_test_file_entry_LDADD = \
-	../libfsext/libfsext.la \
-	@LIBCERROR_LIBADD@
-
-fsext_test_io_handle_SOURCES = \
-	fsext_test_io_handle.c \
-	fsext_test_libcerror.h \
-	fsext_test_libfsext.h \
-	fsext_test_macros.h \
-	fsext_test_memory.c fsext_test_memory.h \
-	fsext_test_unused.h
-
-fsext_test_io_handle_LDADD = \
-	../libfsext/libfsext.la \
-	@LIBCERROR_LIBADD@
-
-fsext_test_notify_SOURCES = \
-	fsext_test_libcerror.h \
-	fsext_test_libfsext.h \
-	fsext_test_macros.h \
-	fsext_test_notify.c \
-	fsext_test_unused.h
-
-fsext_test_notify_LDADD = \
-	../libfsext/libfsext.la \
-	@LIBCERROR_LIBADD@
-
-fsext_test_support_SOURCES = \
-	fsext_test_functions.c fsext_test_functions.h \
-	fsext_test_getopt.c fsext_test_getopt.h \
-	fsext_test_libbfio.h \
-	fsext_test_libcerror.h \
-	fsext_test_libclocale.h \
-	fsext_test_libcnotify.h \
-	fsext_test_libfsext.h \
-	fsext_test_libuna.h \
-	fsext_test_macros.h \
-	fsext_test_memory.c fsext_test_memory.h \
-	fsext_test_support.c \
-	fsext_test_unused.h
-
-fsext_test_support_LDADD = \
+fsfat_test_directory_entry_LDADD = \
 	@LIBBFIO_LIBADD@ \
 	@LIBCPATH_LIBADD@ \
 	@LIBCFILE_LIBADD@ \
@@ -146,19 +112,89 @@ fsext_test_support_LDADD = \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
-	../libfsext/libfsext.la \
+	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@
 
-fsext_test_tools_info_handle_SOURCES = \
-	../fsexttools/digest_hash.c ../fsexttools/digest_hash.h \
-	../fsexttools/info_handle.c ../fsexttools/info_handle.h \
-	fsext_test_libcerror.h \
-	fsext_test_macros.h \
-	fsext_test_memory.c fsext_test_memory.h \
-	fsext_test_tools_info_handle.c \
-	fsext_test_unused.h
+fsfat_test_error_SOURCES = \
+	fsfat_test_error.c \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_unused.h
 
-fsext_test_tools_info_handle_LDADD = \
+fsfat_test_error_LDADD = \
+	../libfsfat/libfsfat.la
+
+fsfat_test_file_entry_SOURCES = \
+	fsfat_test_file_entry.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_file_entry_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_io_handle_SOURCES = \
+	fsfat_test_io_handle.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_io_handle_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_notify_SOURCES = \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_notify.c \
+	fsfat_test_unused.h
+
+fsfat_test_notify_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_support_SOURCES = \
+	fsfat_test_functions.c fsfat_test_functions.h \
+	fsfat_test_getopt.c fsfat_test_getopt.h \
+	fsfat_test_libbfio.h \
+	fsfat_test_libcerror.h \
+	fsfat_test_libclocale.h \
+	fsfat_test_libcnotify.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_libuna.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_support.c \
+	fsfat_test_unused.h
+
+fsfat_test_support_LDADD = \
+	@LIBBFIO_LIBADD@ \
+	@LIBCPATH_LIBADD@ \
+	@LIBCFILE_LIBADD@ \
+	@LIBUNA_LIBADD@ \
+	@LIBCSPLIT_LIBADD@ \
+	@LIBCNOTIFY_LIBADD@ \
+	@LIBCLOCALE_LIBADD@ \
+	@LIBCDATA_LIBADD@ \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_tools_info_handle_SOURCES = \
+	../fsfattools/digest_hash.c ../fsfattools/digest_hash.h \
+	../fsfattools/info_handle.c ../fsfattools/info_handle.h \
+	fsfat_test_libcerror.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_tools_info_handle.c \
+	fsfat_test_unused.h
+
+fsfat_test_tools_info_handle_LDADD = \
 	@LIBHMAC_LIBADD@ \
 	@LIBFGUID_LIBADD@ \
 	@LIBFDATETIME_LIBADD@ \
@@ -170,48 +206,48 @@ fsext_test_tools_info_handle_LDADD = \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
-	../libfsext/libfsext.la \
+	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@ \
 	@LIBCRYPTO_LIBADD@ \
 	@LIBDL_LIBADD@
 
-fsext_test_tools_output_SOURCES = \
-	../fsexttools/fsexttools_output.c ../fsexttools/fsexttools_output.h \
-	fsext_test_libcerror.h \
-	fsext_test_macros.h \
-	fsext_test_tools_output.c \
-	fsext_test_unused.h
+fsfat_test_tools_output_SOURCES = \
+	../fsfattools/fsfattools_output.c ../fsfattools/fsfattools_output.h \
+	fsfat_test_libcerror.h \
+	fsfat_test_macros.h \
+	fsfat_test_tools_output.c \
+	fsfat_test_unused.h
 
-fsext_test_tools_output_LDADD = \
-	../libfsext/libfsext.la \
+fsfat_test_tools_output_LDADD = \
+	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@
 
-fsext_test_tools_signal_SOURCES = \
-	../fsexttools/fsexttools_signal.c ../fsexttools/fsexttools_signal.h \
-	fsext_test_libcerror.h \
-	fsext_test_macros.h \
-	fsext_test_tools_signal.c \
-	fsext_test_unused.h
+fsfat_test_tools_signal_SOURCES = \
+	../fsfattools/fsfattools_signal.c ../fsfattools/fsfattools_signal.h \
+	fsfat_test_libcerror.h \
+	fsfat_test_macros.h \
+	fsfat_test_tools_signal.c \
+	fsfat_test_unused.h
 
-fsext_test_tools_signal_LDADD = \
-	../libfsext/libfsext.la \
+fsfat_test_tools_signal_LDADD = \
+	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@
 
-fsext_test_volume_SOURCES = \
-	fsext_test_functions.c fsext_test_functions.h \
-	fsext_test_getopt.c fsext_test_getopt.h \
-	fsext_test_libbfio.h \
-	fsext_test_libcerror.h \
-	fsext_test_libclocale.h \
-	fsext_test_libcnotify.h \
-	fsext_test_libfsext.h \
-	fsext_test_libuna.h \
-	fsext_test_macros.h \
-	fsext_test_memory.c fsext_test_memory.h \
-	fsext_test_volume.c \
-	fsext_test_unused.h
+fsfat_test_volume_SOURCES = \
+	fsfat_test_functions.c fsfat_test_functions.h \
+	fsfat_test_getopt.c fsfat_test_getopt.h \
+	fsfat_test_libbfio.h \
+	fsfat_test_libcerror.h \
+	fsfat_test_libclocale.h \
+	fsfat_test_libcnotify.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_libuna.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_volume.c \
+	fsfat_test_unused.h
 
-fsext_test_volume_LDADD = \
+fsfat_test_volume_LDADD = \
 	@LIBBFIO_LIBADD@ \
 	@LIBCPATH_LIBADD@ \
 	@LIBCFILE_LIBADD@ \
@@ -220,7 +256,7 @@ fsext_test_volume_LDADD = \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
-	../libfsext/libfsext.la \
+	../libfsfat/libfsfat.la \
 	@LIBCTHREADS_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
 	@PTHREAD_LIBADD@

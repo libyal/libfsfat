@@ -36,6 +36,10 @@ typedef struct libfsfat_boot_record libfsfat_boot_record_t;
 
 struct libfsfat_boot_record
 {
+	/* The file system type
+	 */
+	int8_t file_system_type;
+
 	/* The bytes per sector
 	 */
 	uint16_t bytes_per_sector;
@@ -44,13 +48,25 @@ struct libfsfat_boot_record
 	 */
 	uint8_t sectors_per_cluster_block;
 
+	/* The total number of clusters
+	 */
+	uint32_t total_number_of_clusters;
+
 	/* The volume serial number
 	 */
 	uint32_t volume_serial_number;
 
-	/* The root directory cluster
+	/* The allocation table offset
 	 */
-	uint32_t root_directory_cluster;
+	off64_t allocation_table_offset;
+
+	/* The allocation table size
+	 */
+	size64_t allocation_table_size;
+
+	/* The root directory offset
+	 */
+	off64_t root_directory_offset;
 };
 
 int libfsfat_boot_record_initialize(

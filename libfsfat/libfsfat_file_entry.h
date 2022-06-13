@@ -25,6 +25,8 @@
 #include <common.h>
 #include <types.h>
 
+#include "libfsfat_directory.h"
+#include "libfsfat_directory_entry.h"
 #include "libfsfat_extern.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
@@ -48,6 +50,14 @@ struct libfsfat_internal_file_entry
 	 */
 	libbfio_handle_t *file_io_handle;
 
+	/* The directory
+	 */
+	libfsfat_directory_t *directory;
+
+	/* The directory entry
+	 */
+	libfsfat_directory_entry_t *directory_entry;
+
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
 	 */
@@ -59,11 +69,116 @@ int libfsfat_file_entry_initialize(
      libfsfat_file_entry_t **file_entry,
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
+     libfsfat_directory_t *directory,
+     libfsfat_directory_entry_t *directory_entry,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_free(
      libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_access_time(
+     libfsfat_file_entry_t *file_entry,
+     uint32_t *fat_date_time,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_creation_time(
+     libfsfat_file_entry_t *file_entry,
+     uint32_t *fat_date_time,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_modification_time(
+     libfsfat_file_entry_t *file_entry,
+     uint32_t *fat_date_time,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_file_attribute_flags(
+     libfsfat_file_entry_t *file_entry,
+     uint8_t *file_attribute_flags,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf8_name_size(
+     libfsfat_file_entry_t *file_entry,
+     size_t *utf8_string_size,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf8_name(
+     libfsfat_file_entry_t *file_entry,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf16_name_size(
+     libfsfat_file_entry_t *file_entry,
+     size_t *utf16_string_size,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf16_name(
+     libfsfat_file_entry_t *file_entry,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_number_of_sub_file_entries(
+     libfsfat_file_entry_t *file_entry,
+     int *number_of_sub_entries,
+     libcerror_error_t **error );
+
+int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
+     libfsfat_internal_file_entry_t *internal_file_entry,
+     int sub_file_entry_index,
+     libfsfat_file_entry_t **sub_file_entry,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_sub_file_entry_by_index(
+     libfsfat_file_entry_t *file_entry,
+     int sub_file_entry_index,
+     libfsfat_file_entry_t **sub_file_entry,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+ssize_t libfsfat_file_entry_read_buffer(
+         libfsfat_file_entry_t *file_entry,
+         void *buffer,
+         size_t buffer_size,
+         libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+ssize_t libfsfat_file_entry_read_buffer_at_offset(
+         libfsfat_file_entry_t *file_entry,
+         void *buffer,
+         size_t buffer_size,
+         off64_t offset,
+         libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+off64_t libfsfat_file_entry_seek_offset(
+         libfsfat_file_entry_t *file_entry,
+         off64_t offset,
+         int whence,
+         libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_offset(
+     libfsfat_file_entry_t *file_entry,
+     off64_t *offset,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_size(
+     libfsfat_file_entry_t *file_entry,
+     size64_t *size,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

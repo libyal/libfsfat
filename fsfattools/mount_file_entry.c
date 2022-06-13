@@ -252,11 +252,13 @@ int mount_file_entry_get_creation_time(
      uint64_t *creation_time,
      libcerror_error_t **error )
 {
-	static char *function = "mount_file_entry_get_creation_time";
-	int64_t posix_time    = 0;
+	static char *function  = "mount_file_entry_get_creation_time";
+	uint32_t fat_date_time = 0;
 
 #if defined( WINAPI )
-	uint64_t filetime     = 0;
+	uint64_t filetime      = 0;
+#else
+	int64_t posix_time     = 0;
 #endif
 
 	if( file_entry == NULL )
@@ -283,7 +285,7 @@ int mount_file_entry_get_creation_time(
 	}
 	if( libfsfat_file_entry_get_creation_time(
 	     file_entry->fsfat_file_entry,
-	     &posix_time,
+	     &fat_date_time,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -320,10 +322,12 @@ int mount_file_entry_get_access_time(
      libcerror_error_t **error )
 {
 	static char *function = "mount_file_entry_get_access_time";
-	int64_t posix_time    = 0;
+	uint32_t fat_date_time = 0;
 
 #if defined( WINAPI )
-	uint64_t filetime     = 0;
+	uint64_t filetime      = 0;
+#else
+	int64_t posix_time     = 0;
 #endif
 
 	if( file_entry == NULL )
@@ -350,7 +354,7 @@ int mount_file_entry_get_access_time(
 	}
 	if( libfsfat_file_entry_get_access_time(
 	     file_entry->fsfat_file_entry,
-	     &posix_time,
+	     &fat_date_time,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -387,10 +391,12 @@ int mount_file_entry_get_modification_time(
      libcerror_error_t **error )
 {
 	static char *function = "mount_file_entry_get_modification_time";
-	int64_t posix_time    = 0;
+	uint32_t fat_date_time = 0;
 
 #if defined( WINAPI )
-	uint64_t filetime     = 0;
+	uint64_t filetime      = 0;
+#else
+	int64_t posix_time     = 0;
 #endif
 
 	if( file_entry == NULL )
@@ -417,7 +423,7 @@ int mount_file_entry_get_modification_time(
 	}
 	if( libfsfat_file_entry_get_modification_time(
 	     file_entry->fsfat_file_entry,
-	     &posix_time,
+	     &fat_date_time,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -454,11 +460,6 @@ int mount_file_entry_get_inode_change_time(
      libcerror_error_t **error )
 {
 	static char *function = "mount_file_entry_get_inode_change_time";
-	int64_t posix_time    = 0;
-
-#if defined( WINAPI )
-	uint64_t filetime     = 0;
-#endif
 
 	if( file_entry == NULL )
 	{
@@ -482,31 +483,8 @@ int mount_file_entry_get_inode_change_time(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_inode_change_time(
-	     file_entry->fsfat_file_entry,
-	     &posix_time,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve inode change time from file entry.",
-		 function );
+	*inode_change_time = 0;
 
-		return( -1 );
-	}
-#if defined( WINAPI )
-	if( posix_time != 0 )
-	{
-		/* Convert the POSIX nanoseconds timestamp into a FILETIME timestamp
-		 */
-		filetime = (uint64_t) ( ( posix_time / 100 ) + 116444736000000000L );
-	}
-	*inode_change_time = filetime;
-#else
-	*inode_change_time = (uint64_t) posix_time;
-#endif
 	return( 1 );
 }
 
@@ -518,7 +496,9 @@ int mount_file_entry_get_file_mode(
      uint16_t *file_mode,
      libcerror_error_t **error )
 {
-	static char *function = "mount_file_entry_get_file_mode";
+	static char *function         = "mount_file_entry_get_file_mode";
+	uint32_t file_attribute_flags = 0;
+	int result                    = 0;
 
 	if( file_entry == NULL )
 	{
@@ -542,25 +522,27 @@ int mount_file_entry_get_file_mode(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_file_mode(
+	if( libfsfat_file_entry_get_file_attribute_flags(
 	     file_entry->fsfat_file_entry,
-	     file_mode,
+	     &file_attribute_flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve file mode.",
+		 "%s: unable to retrieve file attribute flags.",
 		 function );
 
 		return( -1 );
 	}
-	/* The ext file mode matches that of POSIX
-	 */
-	if( ( *file_mode & 0xf000 ) == 0xe000 )
+	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
 	{
-		*file_mode = S_IFREG | ( *file_mode & 0x0fff );
+		*file_mode = S_IFDIR | 0555;
+	}
+	else
+	{
+		*file_mode = S_IFREG | 0444;
 	}
 	return( 1 );
 }
@@ -686,57 +668,6 @@ int mount_file_entry_get_name(
 	}
 	string[ file_entry->name_size - 1 ] = 0;
 
-	return( 1 );
-}
-
-/* Retrieves the symbolic link target
- * The size should include the end of string character
- * Returns 1 if successful or -1 on error
- */
-int mount_file_entry_get_symbolic_link_target(
-     mount_file_entry_t *file_entry,
-     system_character_t *string,
-     size_t string_size,
-     libcerror_error_t **error )
-{
-	static char *function = "mount_file_entry_get_symbolic_link_target";
-	int result            = 0;
-
-	if( file_entry == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( -1 );
-	}
-#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
-	result = libfsfat_file_entry_get_utf16_symbolic_link_target(
-	          file_entry->fsfat_file_entry,
-	          (uint16_t *) string,
-	          string_size,
-	          error );
-#else
-	result = libfsfat_file_entry_get_utf8_symbolic_link_target(
-	          file_entry->fsfat_file_entry,
-	          (uint8_t *) string,
-	          string_size,
-	          error );
-#endif
-	if( result != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve symbolic link target string.",
-		 function );
-
-		return( -1 );
-	}
 	return( 1 );
 }
 

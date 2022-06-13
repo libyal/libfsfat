@@ -46,6 +46,7 @@ in the section entitled "GNU Free Documentation License".
 | Version | Author | Date | Comments
 | 0.0.1 | J.B. Metz | August 2021 | Initial version based on older notes about the format.
 | 0.0.2 | J.B. Metz | May 2022 | Additional information.
+| 0.0.3 | J.B. Metz | June 2022 | Additional information.
 |===
 
 :numbered:
@@ -64,7 +65,7 @@ A FAT file system consists of:
 
 * One or more reserved sectors
   * a boot sector
-  * root directory data for FAT-32
+  * file system informartion for FAT-32
 * One or more file allocation tables
 * Root directory data for FAT-12 and FAT-16
 * File and directory data
@@ -76,8 +77,10 @@ FAT-32 stores the root directory as part of the file and directory data.
 |===
 | Characteristics | Description
 | Byte order | little-endian
-| Date and time values |
-| Character strings |
+| Date and time values | FAT date and time
+| Character strings | ASCII strings are Single Byte Character (SBC) or Multi Byte Character (MBC) string stored with a OEM codepage. Sometimes referred to as ANSI string representation. +
+Though technically maybe incorrect, this document will use term (extended) ASCII string. +
+Unicode strings are stored in UCS-2.
 |===
 
 === Determing FAT version
@@ -97,6 +100,20 @@ number of clusters = round down ( data area size / sectors per cluster )
 * FAT-16 is used if the number of clusters is less than 65525
 * FAT-32 is used otherwise
 
+=== Determining the root directory location
+
+==== FAT-12 and FAT-16 root directory
+
+....
+start sector = number of reserved sectors + ( number allocation tables x allocation table size )
+....
+
+==== FAT-32 root directory
+
+....
+start sector = root directory cluster x number of sectors per cluster
+....
+
 == Boot sector
 
 === FAT-12 and FAT-16 boot sector
@@ -108,16 +125,16 @@ The boot sector is at least 512 bytes of size and consists of:
 [cols="1,1,1,5",options="header"]
 |===
 | Offset | Size | Value | Description
-| 0 | 3 | "\xeb\x58\x90" | Boot entry point (JUMP +62, NOP)
+| 0 | 3 | "\xeb\x3c\x90" | Boot entry point (JMP +62, NOP)
 | 3 | 8 | | File system signature (or OEM name)
 | 11 | 2 | | Bytes per sector +
 Must be 512, 1024, 2048 or 4096 according to `[MICROSOFT00]`.
 | 13 | 1 | | Sectors per cluster block +
 Must be 1, 2, 4, 8, 16, 32, 64 or 128 according to `[MICROSOFT00]`.
-| 14 | 2 | 0x00 | Number of reserved sectors +
+| 14 | 2 | | Number of reserved sectors +
 The reserved region starts at the first sector of the volume (sector 0) +
 Must be 1 or more according to `[MICROSOFT00]`, typically 1 or 32.
-| 16 | 1 | 0x00 | Number of file allocation tables +
+| 16 | 1 | | Number of file allocation tables +
 Must be 1 or more according to `[MICROSOFT00]`, typically 2.
 | 17 | 2 | | Number of root directory entries
 | 19 | 2 | | Total number of sectors (16-bit)
@@ -143,7 +160,7 @@ Note that this value is purely informational and not enforced by the format
 4+| _If extended boot signature != 0x29_
 | 39 | 23 | | [yellow-background]*Unknown*
 4+| _Common_
-| 62 | 448 | | [yellow-background]*Unknown (used for bootcode?)*
+| 62 | 448 | | Used for boot code
 | 510 | 2 | 0x55 0xaa | Sector signature
 |===
 
@@ -160,19 +177,23 @@ The volume serial number can be derived from the system current date and time.
 
 === FAT-32 boot sector
 
+The boot sector is stored in the first sector of the volume.
+
+The boot sector is at least 512 bytes of size and consists of:
+
 [cols="1,1,1,5",options="header"]
 |===
 | Offset | Size | Value | Description
-| 0 | 3 | "\xeb\x58\x90" | Boot entry point (JUMP +90, NOP)
+| 0 | 3 | "\xeb\x58\x90" | Boot entry point (JMP +90, NOP)
 | 3 | 8 | | File system signature (or OEM name)
 | 11 | 2 | | Bytes per sector +
 Must be 512, 1024, 2048 or 4096 according to `[MICROSOFT00]`.
 | 13 | 1 | | Sectors per cluster block +
 Must be 1, 2, 4, 8, 16, 32, 64 or 128 according to `[MICROSOFT00]`.
-| 14 | 2 | 0x00 | Number of reserved sectors +
+| 14 | 2 | | Number of reserved sectors +
 The reserved region starts at the first sector of the volume (sector 0) +
 Must be 1 or more according to `[MICROSOFT00]`, typically 1 or 32.
-| 16 | 1 | 0x00 | Number of file allocation tables +
+| 16 | 1 | | Number of file allocation tables +
 Must be 1 or more according to `[MICROSOFT00]`, typically 2.
 | 17 | 2 | 0 | Number of root directory entries +
 Must be 0 for FAT-32
@@ -191,7 +212,7 @@ Contains the number of sectors of a File Allocation Table, must be non 0
 | 40 | 2 | | Extended flags
 | 42 | 1 | 0 | Format revision minor number
 | 43 | 1 | 0 | Format revision major number
-| 44 | 4 | | Root directory cluster
+| 44 | 4 | | Root directory start cluster
 | 48 | 2 | | File system information (FSINFO) sector number
 | 50 | 2 | | Boot record sector number
 | 52 | 12 | 0 | [yellow-background]*Unknown (reserved)*
@@ -209,7 +230,7 @@ Note that this value is purely informational and not enforced by the format
 4+| _If extended boot signature != 0x29_
 | 67 | 23 | | [yellow-background]*Unknown*
 4+| _Common_
-| 90 | 420 | | [yellow-background]*Unknown (used for bootcode?)*
+| 90 | 420 | | Used for boot code
 | 510 | 2 | 0x55 0xaa | Sector signature
 |===
 
@@ -224,6 +245,46 @@ such as those used to store a parition table.
 [NOTE]
 The volume serial number can be derived from the system current date and time.
 
+=== exFAT boot sector
+
+The boot sector is stored in the first sector of the volume.
+
+The boot sector is at least 512 bytes of size and consists of:
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 3 | "\xeb\x76\x90" | Boot entry point (JMP +120, NOP)
+| 3 | 8 | "EXFAT\x20\x20\x20" | File system signature (or OEM name)
+| 11 | 53 | 0 | [yellow-background]*Unknown (reserved)*
+Must be 0 according to `[MICROSOFT22]`.
+| 64 | 8 | | Partition offset
+| 72 | 8 | | Total number of sectors
+| 80 | 4 | | File allocation table size start sector
+| 84 | 4 | | File allocation table size +
+Contains the number of sectors of a File Allocation Table, must be non 0
+| 88 | 4 | | [yellow-background]*Unknown (cluster heap start sector)*
+| 92 | 4 | | [yellow-background]*Unknown (cluster heap number of sectors)*
+| 96 | 4 | | Root directory start cluster
+| 100 | 4 | | Volume serial number
+| 104 | 1 | | Format revision minor number
+| 105 | 1 | 1 | Format revision major number
+| 106 | 2 | | Volume flags
+| 108 | 1 | | Bytes per sector +
+Value is stored as `2^n`, for example 9 is `2^9 = 512` +
+The bytes per sector value must be 512, 1024, 2048 or 4096 according to `[MICROSOFT22]`.
+| 109 | 1 | | Sectors per cluster block +
+Value is stored as `2^n`, for example 3 is `2^3 = 8` +
+The sectors per cluster block must be 1 upto 32M (`2^25`) according to `[MICROSOFT22]`.
+| 110 | 1 | | Number of file allocation tables
+| 111 | 1 | | Drive number
+| 112 | 1 | | [yellow-background]*Unknown (percent in use)* +
+Contains the percentage of allocated cluster blocks in the cluster heap of 0xff if not available
+| 113 | 7 | | [yellow-background]*Unknown (reserved)*
+| 120 | 390 | | Used for boot code
+| 510 | 2 | 0x55 0xaa | Sector signature
+|===
+
 === OEM names
 
 [cols="1,5",options="header"]
@@ -231,6 +292,7 @@ The volume serial number can be derived from the system current date and time.
 | Value | Description
 | "MSWIN4.1" |
 | "MSDOS 5.0" |
+| "EXFAT   " |
 |===
 
 === Media descriptors
@@ -249,18 +311,82 @@ The volume serial number can be derived from the system current date and time.
 | 0xff | |
 |===
 
+=== exFAT Volume flags
+
+[cols="1,1,5",options="header"]
+|===
+| Value | Identifier | Description
+| 0x0001 | ActiveFat | Active FAT, 0 for the first FAT, 1 for the second FAT
+| 0x0002 | VolumeDirty | Is dirty
+| 0x0004 | MediaFailure | Has media failures
+| 0x0008 | ClearToZero | Must be cleared
+| 0xfff0 | | [yellow-background]*Unknown (reserved)*
+|===
+
 == File allocation table
 
 A file allocation table consists of:
 
 * One ore more file allocation table entries
 
-=== File allocation table entry
+=== FAT 12 file allocation table entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 12 bits | | Data cluster number
+|===
+
+[cols="1,5",options="header"]
+|===
+| Value(s) | Description
+| 0x000 | Unused (free) cluster
+| 0x001 | [yellow-background]*Unknown (invalid)*
+| 0x002 - 0xfef | Used cluster
+| 0xff0 - 0xff6 | Reserved
+| 0xff7 | Bad cluster
+| 0xff8 - 0xfff | Last used cluster in FAT chain
+|===
+
+=== FAT 16 file allocation table entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 2 | | Data cluster number
+|===
+
+[cols="1,5",options="header"]
+|===
+| Value(s) | Description
+| 0x0000 | Unused (free) cluster
+| 0x0001 | [yellow-background]*Unknown (invalid)*
+| 0x0002 - 0xffef | Used cluster
+| 0xfff0 - 0xfff6 | Reserved
+| 0xfff7 | Bad cluster
+| 0xfff8 - 0xffff | Last used cluster in FAT chain
+|===
+
+=== FAT 32 file allocation table entry
 
 [cols="1,1,1,5",options="header"]
 |===
 | Offset | Size | Value | Description
 | 0 | 4 | | Data cluster number
+|===
+
+[NOTE]
+Only the lower 28-bits are used
+
+[cols="1,5",options="header"]
+|===
+| Value(s) | Description
+| 0x00000000 | Unused (free) cluster
+| 0x00000001 | [yellow-background]*Unknown (invalid)*
+| 0x00000002 - 0x0fffffef | Used cluster
+| 0x0ffffff0 - 0x0ffffff6 | Reserved
+| 0x0ffffff7 | Bad cluster
+| 0x0ffffff8 - 0x0fffffff | Last used cluster in FAT chain
 |===
 
 == Directory
@@ -284,11 +410,13 @@ Contains an ASCII string where the first character can have a special meaning
 | 8 | 3 | | Short file extension (padded with spaces)
 | 11 | 1 | | File attributes +
 See section: <<file_attributes,File attributes>>
-| 12 | 2 | | [yellow-background]*Unknown (reserved)*
+| 12 | 1 | | [yellow-background]*Unknown (Case for short file name and extension)*
+| 13 | 1 | | [yellow-background]*Unknown (Creation time milliseconds)* +
+Used for creation time fraction of 2-seconds in 10 ms intervals
 | 14 | 2 | | Creation time
 | 16 | 2 | | Creation date
 | 18 | 2 | | Last access date
-| 20 | 2 | | [yellow-background]*Unknown* +
+| 20 | 2 | | [yellow-background]*Unknown (OS/2 extended attribute)* +
 Not used by FAT-12
 | 22 | 2 | | Last written time
 | 24 | 2 | | Last written date
@@ -296,13 +424,48 @@ Not used by FAT-12
 | 28 | 4 | | File content data size
 |===
 
-=== File name first character
+=== Short (8.3) file name
+
+A FAT short (8.3) file name is stored in an OEM character set (codepage). The
+<<short_name_first_character,first character>> can have a special meaning.
+
+Valid FAT short file name characters are:
+
+[cols="1,5",options="header"]
+|===
+| Value | Description
+| 'A-Z' | Upper case character
+| '0-9' | Numeric character
+| ' ' | Space, where trailing spaces are considered padding and therefore ignored.
+| '.' | Dot, with the exception of "." and  "..". Trailing dot characters are ignored.
+| '!' |
+| '#' |
+| '$' |
+| '%' |
+| '&' |
+| '\'' | 
+| '(' |
+| ')' |
+| '-' |
+| '@' |
+| '^' |
+| '_' |
+| '`' | 
+| '{' |
+| '}' |
+| '~' |
+| 0x80 - 0xff | Extended ASCII character, which are codepage dependent.
+|===
+
+==== [[short_name_first_character]]First character
 
 [cols="1,5",options="header"]
 |===
 | Value | Description
 | 0x00 | Last (or terminator) directory entry
-| 0x05 | Directory entry pending deallocation (deprecated since DOS 3.0)
+| 0x01 - 0x13 | VFAT long file name directory entry
+| 0x05 | Directory entry pending deallocation (deprecated since DOS 3.0) or substitution of a 0xe5 extended ASCII character value
+| 0x41 - 0x54 | Last VFAT long file name directory entry
 | 0xe5 | Unallocated directory entry
 |===
 
@@ -317,13 +480,19 @@ Not used by FAT-12
 | 0x08 | Is volume label
 | 0x10 | Is directory
 | 0x20 | Archive
-| 0x40 | [yellow-background]*Unused*
-| 0x80 | [yellow-background]*Unused*
+| 0x40 | Is device
+| 0x80 | [yellow-background]*Unused (reserved)*
 |===
 
 === VFAT long file name entry
 
-VFAT long file names entries are stored in directory entries.
+VFAT long file names entries are stored in directory entries. Multiple VFAT
+long file name entries can be used to store a single long file name, where
+the highest (last) sequence number is stored first. A maximum of 20 VFAT long
+file name entries can be used to store a long file name of 255 UCS-2 characters.
+
+VFAT long file name entries are stored before the directory entry containing
+the short file name and additional file entry information.
 
 A VFAT long file name entry is 32 bytes of size and consists of:
 
@@ -335,17 +504,13 @@ A VFAT long file name entry is 32 bytes of size and consists of:
 Either 10 narrow string or 5 UCS-2 characters
 | 11 | 1 | 0x0f | [yellow-background]*Unknown (attributes)*
 | 12 | 1 | 0x00 | [yellow-background]*Unknown (type)*
-| 13 | 1 | | Checksum of 8.3 file name
+| 13 | 1 | | Checksum of the short (8.3) file name
 | 14 | 12 | | Second name segment string +
 Either 12 narrow string or 6 UCS-2 characters
 | 26 | 2 | 0 | [yellow-background]*Unknown (first cluster)*
 | 28 | 4 | | Third name segment string +
 Either 4 narrow string or 2 UCS-2 characters
 |===
-
-[NOTE]
-Multiple VFAT long file name entries can be used to store a single long file
-name.
 
 ==== VFAT long file name sequence number
 
@@ -370,7 +535,27 @@ name.
 | URL: | http://download.microsoft.com/download/1/6/1/161ba512-40e2-4cc9-843a-923143f3456c/fatgen103.doc
 |===
 
+`[MICROSOFT22]`
+
+[cols="1,5",options="header"]
+|===
+| Title: | exFAT file system specification
+| URL: | https://docs.microsoft.com/en-gb/windows/win32/fileio/exfat-specification#31-main-and-backup-boot-sector-sub-regions
+|===
+
 `[WIKIPEDIA]`
+
+[cols="1,5",options="header"]
+|===
+| Title: | Design of the FAT file system
+| URL: | https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
+|===
+
+[cols="1,5",options="header"]
+|===
+| Title: | exFAT
+| URL: | https://en.wikipedia.org/wiki/ExFAT
+|===
 
 [cols="1,5",options="header"]
 |===

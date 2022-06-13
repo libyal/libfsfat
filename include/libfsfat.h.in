@@ -303,6 +303,104 @@ int libfsfat_file_entry_free(
      libfsfat_file_entry_t **file_entry,
      libfsfat_error_t **error );
 
+/* Retrieves the access date and time
+ * The timestamp is an unsigned 32-bit fat date and time value in number of seconds
+ * This value is retrieved from the short file name directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_access_time(
+     libfsfat_file_entry_t *file_entry,
+     uint32_t *fat_date_time,
+     libfsfat_error_t **error );
+
+/* Retrieves the creation date and time
+ * The timestamp is an unsigned 32-bit fat date and time value in number of seconds
+ * This value is retrieved from the short file name directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_creation_time(
+     libfsfat_file_entry_t *file_entry,
+     uint32_t *fat_date_time,
+     libfsfat_error_t **error );
+
+/* Retrieves the modification date and time
+ * The timestamp is an unsigned 32-bit fat date and time value in number of seconds
+ * This value is retrieved from the short file name directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_modification_time(
+     libfsfat_file_entry_t *file_entry,
+     uint32_t *fat_date_time,
+     libfsfat_error_t **error );
+
+/* Retrieves the file attribute flags
+ * This value is retrieved from the short file name directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_file_attribute_flags(
+     libfsfat_file_entry_t *file_entry,
+     uint8_t *file_attribute_flags,
+     libfsfat_error_t **error );
+
+/* Retrieves the size of the UTF-8 encoded name
+ * The returned size includes the end of string character
+ * This value is retrieved from the directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf8_name_size(
+     libfsfat_file_entry_t *file_entry,
+     size_t *utf8_string_size,
+     libfsfat_error_t **error );
+
+/* Retrieves the UTF-8 encoded name
+ * The size should include the end of string character
+ * This value is retrieved from the directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf8_name(
+     libfsfat_file_entry_t *file_entry,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libfsfat_error_t **error );
+
+/* Retrieves the size of the UTF-16 encoded name
+ * The returned size includes the end of string character
+ * This value is retrieved from the directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf16_name_size(
+     libfsfat_file_entry_t *file_entry,
+     size_t *utf16_string_size,
+     libfsfat_error_t **error );
+
+/* Retrieves the UTF-16 encoded name
+ * The size should include the end of string character
+ * This value is retrieved from the directory entry
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_utf16_name(
+     libfsfat_file_entry_t *file_entry,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
+     libfsfat_error_t **error );
+
+/* Retrieves the size of the data
+ * Returns 1 if successful or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_size(
+     libfsfat_file_entry_t *file_entry,
+     size64_t *size,
+     libfsfat_error_t **error );
+
 #if defined( __cplusplus )
 }
 #endif

@@ -25,6 +25,7 @@
 #include <types.h>
 
 #include "libfsfat_boot_record.h"
+#include "libfsfat_definitions.h"
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcnotify.h"
@@ -152,6 +153,7 @@ int libfsfat_boot_record_read_data(
 	static char *function                     = "libfsfat_boot_record_read_data";
 	uint32_t allocation_table_size            = 0;
 	uint32_t allocation_table_size_32bit      = 0;
+	uint32_t root_directory_cluster           = 0;
 	uint32_t total_number_of_clusters         = 0;
 	uint32_t total_number_of_sectors          = 0;
 	uint32_t total_number_of_sectors_32bit    = 0;
@@ -273,7 +275,7 @@ int libfsfat_boot_record_read_data(
 
 		byte_stream_copy_to_uint32_little_endian(
 		 ( (fsfat_boot_record_fat32_t *) data )->root_directory_cluster,
-		 boot_record->root_directory_cluster );
+		 root_directory_cluster );
 
 		if( ( (fsfat_boot_record_fat32_t *) data )->extended_boot_signature == 0x29 )
 		{
@@ -290,23 +292,6 @@ int libfsfat_boot_record_read_data(
 			 ( (fsfat_boot_record_fat12_t *) data )->volume_serial_number,
 			 boot_record->volume_serial_number );
 		}
-	}
-	total_number_of_clusters  = total_number_of_sectors;
-	total_number_of_clusters -= number_of_reserved_sectors;
-	total_number_of_clusters -= number_of_allocation_tables * allocation_table_size;
-	total_number_of_clusters /= boot_record->sectors_per_cluster_block;
-
-	if( total_number_of_clusters < 4085 )
-	{
-		fshint = "fat12";
-	}
-	else if( total_number_of_clusters < 65525 )
-	{
-		fshint = "fat16";
-	}
-	else
-	{
-		fshint = "fat32";
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -430,7 +415,7 @@ int libfsfat_boot_record_read_data(
 			libcnotify_printf(
 			 "%s: root directory cluster\t\t\t: %" PRIu32 "\n",
 			 function,
-			 boot_record->root_directory_cluster );
+			 root_directory_cluster );
 
 			byte_stream_copy_to_uint16_little_endian(
 			 ( (fsfat_boot_record_fat32_t *) data )->fsinfo_sector_number,
@@ -586,20 +571,6 @@ int libfsfat_boot_record_read_data(
 
 		libcnotify_printf(
 		 "\n" );
-
-		libcnotify_printf(
-		 "%s: total number of clusters\t\t: %" PRIu32 " (%s)\n",
-		 function,
-		 total_number_of_clusters,
-		 fshint );
-
-		libcnotify_printf(
-		 "%s: allocation table size\t\t\t: %" PRIu32 "\n",
-		 function,
-		 allocation_table_size );
-
-		libcnotify_printf(
-		 "\n" );
 	}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 
@@ -617,6 +588,108 @@ int libfsfat_boot_record_read_data(
 
 		return( -1 );
 	}
+	if( ( boot_record->sectors_per_cluster_block != 1 )
+	 && ( boot_record->sectors_per_cluster_block != 2 )
+	 && ( boot_record->sectors_per_cluster_block != 4 )
+	 && ( boot_record->sectors_per_cluster_block != 8 )
+	 && ( boot_record->sectors_per_cluster_block != 16 )
+	 && ( boot_record->sectors_per_cluster_block != 32 )
+	 && ( boot_record->sectors_per_cluster_block != 64 )
+	 && ( boot_record->sectors_per_cluster_block != 128 ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid sectors per cluster block value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	total_number_of_clusters  = total_number_of_sectors;
+	total_number_of_clusters -= number_of_reserved_sectors;
+	total_number_of_clusters -= number_of_allocation_tables * allocation_table_size;
+	total_number_of_clusters /= boot_record->sectors_per_cluster_block;
+
+	boot_record->total_number_of_clusters = total_number_of_clusters;
+
+	if( total_number_of_clusters < 4085 )
+	{
+		boot_record->file_system_type = LIBFSFAT_FILE_SYSTEM_TYPE_FAT12;
+	}
+	else if( total_number_of_clusters < 65525 )
+	{
+		boot_record->file_system_type = LIBFSFAT_FILE_SYSTEM_TYPE_FAT16;
+	}
+	else
+	{
+		boot_record->file_system_type = LIBFSFAT_FILE_SYSTEM_TYPE_FAT32;
+	}
+	if( ( number_of_root_directory_entries == 0 )
+	 && ( total_number_of_sectors_16bit == 0 )
+	 && ( allocation_table_size_16bit == 0 ) )
+	{
+		boot_record->root_directory_offset  = root_directory_cluster;
+		boot_record->root_directory_offset *= boot_record->sectors_per_cluster_block;
+	}
+	else
+	{
+		boot_record->allocation_table_offset = number_of_reserved_sectors;
+		boot_record->root_directory_offset   = boot_record->allocation_table_offset + ( (off64_t) number_of_allocation_tables * allocation_table_size );
+	}
+	boot_record->allocation_table_offset *= boot_record->bytes_per_sector;
+	boot_record->allocation_table_size    = (size64_t) allocation_table_size * boot_record->bytes_per_sector;
+	boot_record->root_directory_offset   *= boot_record->bytes_per_sector;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		switch( boot_record->file_system_type )
+		{
+			case LIBFSFAT_FILE_SYSTEM_TYPE_FAT12:
+				fshint = "fat12";
+				break;
+
+			case LIBFSFAT_FILE_SYSTEM_TYPE_FAT16:
+				fshint = "fat16";
+				break;
+
+			case LIBFSFAT_FILE_SYSTEM_TYPE_FAT32:
+				fshint = "fat32";
+				break;
+
+			default:
+				fshint = "UNKNOWN";
+				break;
+		}
+		libcnotify_printf(
+		 "%s: total number of clusters\t\t: %" PRIu32 " (%s)\n",
+		 function,
+		 boot_record->total_number_of_clusters,
+		 fshint );
+
+		libcnotify_printf(
+		 "%s: allocation table offset\t\t\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
+		 function,
+		 boot_record->allocation_table_offset,
+		 boot_record->allocation_table_offset );
+
+		libcnotify_printf(
+		 "%s: allocation table size\t\t\t: %" PRIu64 "\n",
+		 function,
+		 boot_record->allocation_table_size );
+
+		libcnotify_printf(
+		 "%s: root directory offset\t\t\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
+		 function,
+		 boot_record->root_directory_offset,
+		 boot_record->root_directory_offset );
+
+		libcnotify_printf(
+		 "\n" );
+	}
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+
 	return( 1 );
 }
 

@@ -3,9 +3,9 @@
 #
 # Version: 20201121
 
-if test -f ${PWD}/libfsext/.libs/libfsext.1.dylib && test -f ./pyfsext/.libs/pyfsext.so;
+if test -f ${PWD}/libfsfat/.libs/libfsfat.1.dylib && test -f ./pyfsfat/.libs/pyfsfat.so;
 then
-	install_name_tool -change /usr/local/lib/libfsext.1.dylib ${PWD}/libfsext/.libs/libfsext.1.dylib ./pyfsext/.libs/pyfsext.so;
+	install_name_tool -change /usr/local/lib/libfsfat.1.dylib ${PWD}/libfsfat/.libs/libfsfat.1.dylib ./pyfsfat/.libs/pyfsfat.so;
 fi
 
 make check CHECK_WITH_STDERR=1;

@@ -128,7 +128,9 @@ stamp-h[1-9]
 /fsfattools/fsfatinfo
 /fsfattools/fsfatmount
 /tests/*.exe
+/tests/fsfat_test_allocation_table
 /tests/fsfat_test_boot_record
+/tests/fsfat_test_directory_entry
 /tests/fsfat_test_error
 /tests/fsfat_test_file_entry
 /tests/fsfat_test_io_handle

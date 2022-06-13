@@ -1,5 +1,5 @@
 /*
- * Cylinder Head Sector (CHS) address functions
+ * The directory functions
  *
  * Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,53 +19,55 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _LIBFSFAT_CHS_ADDRESS_H )
-#define _LIBFSFAT_CHS_ADDRESS_H
+#if !defined( _LIBFSFAT_DIRECTORY_H )
+#define _LIBFSFAT_DIRECTORY_H
 
 #include <common.h>
 #include <types.h>
 
+#include "libfsfat_directory_entry.h"
+#include "libfsfat_libbfio.h"
+#include "libfsfat_libcdata.h"
 #include "libfsfat_libcerror.h"
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-typedef struct libfsfat_chs_address libfsfat_chs_address_t;
+typedef struct libfsfat_directory libfsfat_directory_t;
 
-struct libfsfat_chs_address
+struct libfsfat_directory
 {
-	/* The cylinder
+	/* The (directory) entries array
 	 */
-	uint16_t cylinder;
+	libcdata_array_t *entries_array;
 
-	/* The head
+	/* The file entries array
 	 */
-	uint8_t head;
+	libcdata_array_t *file_entries_array;
 
-	/* The sector
+	/* The volume label (directory) entry
 	 */
-	uint8_t sector;
+	libfsfat_directory_entry_t *volume_label_entry;
 };
 
-int libfsfat_chs_address_initialize(
-     libfsfat_chs_address_t **chs_address,
+int libfsfat_directory_initialize(
+     libfsfat_directory_t **directory,
      libcerror_error_t **error );
 
-int libfsfat_chs_address_free(
-     libfsfat_chs_address_t **chs_address,
+int libfsfat_directory_free(
+     libfsfat_directory_t **directory,
      libcerror_error_t **error );
 
-int libfsfat_chs_address_copy_from_byte_stream(
-     libfsfat_chs_address_t *chs_address,
-     uint8_t *byte_stream,
-     size_t byte_stream_size,
-     uint8_t byte_order,
+int libfsfat_directory_read_file_io_handle(
+     libfsfat_directory_t *directory,
+     libbfio_handle_t *file_io_handle,
+     off64_t file_offset,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _LIBFSFAT_CHS_ADDRESS_H ) */
+#endif /* !defined( _LIBFSFAT_DIRECTORY_H ) */
 

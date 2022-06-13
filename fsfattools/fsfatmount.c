@@ -350,13 +350,13 @@ int main( int argc, char * const argv[] )
 	fsfatmount_fuse_operations.open       = &mount_fuse_open;
 	fsfatmount_fuse_operations.read       = &mount_fuse_read;
 	fsfatmount_fuse_operations.release    = &mount_fuse_release;
-	fsfatmount_fuse_operations.getxattr   = &mount_fuse_getxattr;
-	fsfatmount_fuse_operations.listxattr  = &mount_fuse_listxattr;
+	fsfatmount_fuse_operations.getxattr   = NULL;
+	fsfatmount_fuse_operations.listxattr  = NULL;
 	fsfatmount_fuse_operations.opendir    = &mount_fuse_opendir;
 	fsfatmount_fuse_operations.readdir    = &mount_fuse_readdir;
 	fsfatmount_fuse_operations.releasedir = &mount_fuse_releasedir;
 	fsfatmount_fuse_operations.getattr    = &mount_fuse_getattr;
-	fsfatmount_fuse_operations.readlink   = &mount_fuse_readlink;
+	fsfatmount_fuse_operations.readlink   = NULL;
 	fsfatmount_fuse_operations.destroy    = &mount_fuse_destroy;
 
 	fsfatmount_fuse_channel = fuse_mount(
