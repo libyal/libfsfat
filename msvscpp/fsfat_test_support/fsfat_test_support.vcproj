@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="fsext_test_notify"
-	ProjectGUID="{39CB843D-868A-4C33-AE77-16D12FA25F26}"
-	RootNamespace="fsext_test_notify"
+	Name="fsfat_test_support"
+	ProjectGUID="{31904AE5-C27B-4CF2-90B6-83094A724B09}"
+	RootNamespace="fsfat_test_support"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -176,7 +176,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tests\fsext_test_notify.c"
+				RelativePath="..\..\tests\fsfat_test_functions.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_getopt.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_memory.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_support.c"
 				>
 			</File>
 		</Filter>
@@ -186,19 +198,47 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\tests\fsext_test_libcerror.h"
+				RelativePath="..\..\tests\fsfat_test_functions.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_libfsext.h"
+				RelativePath="..\..\tests\fsfat_test_getopt.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_macros.h"
+				RelativePath="..\..\tests\fsfat_test_libbfio.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_unused.h"
+				RelativePath="..\..\tests\fsfat_test_libcerror.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libclocale.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libcnotify.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libfsfat.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libuna.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_macros.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_memory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_unused.h"
 				>
 			</File>
 		</Filter>

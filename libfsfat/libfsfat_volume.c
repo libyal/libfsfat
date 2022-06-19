@@ -1039,6 +1039,7 @@ int libfsfat_internal_volume_open_read(
 	}
 	internal_volume->io_handle->file_system_type         = boot_record->file_system_type;
 	internal_volume->io_handle->bytes_per_sector         = boot_record->bytes_per_sector;
+	internal_volume->io_handle->cluster_block_size       = boot_record->cluster_block_size;
 	internal_volume->io_handle->total_number_of_clusters = boot_record->total_number_of_clusters;
 
 #if defined( HAVE_DEBUG_OUTPUT )

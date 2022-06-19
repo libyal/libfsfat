@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="fsext_test_tools_signal"
-	ProjectGUID="{84979F34-9329-4281-B79D-D2ED7D593978}"
-	RootNamespace="fsext_test_tools_signal"
+	Name="fsfat_test_volume"
+	ProjectGUID="{6041BA15-6BB1-4E45-8929-62F9B8A10D79}"
+	RootNamespace="fsfat_test_volume"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -176,11 +176,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\fsexttools\fsexttools_signal.c"
+				RelativePath="..\..\tests\fsfat_test_functions.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_tools_signal.c"
+				RelativePath="..\..\tests\fsfat_test_getopt.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_memory.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_volume.c"
 				>
 			</File>
 		</Filter>
@@ -190,19 +198,47 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\fsexttools\fsexttools_signal.h"
+				RelativePath="..\..\tests\fsfat_test_functions.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_libcerror.h"
+				RelativePath="..\..\tests\fsfat_test_getopt.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_macros.h"
+				RelativePath="..\..\tests\fsfat_test_libbfio.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_unused.h"
+				RelativePath="..\..\tests\fsfat_test_libcerror.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libclocale.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libcnotify.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libfsfat.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_libuna.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_macros.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_memory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_unused.h"
 				>
 			</File>
 		</Filter>

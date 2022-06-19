@@ -1,5 +1,5 @@
 /*
- * Input/Output (IO) handle functions
+ * Cluster block functions
  *
  * Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,8 +19,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _LIBFSFAT_IO_HANDLE_H )
-#define _LIBFSFAT_IO_HANDLE_H
+#if !defined( _LIBFSFAT_CLUSTER_BLOCK_H )
+#define _LIBFSFAT_CLUSTER_BLOCK_H
 
 #include <common.h>
 #include <types.h>
@@ -32,46 +32,37 @@
 extern "C" {
 #endif
 
-typedef struct libfsfat_io_handle libfsfat_io_handle_t;
+typedef struct libfsfat_cluster_block libfsfat_cluster_block_t;
 
-struct libfsfat_io_handle
+struct libfsfat_cluster_block
 {
-	/* The file system type
+	/* The data
 	 */
-	int8_t file_system_type;
+	uint8_t *data;
 
-	/* The bytes per sector
+	/* The data size
 	 */
-	uint16_t bytes_per_sector;
-
-	/* The cluster block size
-	 */
-	size_t cluster_block_size;
-
-	/* The total number of clusters
-	 */
-	uint32_t total_number_of_clusters;
-
-	/* Value to indicate if abort was signalled
-	 */
-	int abort;
+	size_t data_size;
 };
 
-int libfsfat_io_handle_initialize(
-     libfsfat_io_handle_t **io_handle,
+int libfsfat_cluster_block_initialize(
+     libfsfat_cluster_block_t **cluster_block,
+     size_t data_size,
      libcerror_error_t **error );
 
-int libfsfat_io_handle_free(
-     libfsfat_io_handle_t **io_handle,
+int libfsfat_cluster_block_free(
+     libfsfat_cluster_block_t **cluster_block,
      libcerror_error_t **error );
 
-int libfsfat_io_handle_clear(
-     libfsfat_io_handle_t *io_handle,
+int libfsfat_cluster_block_read_file_io_handle(
+     libfsfat_cluster_block_t *cluster_block,
+     libbfio_handle_t *file_io_handle,
+     off64_t file_offset,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _LIBFSFAT_IO_HANDLE_H ) */
+#endif /* !defined( _LIBFSFAT_CLUSTER_BLOCK_H ) */
 

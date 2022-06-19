@@ -182,6 +182,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libfsfat\libfsfat_cluster_block.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_cluster_block_vector.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libfsfat\libfsfat_debug.c"
 				>
 			</File>
@@ -237,6 +245,14 @@
 			</File>
 			<File
 				RelativePath="..\..\libfsfat\libfsfat_boot_record.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_cluster_block.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_cluster_block_vector.h"
 				>
 			</File>
 			<File

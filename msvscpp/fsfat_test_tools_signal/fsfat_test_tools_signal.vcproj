@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="fsext_test_io_handle"
-	ProjectGUID="{7A64E93F-6AFB-41DD-8EA3-62D1D7CF5591}"
-	RootNamespace="fsext_test_io_handle"
+	Name="fsfat_test_tools_signal"
+	ProjectGUID="{769E268F-4648-4F6F-BBC4-F6732203A2F3}"
+	RootNamespace="fsfat_test_tools_signal"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -176,11 +176,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tests\fsext_test_io_handle.c"
+				RelativePath="..\..\fsfattools\fsfattools_signal.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_memory.c"
+				RelativePath="..\..\tests\fsfat_test_tools_signal.c"
 				>
 			</File>
 		</Filter>
@@ -190,23 +190,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\tests\fsext_test_libcerror.h"
+				RelativePath="..\..\fsfattools\fsfattools_signal.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_libfsext.h"
+				RelativePath="..\..\tests\fsfat_test_libcerror.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_macros.h"
+				RelativePath="..\..\tests\fsfat_test_macros.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_memory.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\tests\fsext_test_unused.h"
+				RelativePath="..\..\tests\fsfat_test_unused.h"
 				>
 			</File>
 		</Filter>

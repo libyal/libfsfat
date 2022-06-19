@@ -44,9 +44,9 @@ struct libfsfat_boot_record
 	 */
 	uint16_t bytes_per_sector;
 
-	/* The number of sectors per cluster block
+	/* The cluster block size
 	 */
-	uint8_t sectors_per_cluster_block;
+	size_t cluster_block_size;
 
 	/* The total number of clusters
 	 */

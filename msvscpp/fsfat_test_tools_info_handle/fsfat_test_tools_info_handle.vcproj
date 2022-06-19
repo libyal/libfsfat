@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="fsext_test_file_entry"
-	ProjectGUID="{2B2BB0FF-34C3-4D0C-8FEB-1C09C393D65A}"
-	RootNamespace="fsext_test_file_entry"
+	Name="fsfat_test_tools_info_handle"
+	ProjectGUID="{B556FEDE-0F44-4655-AF75-C58619DCADB5}"
+	RootNamespace="fsfat_test_tools_info_handle"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -176,11 +176,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tests\fsext_test_file_entry.c"
+				RelativePath="..\..\fsfattools\digest_hash.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_memory.c"
+				RelativePath="..\..\fsfattools\info_handle.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_memory.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_tools_info_handle.c"
 				>
 			</File>
 		</Filter>
@@ -190,23 +198,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\tests\fsext_test_libcerror.h"
+				RelativePath="..\..\fsfattools\digest_hash.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_libfsext.h"
+				RelativePath="..\..\fsfattools\info_handle.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_macros.h"
+				RelativePath="..\..\tests\fsfat_test_libcerror.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_memory.h"
+				RelativePath="..\..\tests\fsfat_test_macros.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tests\fsext_test_unused.h"
+				RelativePath="..\..\tests\fsfat_test_memory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\tests\fsfat_test_unused.h"
 				>
 			</File>
 		</Filter>
