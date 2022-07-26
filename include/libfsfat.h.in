@@ -261,7 +261,7 @@ int libfsfat_volume_close(
      libfsfat_error_t **error );
 
 /* Retrieves the root directory file entry
- * Returns 1 if successful, 0 if not available or -1 on error
+ * Returns 1 if successful or -1 on error
  */
 LIBFSFAT_EXTERN \
 int libfsfat_volume_get_root_directory(

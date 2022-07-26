@@ -153,7 +153,6 @@ int libfsfat_boot_record_read_data(
 	static char *function                     = "libfsfat_boot_record_read_data";
 	uint32_t allocation_table_size            = 0;
 	uint32_t allocation_table_size_32bit      = 0;
-	uint32_t root_directory_cluster           = 0;
 	uint32_t total_number_of_clusters         = 0;
 	uint32_t total_number_of_sectors          = 0;
 	uint32_t total_number_of_sectors_32bit    = 0;
@@ -276,7 +275,7 @@ int libfsfat_boot_record_read_data(
 
 		byte_stream_copy_to_uint32_little_endian(
 		 ( (fsfat_boot_record_fat32_t *) data )->root_directory_cluster,
-		 root_directory_cluster );
+		 boot_record->root_directory_cluster );
 
 		if( ( (fsfat_boot_record_fat32_t *) data )->extended_boot_signature == 0x29 )
 		{
@@ -416,7 +415,7 @@ int libfsfat_boot_record_read_data(
 			libcnotify_printf(
 			 "%s: root directory cluster\t\t\t: %" PRIu32 "\n",
 			 function,
-			 root_directory_cluster );
+			 boot_record->root_directory_cluster );
 
 			byte_stream_copy_to_uint16_little_endian(
 			 ( (fsfat_boot_record_fat32_t *) data )->fsinfo_sector_number,
@@ -628,21 +627,17 @@ int libfsfat_boot_record_read_data(
 	{
 		boot_record->file_system_type = LIBFSFAT_FILE_SYSTEM_TYPE_FAT32;
 	}
-	if( ( number_of_root_directory_entries == 0 )
-	 && ( total_number_of_sectors_16bit == 0 )
-	 && ( allocation_table_size_16bit == 0 ) )
-	{
-		boot_record->root_directory_offset  = root_directory_cluster;
-		boot_record->root_directory_offset *= sectors_per_cluster_block;
-	}
-	else
+	if( ( number_of_root_directory_entries != 0 )
+	 || ( total_number_of_sectors_16bit != 0 )
+	 || ( allocation_table_size_16bit != 0 ) )
 	{
 		boot_record->allocation_table_offset = number_of_reserved_sectors;
-		boot_record->root_directory_offset   = boot_record->allocation_table_offset + ( (off64_t) number_of_allocation_tables * allocation_table_size );
+		boot_record->root_directory_cluster  = 0;
+		boot_record->first_cluster_offset    = boot_record->allocation_table_offset + ( (off64_t) number_of_allocation_tables * allocation_table_size );
 	}
 	boot_record->allocation_table_offset *= boot_record->bytes_per_sector;
 	boot_record->allocation_table_size    = (size64_t) allocation_table_size * boot_record->bytes_per_sector;
-	boot_record->root_directory_offset   *= boot_record->bytes_per_sector;
+	boot_record->first_cluster_offset    *= boot_record->bytes_per_sector;
 
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -688,10 +683,15 @@ int libfsfat_boot_record_read_data(
 		 boot_record->allocation_table_size );
 
 		libcnotify_printf(
-		 "%s: root directory offset\t\t\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
+		 "%s: first cluster offset\t\t\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
 		 function,
-		 boot_record->root_directory_offset,
-		 boot_record->root_directory_offset );
+		 boot_record->first_cluster_offset,
+		 boot_record->first_cluster_offset );
+
+		libcnotify_printf(
+		 "%s: root directory cluster\t\t\t: %" PRIu32 "\n",
+		 function,
+		 boot_record->root_directory_cluster );
 
 		libcnotify_printf(
 		 "\n" );

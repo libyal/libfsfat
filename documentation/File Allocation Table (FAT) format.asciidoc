@@ -345,7 +345,7 @@ A file allocation table consists of:
 | 0x002 - 0xfef | Used cluster
 | 0xff0 - 0xff6 | Reserved
 | 0xff7 | Bad cluster
-| 0xff8 - 0xfff | Last used cluster in FAT chain
+| 0xff8 - 0xfff | End of cluster chain
 |===
 
 === FAT 16 file allocation table entry
@@ -364,7 +364,7 @@ A file allocation table consists of:
 | 0x0002 - 0xffef | Used cluster
 | 0xfff0 - 0xfff6 | Reserved
 | 0xfff7 | Bad cluster
-| 0xfff8 - 0xffff | Last used cluster in FAT chain
+| 0xfff8 - 0xffff | End of cluster chain
 |===
 
 === FAT 32 file allocation table entry
@@ -386,7 +386,8 @@ Only the lower 28-bits are used
 | 0x00000002 - 0x0fffffef | Used cluster
 | 0x0ffffff0 - 0x0ffffff6 | Reserved
 | 0x0ffffff7 | Bad cluster
-| 0x0ffffff8 - 0x0fffffff | Last used cluster in FAT chain
+| 0x0ffffff8 - 0x0fffffff | End of cluster chain
+| 0x10000000 - 0xffffffff | [yellow-background]*Unknown*
 |===
 
 == Directory

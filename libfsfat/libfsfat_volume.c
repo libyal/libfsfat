@@ -25,7 +25,6 @@
 #include <types.h>
 #include <wide_string.h>
 
-#include "libfsfat_allocation_table.h"
 #include "libfsfat_boot_record.h"
 #include "libfsfat_debug.h"
 #include "libfsfat_definitions.h"
@@ -896,33 +895,17 @@ int libfsfat_volume_close(
 
 		result = -1;
 	}
-	if( internal_volume->allocation_table != NULL )
+	if( internal_volume->file_system != NULL )
 	{
-		if( libfsfat_allocation_table_free(
-		     &( internal_volume->allocation_table ),
+		if( libfsfat_file_system_free(
+		     &( internal_volume->file_system ),
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free allocation table.",
-			 function );
-
-			result = -1;
-		}
-	}
-	if( internal_volume->root_directory != NULL )
-	{
-		if( libfsfat_directory_free(
-		     &( internal_volume->root_directory ),
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free root directory.",
+			 "%s: unable to free file system.",
 			 function );
 
 			result = -1;
@@ -979,13 +962,13 @@ int libfsfat_internal_volume_open_read(
 
 		return( -1 );
 	}
-	if( internal_volume->allocation_table != NULL )
+	if( internal_volume->file_system != NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid volume - allocation table value already set.",
+		 "%s: invalid volume - file system value already set.",
 		 function );
 
 		return( -1 );
@@ -1041,7 +1024,22 @@ int libfsfat_internal_volume_open_read(
 	internal_volume->io_handle->bytes_per_sector         = boot_record->bytes_per_sector;
 	internal_volume->io_handle->cluster_block_size       = boot_record->cluster_block_size;
 	internal_volume->io_handle->total_number_of_clusters = boot_record->total_number_of_clusters;
+	internal_volume->io_handle->first_cluster_offset     = boot_record->first_cluster_offset;
 
+	if( libfsfat_file_system_initialize(
+	     &( internal_volume->file_system ),
+	     internal_volume->io_handle,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create file system.",
+		 function );
+
+		goto on_error;
+	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
@@ -1050,22 +1048,8 @@ int libfsfat_internal_volume_open_read(
 		 function );
 	}
 #endif
-	if( libfsfat_allocation_table_initialize(
-	     &( internal_volume->allocation_table ),
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create allocation table.",
-		 function );
-
-		goto on_error;
-	}
-	if( libfsfat_allocation_table_read_file_io_handle(
-	     internal_volume->allocation_table,
-	     internal_volume->io_handle,
+	if( libfsfat_file_system_read_allocation_table(
+	     internal_volume->file_system,
 	     file_io_handle,
 	     boot_record->allocation_table_offset,
 	     boot_record->allocation_table_size,
@@ -1088,23 +1072,11 @@ int libfsfat_internal_volume_open_read(
 		 function );
 	}
 #endif
-	if( libfsfat_directory_initialize(
-	     &( internal_volume->root_directory ),
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create root directory.",
-		 function );
-
-		goto on_error;
-	}
-	if( libfsfat_directory_read_file_io_handle(
-	     internal_volume->root_directory,
+	if( libfsfat_file_system_read_directory(
+	     internal_volume->file_system,
 	     file_io_handle,
-	     boot_record->root_directory_offset,
+	     boot_record->root_directory_cluster,
+	     &( internal_volume->root_directory ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1138,10 +1110,10 @@ on_error:
 		 &( internal_volume->root_directory ),
 		 NULL );
 	}
-	if( internal_volume->allocation_table != NULL )
+	if( internal_volume->file_system != NULL )
 	{
-		libfsfat_directory_free(
-		 &( internal_volume->allocation_table ),
+		libfsfat_file_system_free(
+		 &( internal_volume->file_system ),
 		 NULL );
 	}
 	if( boot_record != NULL )
@@ -1498,93 +1470,7 @@ int libfsfat_volume_get_utf16_label(
 }
 
 /* Retrieves the root directory file entry
- * Returns 1 if successful, 0 if not available or -1 on error
- */
-int libfsfat_internal_volume_get_root_directory(
-     libfsfat_internal_volume_t *internal_volume,
-     libbfio_handle_t *file_io_handle,
-     off64_t directory_offset,
-     libfsfat_file_entry_t **file_entry,
-     libcerror_error_t **error )
-{
-	libfsfat_directory_t *directory = NULL;
-	static char *function           = "libfsfat_internal_volume_get_root_directory";
-
-	if( internal_volume == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid volume.",
-		 function );
-
-		return( -1 );
-	}
-	if( file_entry == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( -1 );
-	}
-	if( *file_entry != NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid file entry value already set.",
-		 function );
-
-		return( -1 );
-	}
-	if( libfsfat_directory_initialize(
-	     &directory,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create directory.",
-		 function );
-
-		goto on_error;
-	}
-	if( libfsfat_directory_read_file_io_handle(
-	     directory,
-	     file_io_handle,
-	     directory_offset,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_READ_FAILED,
-		 "%s: unable to read directory.",
-		 function );
-
-		goto on_error;
-	}
-	return( 1 );
-
-on_error:
-	if( directory != NULL )
-	{
-		libfsfat_directory_free(
-		 &directory,
-		 NULL );
-	}
-	return( -1 );
-}
-
-/* Retrieves the root directory file entry
- * Returns 1 if successful, 0 if not available or -1 on error
+ * Returns 1 if successful or -1 on error
  */
 int libfsfat_volume_get_root_directory(
      libfsfat_volume_t *volume,
@@ -1593,7 +1479,7 @@ int libfsfat_volume_get_root_directory(
 {
 	libfsfat_internal_volume_t *internal_volume = NULL;
 	static char *function                       = "libfsfat_volume_get_root_directory";
-	int result                                  = 0;
+	int result                                  = 1;
 
 	if( volume == NULL )
 	{
@@ -1660,6 +1546,7 @@ int libfsfat_volume_get_root_directory(
 	     file_entry,
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
+	     internal_volume->file_system,
 	     internal_volume->root_directory,
 	     NULL,
 	     error ) != 1 )
@@ -1710,7 +1597,6 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 	libuna_unicode_character_t unicode_character = 0;
 	size_t utf8_string_index                     = 0;
 	size_t utf8_string_segment_length            = 0;
-	uint32_t inode_number                        = 0;
 	int result                                   = 0;
 
 	if( internal_volume == NULL )
@@ -2091,7 +1977,6 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 	libuna_unicode_character_t unicode_character = 0;
 	size_t utf16_string_index                    = 0;
 	size_t utf16_string_segment_length           = 0;
-	uint32_t inode_number                        = 0;
 	int result                                   = 0;
 
 	if( internal_volume == NULL )

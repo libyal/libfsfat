@@ -34,6 +34,15 @@ extern "C" {
 
 #if defined( HAVE_DEBUG_OUTPUT )
 
+const char *libfsfat_debug_print_fat12_cluster_type(
+             uint16_t cluster_type );
+
+const char *libfsfat_debug_print_fat16_cluster_type(
+             uint16_t cluster_type );
+
+const char *libfsfat_debug_print_fat32_cluster_type(
+             uint32_t cluster_type );
+
 void libfsfat_debug_print_file_attribute_flags(
       uint8_t file_attribute_flags );
 

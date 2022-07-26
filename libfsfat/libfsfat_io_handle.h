@@ -52,6 +52,10 @@ struct libfsfat_io_handle
 	 */
 	uint32_t total_number_of_clusters;
 
+	/* The first cluster offset
+	 */
+	off64_t first_cluster_offset;
+
 	/* Value to indicate if abort was signalled
 	 */
 	int abort;

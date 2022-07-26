@@ -26,7 +26,6 @@
 #include <types.h>
 
 #include "libfsfat_directory_entry.h"
-#include "libfsfat_libbfio.h"
 #include "libfsfat_libcdata.h"
 #include "libfsfat_libcerror.h"
 
@@ -59,10 +58,15 @@ int libfsfat_directory_free(
      libfsfat_directory_t **directory,
      libcerror_error_t **error );
 
-int libfsfat_directory_read_file_io_handle(
+int libfsfat_directory_get_number_of_file_entries(
      libfsfat_directory_t *directory,
-     libbfio_handle_t *file_io_handle,
-     off64_t file_offset,
+     int *number_of_file_entries,
+     libcerror_error_t **error );
+
+int libfsfat_directory_get_file_entry_by_index(
+     libfsfat_directory_t *directory,
+     int file_entry_index,
+     libfsfat_directory_entry_t **directory_entry,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

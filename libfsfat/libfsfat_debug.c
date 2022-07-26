@@ -35,6 +35,100 @@
 
 #if defined( HAVE_DEBUG_OUTPUT )
 
+/* Prints the FAT-12 cluster type
+ */
+const char *libfsfat_debug_print_fat12_cluster_type(
+             uint16_t cluster_type )
+{
+	if( cluster_type == 0 )
+	{
+		return( "Free" );
+	}
+	if( cluster_type == 1 )
+	{
+		return( "Invalid" );
+	}
+	if( ( cluster_type >= 0x0ff0 )
+	 && ( cluster_type <= 0x0ff6 ) )
+	{
+		return( "Reserved" );
+	}
+	if( cluster_type == 0x0ff7 )
+	{
+		return( "Bad" );
+	}
+	if( ( cluster_type >= 0x0ff8 )
+	 && ( cluster_type <= 0x0fff ) )
+	{
+		return( "End of chain" );
+	}
+	return( "Used" );
+}
+
+/* Prints the FAT-16 cluster type
+ */
+const char *libfsfat_debug_print_fat16_cluster_type(
+             uint16_t cluster_type )
+{
+	if( cluster_type == 0 )
+	{
+		return( "Free" );
+	}
+	if( cluster_type == 1 )
+	{
+		return( "Invalid" );
+	}
+	if( ( cluster_type >= 0xfff0 )
+	 && ( cluster_type <= 0xfff6 ) )
+	{
+		return( "Reserved" );
+	}
+	if( cluster_type == 0xfff7 )
+	{
+		return( "Bad" );
+	}
+	if( ( cluster_type >= 0xfff8 )
+	 && ( cluster_type <= 0xffff ) )
+	{
+		return( "End of chain" );
+	}
+	return( "Used" );
+}
+
+/* Prints the FAT-32 cluster type
+ */
+const char *libfsfat_debug_print_fat32_cluster_type(
+             uint32_t cluster_type )
+{
+	if( cluster_type == 0UL )
+	{
+		return( "Free" );
+	}
+	if( cluster_type == 1UL )
+	{
+		return( "Invalid" );
+	}
+	if( ( cluster_type >= 0x0ffffff0UL )
+	 && ( cluster_type <= 0x0ffffff6UL ) )
+	{
+		return( "Reserved" );
+	}
+	if( cluster_type == 0x0ffffff7UL )
+	{
+		return( "Bad" );
+	}
+	if( ( cluster_type >= 0x0ffffff8UL )
+	 && ( cluster_type <= 0x0fffffffUL ) )
+	{
+		return( "End of chain" );
+	}
+	if( cluster_type >= 0x10000000UL )
+	{
+		return( "Unknown" );
+	}
+	return( "Used" );
+}
+
 /* Prints the file attribute flags
  */
 void libfsfat_debug_print_file_attribute_flags(

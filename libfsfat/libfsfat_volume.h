@@ -25,9 +25,8 @@
 #include <common.h>
 #include <types.h>
 
-#include "libfsfat_allocation_table.h"
-#include "libfsfat_directory.h"
 #include "libfsfat_extern.h"
+#include "libfsfat_file_system.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
@@ -42,14 +41,6 @@ typedef struct libfsfat_internal_volume libfsfat_internal_volume_t;
 
 struct libfsfat_internal_volume
 {
-	/* The allocation table
-	 */
-	libfsfat_allocation_table_t *allocation_table;
-
-	/* The root directory
-	 */
-	libfsfat_directory_t *root_directory;
-
 	/* The IO handle
 	 */
 	libfsfat_io_handle_t *io_handle;
@@ -65,6 +56,14 @@ struct libfsfat_internal_volume
 	/* Value to indicate if the file IO handle was opened inside the library
 	 */
 	uint8_t file_io_handle_opened_in_library;
+
+	/* The file system
+	 */
+	libfsfat_file_system_t *file_system;
+
+	/* The root directory
+	 */
+	libfsfat_directory_t *root_directory;
 
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
@@ -147,13 +146,6 @@ int libfsfat_volume_get_utf16_label(
      libfsfat_volume_t *volume,
      uint16_t *utf16_string,
      size_t utf16_string_size,
-     libcerror_error_t **error );
-
-int libfsfat_internal_volume_get_root_directory(
-     libfsfat_internal_volume_t *internal_volume,
-     libbfio_handle_t *file_io_handle,
-     off64_t directory_offset,
-     libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \

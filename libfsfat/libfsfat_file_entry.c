@@ -27,6 +27,8 @@
 #include "libfsfat_directory.h"
 #include "libfsfat_directory_entry.h"
 #include "libfsfat_file_entry.h"
+#include "libfsfat_file_system.h"
+#include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcthreads.h"
@@ -40,6 +42,7 @@ int libfsfat_file_entry_initialize(
      libfsfat_file_entry_t **file_entry,
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
+     libfsfat_file_system_t *file_system,
      libfsfat_directory_t *directory,
      libfsfat_directory_entry_t *directory_entry,
      libcerror_error_t **error )
@@ -128,6 +131,7 @@ int libfsfat_file_entry_initialize(
 #endif
 	internal_file_entry->io_handle       = io_handle;
 	internal_file_entry->file_io_handle  = file_io_handle;
+	internal_file_entry->file_system     = file_system;
 	internal_file_entry->directory       = directory;
 	internal_file_entry->directory_entry = directory_entry;
 
@@ -883,7 +887,6 @@ int libfsfat_file_entry_get_number_of_sub_file_entries(
 #endif
 	if( internal_file_entry->directory != NULL )
 	{
-/* TODO implement
 		if( libfsfat_directory_get_number_of_file_entries(
 		     internal_file_entry->directory,
 		     &safe_number_of_sub_file_entries,
@@ -898,7 +901,6 @@ int libfsfat_file_entry_get_number_of_sub_file_entries(
 
 			result = -1;
 		}
-*/
 	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
@@ -925,61 +927,13 @@ int libfsfat_file_entry_get_number_of_sub_file_entries(
 /* Retrieves the sub file entry for the specific index
  * Returns 1 if successful or -1 on error
  */
-int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
-     libfsfat_internal_file_entry_t *internal_file_entry,
-     int sub_file_entry_index,
-     libfsfat_file_entry_t **sub_file_entry,
-     libcerror_error_t **error )
-{
-	static char *function = "libfsfat_file_entry_get_sub_file_entry_by_index";
-
-	if( internal_file_entry == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( -1 );
-	}
-	if( sub_file_entry == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid sub file entry.",
-		 function );
-
-		return( -1 );
-	}
-	if( *sub_file_entry != NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid sub file entry value already set.",
-		 function );
-
-		return( -1 );
-	}
-/* TODO implement */
-
-	return( 1 );
-}
-
-/* Retrieves the sub file entry for the specific index
- * Returns 1 if successful or -1 on error
- */
 int libfsfat_file_entry_get_sub_file_entry_by_index(
      libfsfat_file_entry_t *file_entry,
      int sub_file_entry_index,
      libfsfat_file_entry_t **sub_file_entry,
      libcerror_error_t **error )
 {
+	libfsfat_directory_entry_t *sub_directory_entry     = NULL;
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
 	static char *function                               = "libfsfat_file_entry_get_sub_file_entry_by_index";
 	int result                                          = 1;
@@ -1034,21 +988,43 @@ int libfsfat_file_entry_get_sub_file_entry_by_index(
 		return( -1 );
 	}
 #endif
-	if( libfsfat_internal_file_entry_get_sub_file_entry_by_index(
-	     internal_file_entry,
+	if( libfsfat_directory_get_file_entry_by_index(
+	     internal_file_entry->directory,
 	     sub_file_entry_index,
-	     sub_file_entry,
+	     &sub_directory_entry,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve sub file entry: %d.",
+		 "%s: unable to retrieve sub directory entry: %d.",
 		 function,
 		 sub_file_entry_index );
 
 		result = -1;
+	}
+	else
+	{
+/* TODO get directory */
+		if( libfsfat_file_entry_initialize(
+		     sub_file_entry,
+		     internal_file_entry->io_handle,
+		     internal_file_entry->file_io_handle,
+		     internal_file_entry->file_system,
+		     NULL,
+		     sub_directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create file entry.",
+			 function );
+
+			result = -1;
+		}
 	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(

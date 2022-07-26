@@ -1,4 +1,7 @@
 TODO:
+* implement cluster block vector
+* read sub directory from cluster block vector? what about root directory
+
 * implement library and Python bindings
 * convert directory entries into file (system) entries
 * add volume label API functions

@@ -25,6 +25,7 @@
 #include <types.h>
 
 #include "libfsfat_allocation_table.h"
+#include "libfsfat_debug.h"
 #include "libfsfat_definitions.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
@@ -327,12 +328,14 @@ int libfsfat_allocation_table_read_file_io_handle(
 					if( ( cluster_number & 0x00000fffUL ) >= 0x00000800UL )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: 0x%03" PRIx32 "\n",
+						 "%s: cluster: %04d number\t: 0x%03" PRIx32 " (%s)\n",
 						 function,
 						 table_index,
-						 cluster_number & 0x00000fffUL );
+						 cluster_number & 0x00000fffUL,
+						 libfsfat_debug_print_fat12_cluster_type(
+						  cluster_number & 0x00000fffUL ) );
 					}
-					else
+					else if( ( cluster_number & 0x00000fffUL ) != 0 )
 					{
 						libcnotify_printf(
 						 "%s: cluster: %04d number\t: %" PRIu32 "\n",
@@ -348,28 +351,32 @@ int libfsfat_allocation_table_read_file_io_handle(
 				{
 					break;
 				}
+				cluster_number >>= 12;
+
 #if defined( HAVE_DEBUG_OUTPUT )
 				if( libcnotify_verbose != 0 )
 				{
-					if( ( cluster_number >> 12 ) >= 0x00000800UL )
+					if( cluster_number >= 0x00000800UL )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: 0x%03" PRIx32 "\n",
+						 "%s: cluster: %04d number\t: 0x%03" PRIx32 " (%s)\n",
 						 function,
 						 table_index,
-						 cluster_number >> 12 );
+						 cluster_number,
+						 libfsfat_debug_print_fat12_cluster_type(
+						  cluster_number ) );
 					}
-					else
+					else if( cluster_number != 0 )
 					{
 						libcnotify_printf(
 						 "%s: cluster: %04d number\t: %" PRIu32 "\n",
 						 function,
 						 table_index,
-						 cluster_number >> 12 );
+						 cluster_number );
 					}
 				}
 #endif
-				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number >> 12;
+				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number;
 			}
 			else if( io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT16 )
 			{
@@ -382,15 +389,17 @@ int libfsfat_allocation_table_read_file_io_handle(
 #if defined( HAVE_DEBUG_OUTPUT )
 				if( libcnotify_verbose != 0 )
 				{
-					if( ( cluster_number >> 12 ) >= 0x00008000UL )
+					if( cluster_number >= 0x00008000UL )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: 0x%04" PRIx32 "\n",
+						 "%s: cluster: %04d number\t: 0x%04" PRIx32 " (%s)\n",
 						 function,
 						 table_index,
-						 cluster_number );
+						 cluster_number,
+						 libfsfat_debug_print_fat16_cluster_type(
+						  cluster_number ) );
 					}
-					else
+					else if( cluster_number != 0 )
 					{
 						libcnotify_printf(
 						 "%s: cluster: %04d number\t: %" PRIu32 "\n",
@@ -413,15 +422,17 @@ int libfsfat_allocation_table_read_file_io_handle(
 #if defined( HAVE_DEBUG_OUTPUT )
 				if( libcnotify_verbose != 0 )
 				{
-					if( ( cluster_number >> 12 ) >= 0x08000000UL )
+					if( cluster_number >= 0x08000000UL )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: 0x%08" PRIx32 "\n",
+						 "%s: cluster: %04d number\t: 0x%08" PRIx32 " (%s)\n",
 						 function,
 						 table_index,
-						 cluster_number );
+						 cluster_number,
+						 libfsfat_debug_print_fat32_cluster_type(
+						  cluster_number ) );
 					}
-					else
+					else if( cluster_number != 0 )
 					{
 						libcnotify_printf(
 						 "%s: cluster: %04d number\t: %" PRIu32 "\n",

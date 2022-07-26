@@ -1455,6 +1455,7 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
 
 		goto on_error;
 	}
+#endif
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libfsfat_file_entry_get_utf16_name_size(
 	          file_entry,
@@ -1711,7 +1712,6 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
 			sub_path = NULL;
 		}
 	}
-#endif
 	if( file_entry_name != NULL )
 	{
 		memory_free(

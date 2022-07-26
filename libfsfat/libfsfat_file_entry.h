@@ -28,6 +28,7 @@
 #include "libfsfat_directory.h"
 #include "libfsfat_directory_entry.h"
 #include "libfsfat_extern.h"
+#include "libfsfat_file_system.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
@@ -50,6 +51,10 @@ struct libfsfat_internal_file_entry
 	 */
 	libbfio_handle_t *file_io_handle;
 
+	/* The file system
+	 */
+	libfsfat_file_system_t *file_system;
+
 	/* The directory
 	 */
 	libfsfat_directory_t *directory;
@@ -69,6 +74,7 @@ int libfsfat_file_entry_initialize(
      libfsfat_file_entry_t **file_entry,
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
+     libfsfat_file_system_t *file_system,
      libfsfat_directory_t *directory,
      libfsfat_directory_entry_t *directory_entry,
      libcerror_error_t **error );
@@ -132,12 +138,6 @@ LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_number_of_sub_file_entries(
      libfsfat_file_entry_t *file_entry,
      int *number_of_sub_entries,
-     libcerror_error_t **error );
-
-int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
-     libfsfat_internal_file_entry_t *internal_file_entry,
-     int sub_file_entry_index,
-     libfsfat_file_entry_t **sub_file_entry,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \

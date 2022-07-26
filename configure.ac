@@ -1,8 +1,8 @@
-AC_PREREQ([2.71])
+AC_PREREQ([2.69])
 
 AC_INIT(
  [libfsfat],
- [20220716],
+ [20220725],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(

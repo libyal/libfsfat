@@ -26,11 +26,8 @@
 #include "libfsfat_definitions.h"
 #include "libfsfat_directory.h"
 #include "libfsfat_directory_entry.h"
-#include "libfsfat_libbfio.h"
 #include "libfsfat_libcdata.h"
 #include "libfsfat_libcerror.h"
-
-#include "fsfat_directory_entry.h"
 
 /* Creates a directory
  * Make sure the value directory is referencing, is set to NULL
@@ -204,22 +201,15 @@ int libfsfat_directory_free(
 	return( result );
 }
 
-/* Reads a directory
+/* Retrieves the number of file entries
  * Returns 1 if successful or -1 on error
  */
-int libfsfat_directory_read_file_io_handle(
+int libfsfat_directory_get_number_of_file_entries(
      libfsfat_directory_t *directory,
-     libbfio_handle_t *file_io_handle,
-     off64_t file_offset,
+     int *number_of_file_entries,
      libcerror_error_t **error )
 {
-	libcdata_array_t *long_file_name_entries_array = NULL;
-	libfsfat_directory_entry_t *directory_entry    = NULL;
-	static char *function                          = "libfsfat_directory_read_file_io_handle";
-	int entry_index                                = 0;
-	int result                                     = 0;
-	uint8_t last_vfat_sequence_number              = 0;
-	uint8_t vfat_sequence_number                   = 0;
+	static char *function = "libfsfat_directory_get_number_of_file_entries";
 
 	if( directory == NULL )
 	{
@@ -232,229 +222,61 @@ int libfsfat_directory_read_file_io_handle(
 
 		return( -1 );
 	}
-/* TODO determine stream containing directory entries */
-	do
+	if( libcdata_array_get_number_of_entries(
+	     directory->file_entries_array,
+	     number_of_file_entries,
+	     error ) != 1 )
 	{
-		if( libfsfat_directory_entry_initialize(
-		     &directory_entry,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-			 "%s: unable to create directory entry.",
-			 function );
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve number of file entries.",
+		 function );
 
-			goto on_error;
-		}
-/* TODO read directory entry from stream */
-		result = libfsfat_directory_entry_read_file_io_handle(
-		          directory_entry,
-		          file_io_handle,
-		          file_offset,
-		          error );
-
-		if( result == -1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: unable to read directory entry.",
-			 function );
-
-			goto on_error;
-		}
-		else if( result == 0 )
-		{
-			if( libfsfat_directory_entry_free(
-			     &directory_entry,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-				 "%s: unable to free directory entry.",
-				 function );
-
-				goto on_error;
-			}
-		}
-		else
-		{
-			if( libcdata_array_append_entry(
-			     directory->entries_array,
-			     &entry_index,
-			     (intptr_t *) directory_entry,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-				 "%s: unable to append directory entry to array.",
-				 function );
-
-				goto on_error;
-			}
-			if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
-			{
-				directory_entry->long_file_name_entries_array = long_file_name_entries_array;
-				long_file_name_entries_array                  = NULL;
-
-				if( directory_entry->file_attribute_flags == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
-				{
-					if( directory->volume_label_entry != NULL )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-						 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-						 "%s: invalid directory - volume label entry value already set.",
-						 function );
-
-						goto on_error;
-					}
-					directory->volume_label_entry = directory_entry;
-				}
-				else
-				{
-					if( libcdata_array_append_entry(
-					     directory->file_entries_array,
-					     &entry_index,
-					     (intptr_t *) directory_entry,
-					     error ) != 1 )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-						 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-						 "%s: unable to append directory entry to file entries array.",
-						 function );
-
-						directory_entry = NULL;
-
-						goto on_error;
-					}
-				}
-			}
-			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
-			{
-				vfat_sequence_number = directory_entry->vfat_sequence_number & 0x1f;
-
-				if( ( directory_entry->vfat_sequence_number & 0x40 ) != 0 )
-				{
-					if( long_file_name_entries_array != NULL )
-					{
-						if( libcdata_array_free(
-						     &long_file_name_entries_array,
-						     NULL,
-						     error ) != 1 )
-						{
-							libcerror_error_set(
-							 error,
-							 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-							 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-							 "%s: unable to free long file name entries array.",
-							 function );
-
-							directory_entry = NULL;
-
-							goto on_error;
-						}
-					}
-					if( libcdata_array_initialize(
-					     &long_file_name_entries_array,
-					     0,
-					     error ) != 1 )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-						 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-						 "%s: unable to create long file name entries array.",
-						 function );
-
-						directory_entry = NULL;
-
-						goto on_error;
-					}
-					last_vfat_sequence_number = vfat_sequence_number;
-				}
-				else
-				{
-					if( ( vfat_sequence_number + 1 ) != last_vfat_sequence_number )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-						 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
-						 "%s: invalid VFAT sequence number value out of bounds.",
-						 function );
-
-						return( -1 );
-					}
-					if( libcdata_array_append_entry(
-					     long_file_name_entries_array,
-					     &entry_index,
-					     (intptr_t *) directory_entry,
-					     error ) != 1 )
-					{
-						libcerror_error_set(
-						 error,
-						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-						 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-						 "%s: unable to append directory entry to long file name entries array.",
-						 function );
-
-						directory_entry = NULL;
-
-						goto on_error;
-					}
-					last_vfat_sequence_number = vfat_sequence_number;
-				}
-			}
-			directory_entry = NULL;
-		}
-		file_offset += sizeof( fsfat_directory_entry_t );
-	}
-	while( result != 0 );
-
-	if( long_file_name_entries_array != NULL )
-	{
-		if( libcdata_array_free(
-		     &long_file_name_entries_array,
-		     NULL,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free long file name entries array.",
-			 function );
-
-			goto on_error;
-		}
+		return( -1 );
 	}
 	return( 1 );
+}
 
-on_error:
-	if( long_file_name_entries_array != NULL )
+/* Retrieves a specific file entry
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_get_file_entry_by_index(
+     libfsfat_directory_t *directory,
+     int file_entry_index,
+     libfsfat_directory_entry_t **directory_entry,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_get_file_entry_by_index";
+
+	if( directory == NULL )
 	{
-		libcdata_array_free(
-		 &long_file_name_entries_array,
-		 NULL,
-		 NULL );
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory.",
+		 function );
+
+		return( -1 );
 	}
-	if( directory_entry != NULL )
+	if( libcdata_array_get_entry_by_index(
+	     directory->file_entries_array,
+	     file_entry_index,
+	     (intptr_t **) directory_entry,
+	     error ) != 1 )
 	{
-		libfsfat_directory_entry_free(
-		 &directory_entry,
-		 NULL );
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve directory entry: %d from file entries array.",
+		 function,
+		 file_entry_index );
+
+		return( -1 );
 	}
-	return( -1 );
+	return( 1 );
 }
 

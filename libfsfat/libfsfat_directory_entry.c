@@ -273,7 +273,7 @@ int libfsfat_directory_entry_read_data(
 			return( -1 );
 		}
 		if( memory_copy(
-		     directory_entry->name_data,
+		     &( directory_entry->name_data[ 10 ] ),
 		     ( (fsfat_directory_entry_vfat_t *) data )->second_name_segment,
 		     12 ) == NULL )
 		{
@@ -287,7 +287,7 @@ int libfsfat_directory_entry_read_data(
 			return( -1 );
 		}
 		if( memory_copy(
-		     directory_entry->name_data,
+		     &( directory_entry->name_data[ 10 + 12 ] ),
 		     ( (fsfat_directory_entry_vfat_t *) data )->third_name_segment,
 		     4 ) == NULL )
 		{
@@ -682,7 +682,9 @@ int libfsfat_directory_entry_get_access_time(
 
 		return( -1 );
 	}
-	*fat_date_time = directory_entry->access_time;
+	byte_stream_copy_to_uint32_little_endian(
+	 directory_entry->access_time,
+	 *fat_date_time );
 
 	return( 1 );
 }
@@ -720,7 +722,9 @@ int libfsfat_directory_entry_get_creation_time(
 
 		return( -1 );
 	}
-	*fat_date_time = directory_entry->creation_time;
+	byte_stream_copy_to_uint32_little_endian(
+	 directory_entry->creation_time,
+	 *fat_date_time );
 
 	return( 1 );
 }
@@ -758,7 +762,9 @@ int libfsfat_directory_entry_get_modification_time(
 
 		return( -1 );
 	}
-	*fat_date_time = directory_entry->modification_time;
+	byte_stream_copy_to_uint32_little_endian(
+	 directory_entry->modification_time,
+	 *fat_date_time );
 
 	return( 1 );
 }
@@ -915,14 +921,14 @@ int libfsfat_directory_entry_get_name(
 			}
 			if( memory_copy(
 			     &( directory_entry->name[ name_offset ] ),
-			     directory_entry->name_data,
+			     long_file_name_directory_entry->name_data,
 			     10 + 12 + 4 ) == NULL )
 			{
 				libcerror_error_set(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_MEMORY,
 				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-				 "%s: unable to copy first name segment.",
+				 "%s: unable to copy long file name segment: %d.",
 				 function );
 
 				goto on_error;
@@ -931,6 +937,19 @@ int libfsfat_directory_entry_get_name(
 		}
 /* TODO determine if name is UCS-2 or ASCII */
 /* TODO determine size of name */
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: long name data:\n",
+		 function );
+		libcnotify_print_data(
+		 directory_entry->name,
+		 directory_entry->name_size,
+		 0 );
+	}
+#endif
 	}
 	return( 1 );
 
