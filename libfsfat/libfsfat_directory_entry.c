@@ -144,6 +144,23 @@ int libfsfat_directory_entry_free(
 	}
 	if( *directory_entry != NULL )
 	{
+		if( ( *directory_entry )->name_entries_array != NULL )
+		{
+			if( libcdata_array_free(
+			     &( ( *directory_entry )->name_entries_array ),
+			     NULL,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to free name entries array.",
+				 function );
+
+				result = -1;
+			}
+		}
 		if( ( *directory_entry )->long_file_name_entries_array != NULL )
 		{
 			if( libcdata_array_free(
@@ -390,9 +407,9 @@ int libfsfat_directory_entry_read_data(
 			libcnotify_printf(
 			 "%s: file attribute flags\t\t: 0x%02" PRIx16 "\n",
 			 function,
-			 ( (fsfat_directory_entry_t *) data )->file_attribute_flags );
+			 directory_entry->file_attribute_flags );
 			libfsfat_debug_print_file_attribute_flags(
-			 ( (fsfat_directory_entry_t *) data )->file_attribute_flags );
+			 directory_entry->file_attribute_flags );
 			libcnotify_printf(
 			 "\n" );
 
@@ -467,12 +484,12 @@ int libfsfat_directory_entry_read_data(
 				return( -1 );
 			}
 			libcnotify_printf(
-			 "%s: data start cluster\t\t\t: %" PRIu16 "\n",
+			 "%s: data start cluster\t\t\t: %" PRIu32 "\n",
 			 function,
 			 directory_entry->data_start_cluster );
 
 			libcnotify_printf(
-			 "%s: data size\t\t\t\t: %" PRIu32 "\n",
+			 "%s: data size\t\t\t\t: %" PRIu64 "\n",
 			 function,
 			 directory_entry->data_size );
 
@@ -629,8 +646,98 @@ int libfsfat_directory_entry_read_data(
 		}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 	}
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_DATA_STREAM )
+	{
+		directory_entry->name_size = ( (fsfat_directory_entry_exfat_volume_label_t *) data )->name_size;
+
+		byte_stream_copy_to_uint64_little_endian(
+		 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->valid_data_size,
+		 directory_entry->valid_data_size );
+
+		byte_stream_copy_to_uint32_little_endian(
+		 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->data_start_cluster,
+		 directory_entry->data_start_cluster );
+
+		byte_stream_copy_to_uint64_little_endian(
+		 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->data_size,
+		 directory_entry->data_size );
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->entry_type );
+
+			libcnotify_printf(
+			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->unknown1 );
+
+			libcnotify_printf(
+			 "%s: unknown2\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->unknown2 );
+
+			libcnotify_printf(
+			 "%s: name size\t\t\t\t: %" PRIu16 " (%" PRIu8 " characters)\n",
+			 function,
+			 (uint16_t) ( (fsfat_directory_entry_exfat_data_stream_t *) data )->name_size * 2,
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->name_size );
+
+			byte_stream_copy_to_uint16_little_endian(
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->name_hash,
+			 value_16bit );
+			libcnotify_printf(
+			 "%s: name hash\t\t\t\t: 0x%04" PRIx16 "\n",
+			 function,
+			 value_16bit );
+
+			byte_stream_copy_to_uint16_little_endian(
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->unknown3,
+			 value_16bit );
+			libcnotify_printf(
+			 "%s: unknown3\t\t\t\t: 0x%04" PRIx16 "\n",
+			 function,
+			 value_16bit );
+
+			byte_stream_copy_to_uint32_little_endian(
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->unknown4,
+			 value_32bit );
+			libcnotify_printf(
+			 "%s: unknown4\t\t\t\t: 0x%08" PRIx32 "\n",
+			 function,
+			 value_32bit );
+
+			libcnotify_printf(
+			 "%s: valid data size\t\t\t: %" PRIu64 "\n",
+			 function,
+			 directory_entry->valid_data_size );
+
+			libcnotify_printf(
+			 "%s: data start cluster\t\t\t: %" PRIu32 "\n",
+			 function,
+			 directory_entry->data_start_cluster );
+
+			libcnotify_printf(
+			 "%s: data size\t\t\t\t: %" PRIu64 "\n",
+			 function,
+			 directory_entry->data_size );
+
+			libcnotify_printf(
+			 "\n" );
+		}
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+
+		directory_entry->name_size *= 2;
+	}
 	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
 	{
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->file_attribute_flags,
+		 directory_entry->file_attribute_flags );
+
 		byte_stream_copy_to_uint16_little_endian(
 		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->creation_date,
 		 directory_entry->creation_date );
@@ -685,6 +792,15 @@ int libfsfat_directory_entry_read_data(
 			 "%s: unknown2\t\t\t\t: 0x%04" PRIx16 "\n",
 			 function,
 			 value_16bit );
+
+			libcnotify_printf(
+			 "%s: file attribute flags\t\t: 0x%02" PRIx16 "\n",
+			 function,
+			 directory_entry->file_attribute_flags );
+			libfsfat_debug_print_file_attribute_flags(
+			 directory_entry->file_attribute_flags );
+			libcnotify_printf(
+			 "\n" );
 
 			if( libfsfat_debug_print_fat_date_time_value(
 			     function,
@@ -757,8 +873,8 @@ int libfsfat_directory_entry_read_data(
 	{
 		if( memory_copy(
 		     directory_entry->name_data,
-		     30,
-		     directory_entry->name_size ) == NULL )
+		     ( (fsfat_directory_entry_exfat_file_entry_name_t *) data )->name,
+		     30 ) == NULL )
 		{
 			libcerror_error_set(
 			 error,
@@ -1143,13 +1259,13 @@ int libfsfat_directory_entry_get_name(
      libfsfat_directory_entry_t *directory_entry,
      libcerror_error_t **error )
 {
-	libfsfat_directory_entry_t *long_file_name_directory_entry = NULL;
-	static char *function                                      = "libfsfat_directory_entry_get_name";
-	size_t name_data_offset                                    = 0;
-	size_t name_offset                                         = 0;
-	size_t name_size                                           = 0;
-	int entry_index                                            = 0;
-	int number_of_entries                                      = 0;
+	libfsfat_directory_entry_t *name_directory_entry = NULL;
+	static char *function                            = "libfsfat_directory_entry_get_name";
+	size_t name_data_offset                          = 0;
+	size_t name_offset                               = 0;
+	size_t name_size                                 = 0;
+	int entry_index                                  = 0;
+	int number_of_entries                            = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -1173,7 +1289,128 @@ int libfsfat_directory_entry_get_name(
 
 		return( -1 );
 	}
-	if( directory_entry->long_file_name_entries_array != NULL )
+	if( directory_entry->name_entries_array != NULL )
+	{
+		if( libcdata_array_get_number_of_entries(
+		     directory_entry->name_entries_array,
+		     &number_of_entries,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve number of name entries.",
+			 function );
+
+			goto on_error;
+		}
+		if( ( number_of_entries == 0 )
+		 || ( number_of_entries > 9 ) )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid number of name entries value out of bounds.",
+			 function );
+
+			goto on_error;
+		}
+		name_size = ( (size_t) 30 * number_of_entries ) + 2;
+
+		directory_entry->name = (uint8_t *) memory_allocate(
+		                                     sizeof( uint8_t ) * name_size );
+
+		if( directory_entry->name == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create name.",
+			 function );
+
+			goto on_error;
+		}
+		directory_entry->name_size = name_size;
+
+		for( entry_index = 0;
+		     entry_index < number_of_entries;
+		     entry_index++ )
+		{
+			if( libcdata_array_get_entry_by_index(
+			     directory_entry->name_entries_array,
+			     entry_index,
+			     (intptr_t **) &name_directory_entry,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+				 "%s: unable to retrieve directory entry: %d from name entries array.",
+				 function,
+				 entry_index );
+
+				goto on_error;
+			}
+			if( name_directory_entry == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+				 "%s: invalid name directory entry: %d.",
+				 function,
+				 entry_index );
+
+				goto on_error;
+			}
+			if( memory_copy(
+			     &( directory_entry->name[ name_offset ] ),
+			     name_directory_entry->name_data,
+			     30 ) == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+				 "%s: unable to copy name segment: %d.",
+				 function );
+
+				goto on_error;
+			}
+			name_offset += 30;
+		}
+		for( name_offset = 0;
+		     ( name_offset + 1 ) < directory_entry->name_size;
+		     name_offset += 2 )
+		{
+			if( ( directory_entry->name[ name_offset ] == 0 )
+			 && ( directory_entry->name[ name_offset + 1 ] == 0 ) )
+			{
+				name_offset += 2;
+				break;
+			}
+		}
+		directory_entry->name_size  = name_offset;
+		directory_entry->is_unicode = 1;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: name data:\n",
+			 function );
+			libcnotify_print_data(
+			 directory_entry->name,
+			 directory_entry->name_size,
+			 0 );
+		}
+#endif
+	}
+	else if( directory_entry->long_file_name_entries_array != NULL )
 	{
 		if( libcdata_array_get_number_of_entries(
 		     directory_entry->long_file_name_entries_array,
@@ -1189,7 +1426,8 @@ int libfsfat_directory_entry_get_name(
 
 			goto on_error;
 		}
-		if( number_of_entries == 0 )
+		if( ( number_of_entries == 0 )
+		 || ( number_of_entries > 10 ) )
 		{
 			libcerror_error_set(
 			 error,
@@ -1200,7 +1438,7 @@ int libfsfat_directory_entry_get_name(
 
 			goto on_error;
 		}
-		name_size = (size_t) ( 10 + 12 + 4 ) * number_of_entries;
+		name_size = ( (size_t) ( 10 + 12 + 4 ) * number_of_entries ) + 2;
 
 		directory_entry->name = (uint8_t *) memory_allocate(
 		                                     sizeof( uint8_t ) * name_size );
@@ -1225,7 +1463,7 @@ int libfsfat_directory_entry_get_name(
 			if( libcdata_array_get_entry_by_index(
 			     directory_entry->long_file_name_entries_array,
 			     entry_index,
-			     (intptr_t **) &long_file_name_directory_entry,
+			     (intptr_t **) &name_directory_entry,
 			     error ) != 1 )
 			{
 				libcerror_error_set(
@@ -1238,7 +1476,7 @@ int libfsfat_directory_entry_get_name(
 
 				goto on_error;
 			}
-			if( long_file_name_directory_entry == NULL )
+			if( name_directory_entry == NULL )
 			{
 				libcerror_error_set(
 				 error,
@@ -1252,7 +1490,7 @@ int libfsfat_directory_entry_get_name(
 			}
 			if( memory_copy(
 			     &( directory_entry->name[ name_offset ] ),
-			     long_file_name_directory_entry->name_data,
+			     name_directory_entry->name_data,
 			     10 + 12 + 4 ) == NULL )
 			{
 				libcerror_error_set(
@@ -1883,8 +2121,14 @@ int libfsfat_directory_entry_get_data_start_cluster(
 
 		return( -1 );
 	}
-	*data_start_cluster = directory_entry->data_start_cluster;
-
+	if( directory_entry->data_stream_entry != NULL )
+	{
+		*data_start_cluster = directory_entry->data_stream_entry->data_start_cluster;
+	}
+	else
+	{
+		*data_start_cluster = directory_entry->data_start_cluster;
+	}
 	return( 1 );
 }
 
@@ -1893,7 +2137,7 @@ int libfsfat_directory_entry_get_data_start_cluster(
  */
 int libfsfat_directory_entry_get_data_size(
      libfsfat_directory_entry_t *directory_entry,
-     uint32_t *data_size,
+     uint64_t *data_size,
      libcerror_error_t **error )
 {
 	static char *function = "libfsfat_directory_entry_get_data_size";
@@ -1920,8 +2164,14 @@ int libfsfat_directory_entry_get_data_size(
 
 		return( -1 );
 	}
-	*data_size = directory_entry->data_size;
-
+	if( directory_entry->data_stream_entry != NULL )
+	{
+		*data_size = directory_entry->data_stream_entry->data_size;
+	}
+	else
+	{
+		*data_size = directory_entry->data_size;
+	}
 	return( 1 );
 }
 

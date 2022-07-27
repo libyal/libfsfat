@@ -417,8 +417,8 @@ Only the lower 28-bits are used
 
 A directory consists of:
 
-* self (".") directory entry (not used in root directory)
-* parent ("..") directory entry (not used in root directory)
+* self (".") directory entry (not used in root directory or in exFAT)
+* parent ("..") directory entry (not used in root directory or in exFAT)
 * Zero or more directory entries
 * Terminator directory entry
 
@@ -540,8 +540,8 @@ Table of uppercase characters used for ensuring case insensitivity in Windows an
 |===
 | Offset | Size | Value | Description
 | 0 | 1 | 0x83 | Entry type
-| 1 | 1 | | Number of characters
-| 2 | 22 | | Volume label +
+| 1 | 1 | | Name number of characters
+| 2 | 22 | | Name string +
 UTF-16 little-endian string without an end-of-string character
 | 24 | 8 | 0 | [yellow-background]*Unknown (Reserved)*
 |===
@@ -602,7 +602,7 @@ Contains a GUID
 | 0 | 1 | 0xc0 | Entry type
 | 1 | 1 | | [yellow-background]*Unknown (Flags)*
 | 2 | 1 | 0 | [yellow-background]*Unknown (Reserved)*
-| 3 | 1 | | Name size
+| 3 | 1 | | Name number of characters
 | 4 | 2 | | Name hash
 | 6 | 2 | 0 | [yellow-background]*Unknown (Reserved)*
 | 8 | 8 | | Data stream valid data size
@@ -618,7 +618,7 @@ Contains a GUID
 | Offset | Size | Value | Description
 | 0 | 1 | 0xc1 | Entry type
 | 1 | 1 | | [yellow-background]*Unknown (Flags)*
-| 2 | 30 | | Name +
+| 2 | 30 | | Name string +
 UTF-16 little-endian string without an end-of-string character
 |===
 

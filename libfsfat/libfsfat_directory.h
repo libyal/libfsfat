@@ -45,6 +45,14 @@ struct libfsfat_directory
 	 */
 	libcdata_array_t *file_entries_array;
 
+	/* The self (directory) entry
+	 */
+	libfsfat_directory_entry_t *self_entry;
+
+	/* The parent (directory) entry
+	 */
+	libfsfat_directory_entry_t *parent_entry;
+
 	/* The volume label (directory) entry
 	 */
 	libfsfat_directory_entry_t *volume_label_entry;

@@ -309,7 +309,7 @@ int libfsfat_directory_get_file_entry_by_utf8_name(
 		return( -1 );
 	}
 	if( libcdata_array_get_number_of_entries(
-	     directory->entries_array,
+	     directory->file_entries_array,
 	     &number_of_entries,
 	     error ) != 1 )
 	{
@@ -317,7 +317,7 @@ int libfsfat_directory_get_file_entry_by_utf8_name(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of entries.",
+		 "%s: unable to retrieve number of file entries.",
 		 function );
 
 		return( -1 );
@@ -327,7 +327,7 @@ int libfsfat_directory_get_file_entry_by_utf8_name(
 	     entry_index++ )
 	{
 		if( libcdata_array_get_entry_by_index(
-		     directory->entries_array,
+		     directory->file_entries_array,
 		     entry_index,
 		     (intptr_t **) &safe_directory_entry,
 		     error ) != 1 )
@@ -336,7 +336,7 @@ int libfsfat_directory_get_file_entry_by_utf8_name(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve entry: %d.",
+			 "%s: unable to retrieve file entry: %d.",
 			 function,
 			 entry_index );
 
@@ -400,7 +400,7 @@ int libfsfat_directory_get_file_entry_by_utf16_name(
 		return( -1 );
 	}
 	if( libcdata_array_get_number_of_entries(
-	     directory->entries_array,
+	     directory->file_entries_array,
 	     &number_of_entries,
 	     error ) != 1 )
 	{
@@ -408,7 +408,7 @@ int libfsfat_directory_get_file_entry_by_utf16_name(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve number of entries.",
+		 "%s: unable to retrieve number of file entries.",
 		 function );
 
 		return( -1 );
@@ -418,7 +418,7 @@ int libfsfat_directory_get_file_entry_by_utf16_name(
 	     entry_index++ )
 	{
 		if( libcdata_array_get_entry_by_index(
-		     directory->entries_array,
+		     directory->file_entries_array,
 		     entry_index,
 		     (intptr_t **) &safe_directory_entry,
 		     error ) != 1 )
@@ -427,7 +427,7 @@ int libfsfat_directory_get_file_entry_by_utf16_name(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve entry: %d.",
+			 "%s: unable to retrieve file entry: %d.",
 			 function,
 			 entry_index );
 

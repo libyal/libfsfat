@@ -174,6 +174,61 @@ struct fsfat_directory_entry_exfat_allocation_bitmap
 	uint8_t data_size[ 8 ];
 };
 
+typedef struct fsfat_directory_entry_exfat_data_stream fsfat_directory_entry_exfat_data_stream_t;
+
+struct fsfat_directory_entry_exfat_data_stream
+{
+	/* The entry type
+	 * Consists of 1 byte
+	 */
+	uint8_t entry_type;
+
+	/* Unknown
+	 * Consists of 1 byte
+	 */
+	uint8_t unknown1;
+
+	/* Unknown
+	 * Consists of 1 byte
+	 */
+	uint8_t unknown2;
+
+	/* Name size
+	 * Consists of 1 byte
+	 */
+	uint8_t name_size;
+
+	/* Name hash
+	 * Consists of 2 bytes
+	 */
+	uint8_t name_hash[ 2 ];
+
+	/* Unknown
+	 * Consists of 2 bytes
+	 */
+	uint8_t unknown3[ 2 ];
+
+	/* The valid data size
+	 * Consists of 8 bytes
+	 */
+	uint8_t valid_data_size[ 8 ];
+
+	/* Unknown
+	 * Consists of 4 bytes
+	 */
+	uint8_t unknown4[ 4 ];
+
+	/* The data start cluster
+	 * Consists of 4 bytes
+	 */
+	uint8_t data_start_cluster[ 4 ];
+
+	/* The data size
+	 * Consists of 8 bytes
+	 */
+	uint8_t data_size[ 8 ];
+};
+
 typedef struct fsfat_directory_entry_exfat_file_entry fsfat_directory_entry_exfat_file_entry_t;
 
 struct fsfat_directory_entry_exfat_file_entry

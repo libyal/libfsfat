@@ -2266,7 +2266,7 @@ int libfsfat_file_entry_get_size(
 {
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
 	static char *function                               = "libfsfat_file_entry_get_size";
-	uint32_t data_size                                  = 0;
+	uint64_t data_size                                  = 0;
 	int result                                          = 1;
 
 	if( file_entry == NULL )

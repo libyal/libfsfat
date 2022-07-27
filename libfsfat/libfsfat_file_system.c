@@ -297,6 +297,7 @@ int libfsfat_file_system_read_directory(
 {
 	libcdata_array_t *long_file_name_entries_array = NULL;
 	libfsfat_directory_t *safe_directory           = NULL;
+	libfsfat_directory_entry_t *current_file_entry = NULL;
 	libfsfat_directory_entry_t *directory_entry    = NULL;
 	static char *function                          = "libfsfat_file_system_read_directory";
 	off64_t cluster_end_offset                     = 0;
@@ -428,11 +429,8 @@ int libfsfat_file_system_read_directory(
 				}
 				break;
 			}
-			/* Ignore directory entries "." and ".."
-			 */
 			if( ( directory_entry->name_data[ 0 ] == '.' )
-			 && ( ( directory_entry->name_data[ 1 ] == '.' )
-			  ||  ( directory_entry->name_data[ 1 ] == ' ' ) )
+			 && ( directory_entry->name_data[ 1 ] == ' ' )
 			 && ( directory_entry->name_data[ 2 ] == ' ' )
 			 && ( directory_entry->name_data[ 3 ] == ' ' )
 			 && ( directory_entry->name_data[ 4 ] == ' ' )
@@ -443,29 +441,50 @@ int libfsfat_file_system_read_directory(
 			 && ( directory_entry->name_data[ 9 ] == ' ' )
 			 && ( directory_entry->name_data[ 10 ] == ' ' ) )
 			{
-				if( libfsfat_directory_entry_free(
-				     &directory_entry,
-				     error ) != 1 )
+				if( safe_directory->self_entry != NULL )
 				{
 					libcerror_error_set(
 					 error,
 					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-					 "%s: unable to free directory entry.",
+					 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+					 "%s: invalid directory - self entry value already set.",
 					 function );
 
 					goto on_error;
 				}
-				cluster_offset += sizeof( fsfat_directory_entry_t );
-
-				continue;
+				safe_directory->self_entry = directory_entry;
 			}
-			if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
+			else if( ( directory_entry->name_data[ 0 ] == '.' )
+			      && ( directory_entry->name_data[ 1 ] == '.' )
+			      && ( directory_entry->name_data[ 2 ] == ' ' )
+			      && ( directory_entry->name_data[ 3 ] == ' ' )
+			      && ( directory_entry->name_data[ 4 ] == ' ' )
+			      && ( directory_entry->name_data[ 5 ] == ' ' )
+			      && ( directory_entry->name_data[ 6 ] == ' ' )
+			      && ( directory_entry->name_data[ 7 ] == ' ' )
+			      && ( directory_entry->name_data[ 8 ] == ' ' )
+			      && ( directory_entry->name_data[ 9 ] == ' ' )
+			      && ( directory_entry->name_data[ 10 ] == ' ' ) )
+			{
+				if( safe_directory->parent_entry != NULL )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+					 "%s: invalid directory - parent entry value already set.",
+					 function );
+
+					goto on_error;
+				}
+				safe_directory->parent_entry = directory_entry;
+			}
+			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 			{
 				directory_entry->long_file_name_entries_array = long_file_name_entries_array;
 				long_file_name_entries_array                  = NULL;
 
-				if( directory_entry->file_attribute_flags == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
+				if( ( directory_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 )
 				{
 					if( safe_directory->volume_label_entry != NULL )
 					{
@@ -567,6 +586,94 @@ int libfsfat_file_system_read_directory(
 					goto on_error;
 				}
 				last_vfat_sequence_number = vfat_sequence_number;
+			}
+			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_DATA_STREAM )
+			{
+				if( current_file_entry == NULL )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+					 "%s: missing current file entry.",
+					 function );
+
+					goto on_error;
+				}
+				if( current_file_entry->data_stream_entry != NULL )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+					 "%s: invalid current file entry - data stream entry value already set.",
+					 function );
+
+					goto on_error;
+				}
+				current_file_entry->data_stream_entry = directory_entry;
+			}
+			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
+			{
+				if( libcdata_array_append_entry(
+				     safe_directory->file_entries_array,
+				     &entry_index,
+				     (intptr_t *) directory_entry,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+					 "%s: unable to append directory entry to file entries array.",
+					 function );
+
+					goto on_error;
+				}
+				if( libcdata_array_initialize(
+				     &( directory_entry->name_entries_array ),
+				     0,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+					 "%s: unable to create name entries array.",
+					 function );
+
+					goto on_error;
+				}
+				current_file_entry = directory_entry;
+			}
+			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY_NAME )
+			{
+				if( current_file_entry == NULL )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+					 "%s: missing current file entry.",
+					 function );
+
+					goto on_error;
+				}
+				if( libcdata_array_append_entry(
+				     current_file_entry->name_entries_array,
+				     &entry_index,
+				     (intptr_t *) directory_entry,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+					 "%s: unable to append directory entry to name entries array.",
+					 function );
+
+					goto on_error;
+				}
 			}
 			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_VOLUME_LABEL )
 			{

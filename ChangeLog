@@ -1,8 +1,10 @@
 TODO:
-* add docstring about timestamps in local time or UTC
-* use milli / micro seconds POSIX timestamp instead of seconds
 * add exFAT support
   - debug print exFAT directory entry type
+  - add valid data size support
+* add number of file entries support?
+* add docstring about timestamps in local time or UTC
+* use milli / micro seconds POSIX timestamp instead of seconds
 * error on volume labels outside of root directory
 * add recursion depth checks
 * add support for case less comparision
