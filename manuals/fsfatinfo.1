@@ -1,33 +1,42 @@
-.Dd May 4, 2015
+.Dd July 27, 2022
 .Dt fsfatinfo
 .Os libfsfat
 .Sh NAME
 .Nm fsfatinfo
-.Nd determines information about an Extended File System (ext) volume
+.Nd determines information about a File Allocation Table (FAT) file system volume
 .Sh SYNOPSIS
 .Nm fsfatinfo
-.Op Fl ahvV
+.Op Fl B Ar bodyfile
+.Op Fl F Ar path
+.Op Fl o Ar offset
+.Op Fl dhHvV
 .Ar source
 .Sh DESCRIPTION
 .Nm fsfatinfo
-is a utility to determine information about an Extended File System (ext) volume
+is a utility to determine information about a File Allocation Table (FAT) file system volume
 .Pp
 .Nm fsfatinfo
 is part of the
 .Nm libfsfat
 package.
 .Nm libfsfat
-is a library to access the Extended File System (ext) format
+is a library to access the File Allocation Table (FAT) file system format
 .Pp
 .Ar source
 is the source file.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl a
-shows allocation information
+.It Fl B Ar bodyfile
+output file system information as a bodyfile
+.It Fl h
+calculate a MD5 hash of a file entry to include in the bodyfile
+.It Fl F Ar path
+show information about a specific file entry path
 .It Fl h
 shows this help
+.It Fl H
+shows the file system hierarchy
 .It Fl v
 verbose output to stderr
 .It Fl V
@@ -39,12 +48,15 @@ None
 None
 .Sh EXAMPLES
 .Bd -literal
-# fsfatinfo /dev/sda1
-fsfatinfo 20150504
-
+# fsfatinfo fat32.raw
+fsfatinfo 20220727
+.sp
+File Allocation Table (FAT) file system information:
+.sp
 Volume information:
-.Dl        ...
-
+        File system             : FAT-32
+        Label                   : TESTVOLUME
+.sp
 .Ed
 .Sh DIAGNOSTICS
 Errors, verbose and debug output are printed to stderr when verbose output \-v is enabled.

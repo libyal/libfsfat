@@ -270,7 +270,7 @@ int libfsfat_file_entry_free(
 }
 
 /* Retrieves the (virtual) identifier
- * This value is calculated base on the volume offset of the short name directory entry
+ * The identifier is calculated base on the volume offset of the short name directory entry
  * relative to the root directory offset on FAT-12 and FAT-16 or first data cluster offset on FAT-32
  * where 3 is the first identifier and 2 represents the root directory
  * Returns 1 if successful or -1 on error

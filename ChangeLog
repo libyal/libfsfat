@@ -1,4 +1,5 @@
 TODO:
+* clone directory entry in file entry
 * add exFAT support
   - debug print exFAT directory entry type
   - add valid data size support
@@ -11,7 +12,7 @@ TODO:
 * add support for short and long file name comparison
 * add volume (label) last modification time API function
 * complete info tool
-  - add get by identifier functionality
+  - add get by identifier functionality, backtrack to VFAT name?
 * complete mount tool
 
 * add API functions
