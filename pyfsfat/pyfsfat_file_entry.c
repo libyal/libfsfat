@@ -29,8 +29,6 @@
 
 #include "pyfsfat_datetime.h"
 #include "pyfsfat_error.h"
-#include "pyfsfat_extended_attribute.h"
-#include "pyfsfat_extended_attributes.h"
 #include "pyfsfat_file_entries.h"
 #include "pyfsfat_file_entry.h"
 #include "pyfsfat_integer.h"
@@ -41,19 +39,12 @@
 
 PyMethodDef pyfsfat_file_entry_object_methods[] = {
 
-	{ "is_empty",
-	  (PyCFunction) pyfsfat_file_entry_is_empty,
+	{ "get_identifier",
+	  (PyCFunction) pyfsfat_file_entry_get_identifier,
 	  METH_NOARGS,
-	  "is_empty() -> Boolean or None\n"
+	  "get_identifier() -> Integer\n"
 	  "\n"
-	  "Determines if the file entry is empty." },
-
-	{ "get_inode_number",
-	  (PyCFunction) pyfsfat_file_entry_get_inode_number,
-	  METH_NOARGS,
-	  "get_inode_number() -> Integer\n"
-	  "\n"
-	  "Retrieves the inode number." },
+	  "Retrieves the identifier." },
 
 	{ "get_access_time",
 	  (PyCFunction) pyfsfat_file_entry_get_access_time,
@@ -83,20 +74,6 @@ PyMethodDef pyfsfat_file_entry_object_methods[] = {
 	  "\n"
 	  "Retrieves the creation date and time as a 64-bit integer containing a POSIX timestamp value." },
 
-	{ "get_inode_change_time",
-	  (PyCFunction) pyfsfat_file_entry_get_inode_change_time,
-	  METH_NOARGS,
-	  "get_inode_change_time() -> Datetime\n"
-	  "\n"
-	  "Retrieves the inode change time date and time." },
-
-	{ "get_inode_change_time_as_integer",
-	  (PyCFunction) pyfsfat_file_entry_get_inode_change_time_as_integer,
-	  METH_NOARGS,
-	  "get_inode_change_time_as_integer() -> Integer or None\n"
-	  "\n"
-	  "Retrieves the inode change time date and time as a 64-bit integer containing a POSIX timestamp value." },
-
 	{ "get_modification_time",
 	  (PyCFunction) pyfsfat_file_entry_get_modification_time,
 	  METH_NOARGS,
@@ -111,47 +88,12 @@ PyMethodDef pyfsfat_file_entry_object_methods[] = {
 	  "\n"
 	  "Retrieves the modification date and time as a 64-bit integer containing a POSIX timestamp value." },
 
-	{ "get_deletion_time",
-	  (PyCFunction) pyfsfat_file_entry_get_deletion_time,
+	{ "get_file_attribute_flags",
+	  (PyCFunction) pyfsfat_file_entry_get_file_attribute_flags,
 	  METH_NOARGS,
-	  "get_deletion_time() -> Datetime\n"
+	  "get_file_attribute_flags() -> Integer\n"
 	  "\n"
-	  "Retrieves the deletion date and time." },
-
-	{ "get_deletion_time_as_integer",
-	  (PyCFunction) pyfsfat_file_entry_get_deletion_time_as_integer,
-	  METH_NOARGS,
-	  "get_deletion_time_as_integer() -> Integer or None\n"
-	  "\n"
-	  "Retrieves the deletion date and time as a 32-bit integer containing a POSIX timestamp value." },
-
-	{ "get_file_mode",
-	  (PyCFunction) pyfsfat_file_entry_get_file_mode,
-	  METH_NOARGS,
-	  "get_file_mode() -> Integer\n"
-	  "\n"
-	  "Retrieves the file mode." },
-
-	{ "get_number_of_links",
-	  (PyCFunction) pyfsfat_file_entry_get_number_of_links,
-	  METH_NOARGS,
-	  "get_number_of_links() -> Integer\n"
-	  "\n"
-	  "Retrieves the number of (hard) links." },
-
-	{ "get_owner_identifier",
-	  (PyCFunction) pyfsfat_file_entry_get_owner_identifier,
-	  METH_NOARGS,
-	  "get_owner_identifier() -> Integer\n"
-	  "\n"
-	  "Retrieves the owner identifier." },
-
-	{ "get_group_identifier",
-	  (PyCFunction) pyfsfat_file_entry_get_group_identifier,
-	  METH_NOARGS,
-	  "get_group_identifier() -> Integer\n"
-	  "\n"
-	  "Retrieves the group identifier." },
+	  "Retrieves the file attribute flags." },
 
 	{ "get_name",
 	  (PyCFunction) pyfsfat_file_entry_get_name,
@@ -159,41 +101,6 @@ PyMethodDef pyfsfat_file_entry_object_methods[] = {
 	  "get_name() -> Unicode string or None\n"
 	  "\n"
 	  "Retrieves the name." },
-
-	{ "get_symbolic_link_target",
-	  (PyCFunction) pyfsfat_file_entry_get_symbolic_link_target,
-	  METH_NOARGS,
-	  "get_symbolic_link_target() -> Unicode string or None\n"
-	  "\n"
-	  "Returns the symbolic link target." },
-
-	{ "get_number_of_extended_attributes",
-	  (PyCFunction) pyfsfat_file_entry_get_number_of_extended_attributes,
-	  METH_NOARGS,
-	  "get_number_of_extended_attributes() -> Integer\n"
-	  "\n"
-	  "Retrieves the number of extended attributes." },
-
-	{ "get_extended_attribute",
-	  (PyCFunction) pyfsfat_file_entry_get_extended_attribute,
-	  METH_VARARGS | METH_KEYWORDS,
-	  "get_extended_attribute(extended_attribute_index) -> Object\n"
-	  "\n"
-	  "Retrieves the extended attribute specified by the index." },
-
-	{ "has_extended_attribute_by_name",
-	  (PyCFunction) pyfsfat_file_entry_has_extended_attribute_by_name,
-	  METH_VARARGS | METH_KEYWORDS,
-	  "has_extended_attribute_by_name(name) -> Boolean\n"
-	  "\n"
-	  "Determines if there is an extended attribute specified by the name." },
-
-	{ "get_extended_attribute_by_name",
-	  (PyCFunction) pyfsfat_file_entry_get_extended_attribute_by_name,
-	  METH_VARARGS | METH_KEYWORDS,
-	  "get_extended_attribute_by_name(name) -> Object or None\n"
-	  "\n"
-	  "Retrieves an extended attribute specified by the name." },
 
 	{ "get_number_of_sub_file_entries",
 	  (PyCFunction) pyfsfat_file_entry_get_number_of_sub_file_entries,
@@ -272,31 +179,16 @@ PyMethodDef pyfsfat_file_entry_object_methods[] = {
 	  "\n"
 	  "Retrieves the size of the data." },
 
-	{ "get_number_of_extents",
-	  (PyCFunction) pyfsfat_file_entry_get_number_of_extents,
-	  METH_NOARGS,
-	  "get_number_of_extents() -> Integer\n"
-	  "\n"
-	  "Retrieves the number of extents of the data." },
-
-	{ "get_extent",
-	  (PyCFunction) pyfsfat_file_entry_get_extent,
-	  METH_VARARGS | METH_KEYWORDS,
-	  "get_extent(extent_index) -> Tuple( Integer, Integer, Integer )\n"
-	  "\n"
-	  "Retrieves a specific extent.\t"
-          "The extent is a tuple of offset, size and flags." },
-
 	/* Sentinel */
 	{ NULL, NULL, 0, NULL }
 };
 
 PyGetSetDef pyfsfat_file_entry_object_get_set_definitions[] = {
 
-	{ "inode_number",
-	  (getter) pyfsfat_file_entry_get_inode_number,
+	{ "identifier",
+	  (getter) pyfsfat_file_entry_get_identifier,
 	  (setter) 0,
-	  "The inode number.",
+	  "The identifier.",
 	  NULL },
 
 	{ "access_time",
@@ -311,70 +203,22 @@ PyGetSetDef pyfsfat_file_entry_object_get_set_definitions[] = {
 	  "The creation date and time.",
 	  NULL },
 
-	{ "inode_change_time",
-	  (getter) pyfsfat_file_entry_get_inode_change_time,
-	  (setter) 0,
-	  "The inode change time date and time.",
-	  NULL },
-
 	{ "modification_time",
 	  (getter) pyfsfat_file_entry_get_modification_time,
 	  (setter) 0,
 	  "The modification date and time.",
 	  NULL },
 
-	{ "deletion_time",
-	  (getter) pyfsfat_file_entry_get_deletion_time,
+	{ "file_attribute_flags",
+	  (getter) pyfsfat_file_entry_get_file_attribute_flags,
 	  (setter) 0,
-	  "The deletion date and time.",
-	  NULL },
-
-	{ "file_mode",
-	  (getter) pyfsfat_file_entry_get_file_mode,
-	  (setter) 0,
-	  "The file mode.",
-	  NULL },
-
-	{ "number_of_links",
-	  (getter) pyfsfat_file_entry_get_number_of_links,
-	  (setter) 0,
-	  "The number of (hard) links.",
-	  NULL },
-
-	{ "owner_identifier",
-	  (getter) pyfsfat_file_entry_get_owner_identifier,
-	  (setter) 0,
-	  "The owner identifier.",
-	  NULL },
-
-	{ "group_identifier",
-	  (getter) pyfsfat_file_entry_get_group_identifier,
-	  (setter) 0,
-	  "The group identifier.",
+	  "The file attribute flags.",
 	  NULL },
 
 	{ "name",
 	  (getter) pyfsfat_file_entry_get_name,
 	  (setter) 0,
 	  "The name.",
-	  NULL },
-
-	{ "symbolic_link_target",
-	  (getter) pyfsfat_file_entry_get_symbolic_link_target,
-	  (setter) 0,
-	  "The symbolic link target.",
-	  NULL },
-
-	{ "number_of_extended_attributes",
-	  (getter) pyfsfat_file_entry_get_number_of_extended_attributes,
-	  (setter) 0,
-	  "The number of extended attributes.",
-	  NULL },
-
-	{ "extended_attributes",
-	  (getter) pyfsfat_file_entry_get_extended_attributes,
-	  (setter) 0,
-	  "The extended attributes.",
 	  NULL },
 
 	{ "number_of_sub_file_entries",
@@ -393,12 +237,6 @@ PyGetSetDef pyfsfat_file_entry_object_get_set_definitions[] = {
 	  (getter) pyfsfat_file_entry_get_size,
 	  (setter) 0,
 	  "The size of the data.",
-	  NULL },
-
-	{ "number_of_extents",
-	  (getter) pyfsfat_file_entry_get_number_of_extents,
-	  (setter) 0,
-	  "The number of extents of the data.",
 	  NULL },
 
 	/* Sentinel */
@@ -653,73 +491,17 @@ void pyfsfat_file_entry_free(
 	 (PyObject*) pyfsfat_file_entry );
 }
 
-/* Determines if the file entry is 
+/* Retrieves the identifier
  * Returns a Python object if successful or NULL on error
  */
-PyObject *pyfsfat_file_entry_is_empty(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_is_empty";
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_is_empty(
-	          pyfsfat_file_entry->file_entry,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to determine if file entry is .",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	if( result != 0 )
-	{
-		Py_IncRef(
-		 (PyObject *) Py_True );
-
-		return( Py_True );
-	}
-	Py_IncRef(
-	 (PyObject *) Py_False );
-
-	return( Py_False );
-}
-
-/* Retrieves the inode number
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_inode_number(
+PyObject *pyfsfat_file_entry_get_identifier(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
 {
 	PyObject *integer_object = NULL;
 	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_inode_number";
-	uint32_t value_32bit     = 0;
+	static char *function    = "pyfsfat_file_entry_get_identifier";
+	uint64_t value_64bit     = 0;
 	int result               = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
@@ -735,9 +517,9 @@ PyObject *pyfsfat_file_entry_get_inode_number(
 	}
 	Py_BEGIN_ALLOW_THREADS
 
-	result = libfsfat_file_entry_get_inode_number(
+	result = libfsfat_file_entry_get_identifier(
 	          pyfsfat_file_entry->file_entry,
-	          &value_32bit,
+	          &value_64bit,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -747,7 +529,7 @@ PyObject *pyfsfat_file_entry_get_inode_number(
 		pyfsfat_error_raise(
 		 error,
 		 PyExc_IOError,
-		 "%s: unable to retrieve inode number.",
+		 "%s: unable to retrieve identifier.",
 		 function );
 
 		libcerror_error_free(
@@ -755,8 +537,8 @@ PyObject *pyfsfat_file_entry_get_inode_number(
 
 		return( NULL );
 	}
-	integer_object = PyLong_FromUnsignedLong(
-	                  (unsigned long) value_32bit );
+	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
+	                  value_64bit );
 
 	return( integer_object );
 }
@@ -771,7 +553,7 @@ PyObject *pyfsfat_file_entry_get_access_time(
 	PyObject *datetime_object = NULL;
 	libcerror_error_t *error  = NULL;
 	static char *function     = "pyfsfat_file_entry_get_access_time";
-	int64_t posix_time        = 0;
+	uint64_t fat_timestamp    = 0;
 	int result                = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
@@ -789,7 +571,7 @@ PyObject *pyfsfat_file_entry_get_access_time(
 
 	result = libfsfat_file_entry_get_access_time(
 	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
+	          &fat_timestamp,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -815,7 +597,7 @@ PyObject *pyfsfat_file_entry_get_access_time(
 		return( Py_None );
 	}
 	datetime_object = pyfsfat_datetime_new_from_posix_time_in_micro_seconds(
-	                   posix_time / 1000 );
+	                   ( fat_timestamp + 31553280000UL ) * 10000 );
 
 	return( datetime_object );
 }
@@ -830,7 +612,7 @@ PyObject *pyfsfat_file_entry_get_access_time_as_integer(
 	PyObject *integer_object = NULL;
 	libcerror_error_t *error = NULL;
 	static char *function    = "pyfsfat_file_entry_get_access_time_as_integer";
-	int64_t posix_time       = 0;
+	uint64_t fat_timestamp   = 0;
 	int result               = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
@@ -848,7 +630,7 @@ PyObject *pyfsfat_file_entry_get_access_time_as_integer(
 
 	result = libfsfat_file_entry_get_access_time(
 	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
+	          &fat_timestamp,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -873,8 +655,8 @@ PyObject *pyfsfat_file_entry_get_access_time_as_integer(
 
 		return( Py_None );
 	}
-	integer_object = pyfsfat_integer_signed_new_from_64bit(
-	                  posix_time );
+	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
+	                  fat_timestamp );
 
 	return( integer_object );
 }
@@ -889,7 +671,7 @@ PyObject *pyfsfat_file_entry_get_creation_time(
 	PyObject *datetime_object = NULL;
 	libcerror_error_t *error  = NULL;
 	static char *function     = "pyfsfat_file_entry_get_creation_time";
-	int64_t posix_time        = 0;
+	uint64_t fat_timestamp    = 0;
 	int result                = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
@@ -907,7 +689,7 @@ PyObject *pyfsfat_file_entry_get_creation_time(
 
 	result = libfsfat_file_entry_get_creation_time(
 	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
+	          &fat_timestamp,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -933,7 +715,7 @@ PyObject *pyfsfat_file_entry_get_creation_time(
 		return( Py_None );
 	}
 	datetime_object = pyfsfat_datetime_new_from_posix_time_in_micro_seconds(
-	                   posix_time / 1000 );
+	                   ( fat_timestamp + 31553280000UL ) * 10000 );
 
 	return( datetime_object );
 }
@@ -948,7 +730,7 @@ PyObject *pyfsfat_file_entry_get_creation_time_as_integer(
 	PyObject *integer_object = NULL;
 	libcerror_error_t *error = NULL;
 	static char *function    = "pyfsfat_file_entry_get_creation_time_as_integer";
-	int64_t posix_time       = 0;
+	uint64_t fat_timestamp   = 0;
 	int result               = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
@@ -966,7 +748,7 @@ PyObject *pyfsfat_file_entry_get_creation_time_as_integer(
 
 	result = libfsfat_file_entry_get_creation_time(
 	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
+	          &fat_timestamp,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -991,126 +773,8 @@ PyObject *pyfsfat_file_entry_get_creation_time_as_integer(
 
 		return( Py_None );
 	}
-	integer_object = pyfsfat_integer_signed_new_from_64bit(
-	                  posix_time );
-
-	return( integer_object );
-}
-
-/* Retrieves the inode change time date and time
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_inode_change_time(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *datetime_object = NULL;
-	libcerror_error_t *error  = NULL;
-	static char *function     = "pyfsfat_file_entry_get_inode_change_time";
-	int64_t posix_time        = 0;
-	int result                = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_inode_change_time(
-	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve inode change time date and time.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	else if( result == 0 )
-	{
-		Py_IncRef(
-		 Py_None );
-
-		return( Py_None );
-	}
-	datetime_object = pyfsfat_datetime_new_from_posix_time_in_micro_seconds(
-	                   posix_time / 1000 );
-
-	return( datetime_object );
-}
-
-/* Retrieves the inode change time date and time as an integer
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_inode_change_time_as_integer(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object = NULL;
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_inode_change_time_as_integer";
-	int64_t posix_time       = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_inode_change_time(
-	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve inode change time date and time.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	else if( result == 0 )
-	{
-		Py_IncRef(
-		 Py_None );
-
-		return( Py_None );
-	}
-	integer_object = pyfsfat_integer_signed_new_from_64bit(
-	                  posix_time );
+	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
+	                  fat_timestamp );
 
 	return( integer_object );
 }
@@ -1125,7 +789,7 @@ PyObject *pyfsfat_file_entry_get_modification_time(
 	PyObject *datetime_object = NULL;
 	libcerror_error_t *error  = NULL;
 	static char *function     = "pyfsfat_file_entry_get_modification_time";
-	int64_t posix_time        = 0;
+	uint64_t fat_timestamp    = 0;
 	int result                = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
@@ -1143,7 +807,7 @@ PyObject *pyfsfat_file_entry_get_modification_time(
 
 	result = libfsfat_file_entry_get_modification_time(
 	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
+	          &fat_timestamp,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -1169,7 +833,7 @@ PyObject *pyfsfat_file_entry_get_modification_time(
 		return( Py_None );
 	}
 	datetime_object = pyfsfat_datetime_new_from_posix_time_in_micro_seconds(
-	                   posix_time / 1000 );
+	                   ( fat_timestamp + 31553280000UL ) * 10000 );
 
 	return( datetime_object );
 }
@@ -1184,7 +848,7 @@ PyObject *pyfsfat_file_entry_get_modification_time_as_integer(
 	PyObject *integer_object = NULL;
 	libcerror_error_t *error = NULL;
 	static char *function    = "pyfsfat_file_entry_get_modification_time_as_integer";
-	int64_t posix_time       = 0;
+	uint64_t fat_timestamp   = 0;
 	int result               = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
@@ -1202,7 +866,7 @@ PyObject *pyfsfat_file_entry_get_modification_time_as_integer(
 
 	result = libfsfat_file_entry_get_modification_time(
 	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
+	          &fat_timestamp,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -1227,24 +891,24 @@ PyObject *pyfsfat_file_entry_get_modification_time_as_integer(
 
 		return( Py_None );
 	}
-	integer_object = pyfsfat_integer_signed_new_from_64bit(
-	                  posix_time );
+	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
+	                  fat_timestamp );
 
 	return( integer_object );
 }
 
-/* Retrieves the deletion date and time
+/* Retrieves the file attribute flags
  * Returns a Python object if successful or NULL on error
  */
-PyObject *pyfsfat_file_entry_get_deletion_time(
+PyObject *pyfsfat_file_entry_get_file_attribute_flags(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
 {
-	PyObject *datetime_object = NULL;
-	libcerror_error_t *error  = NULL;
-	static char *function     = "pyfsfat_file_entry_get_deletion_time";
-	int32_t posix_time        = 0;
-	int result                = 0;
+	PyObject *integer_object      = NULL;
+	libcerror_error_t *error      = NULL;
+	static char *function         = "pyfsfat_file_entry_get_file_attribute_flags";
+	uint16_t file_attribute_flags = 0;
+	int result                    = 0;
 
 	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
 
@@ -1259,127 +923,9 @@ PyObject *pyfsfat_file_entry_get_deletion_time(
 	}
 	Py_BEGIN_ALLOW_THREADS
 
-	result = libfsfat_file_entry_get_deletion_time(
+	result = libfsfat_file_entry_get_file_attribute_flags(
 	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve deletion date and time.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	else if( result == 0 )
-	{
-		Py_IncRef(
-		 Py_None );
-
-		return( Py_None );
-	}
-	datetime_object = pyfsfat_datetime_new_from_posix_time(
-	                   posix_time );
-
-	return( datetime_object );
-}
-
-/* Retrieves the deletion date and time as an integer
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_deletion_time_as_integer(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object = NULL;
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_deletion_time_as_integer";
-	int32_t posix_time       = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_deletion_time(
-	          pyfsfat_file_entry->file_entry,
-	          &posix_time,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve deletion date and time.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	else if( result == 0 )
-	{
-		Py_IncRef(
-		 Py_None );
-
-		return( Py_None );
-	}
-	integer_object = PyLong_FromLong(
-	                  (long) posix_time );
-
-	return( integer_object );
-}
-
-/* Retrieves the file mode
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_file_mode(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object = NULL;
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_file_mode";
-	uint16_t file_mode       = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_file_mode(
-	          pyfsfat_file_entry->file_entry,
-	          &file_mode,
+	          &file_attribute_flags,
 	          &error );
 
 	Py_END_ALLOW_THREADS
@@ -1399,171 +945,11 @@ PyObject *pyfsfat_file_entry_get_file_mode(
 	}
 #if PY_MAJOR_VERSION >= 3
 	integer_object = PyLong_FromLong(
-	                  (long) file_mode );
+	                  (long) file_attribute_flags );
 #else
 	integer_object = PyInt_FromLong(
-	                  (long) file_mode );
+	                  (long) file_attribute_flags );
 #endif
-	return( integer_object );
-}
-
-/* Retrieves the number of (hard) links
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_number_of_links(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object = NULL;
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_number_of_links";
-	uint16_t number_of_links = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_number_of_links(
-	          pyfsfat_file_entry->file_entry,
-	          &number_of_links,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve number of (hard) links.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-#if PY_MAJOR_VERSION >= 3
-	integer_object = PyLong_FromLong(
-	                  (long) number_of_links );
-#else
-	integer_object = PyInt_FromLong(
-	                  (long) number_of_links );
-#endif
-	return( integer_object );
-}
-
-/* Retrieves the owner identifier
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_owner_identifier(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object = NULL;
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_owner_identifier";
-	uint32_t value_32bit     = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_owner_identifier(
-	          pyfsfat_file_entry->file_entry,
-	          &value_32bit,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve owner identifier.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	integer_object = PyLong_FromUnsignedLong(
-	                  (unsigned long) value_32bit );
-
-	return( integer_object );
-}
-
-/* Retrieves the group identifier
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_group_identifier(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object = NULL;
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_group_identifier";
-	uint32_t value_32bit     = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_group_identifier(
-	          pyfsfat_file_entry->file_entry,
-	          &value_32bit,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve group identifier.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	integer_object = PyLong_FromUnsignedLong(
-	                  (unsigned long) value_32bit );
-
 	return( integer_object );
 }
 
@@ -1677,509 +1063,6 @@ on_error:
 	{
 		PyMem_Free(
 		 name );
-	}
-	return( NULL );
-}
-
-/* Retrieves the symbolic link target
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_symbolic_link_target(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	libcerror_error_t *error = NULL;
-	PyObject *string_object  = NULL;
-	const char *errors       = NULL;
-	uint8_t *target          = NULL;
-	static char *function    = "pyfsfat_file_entry_get_symbolic_link_target";
-	size_t target_size       = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_TypeError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_utf8_symbolic_link_target_size(
-	          pyfsfat_file_entry->file_entry,
-	          &target_size,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve symbolic link target size.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		goto on_error;
-	}
-	else if( ( result == 0 )
-	      || ( target_size == 0 ) )
-	{
-		Py_IncRef(
-		 Py_None );
-
-		return( Py_None );
-	}
-	target = (uint8_t *) PyMem_Malloc(
-	                      sizeof( uint8_t ) * target_size );
-
-	if( target == NULL )
-	{
-		PyErr_Format(
-		 PyExc_IOError,
-		 "%s: unable to create target.",
-		 function );
-
-		goto on_error;
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_utf8_symbolic_link_target(
-		  pyfsfat_file_entry->file_entry,
-		  target,
-		  target_size,
-		  &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve symbolic link target.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		goto on_error;
-	}
-	/* Pass the string length to PyUnicode_DecodeUTF8
-	 * otherwise it makes the end of string character is part
-	 * of the string
-	 */
-	string_object = PyUnicode_DecodeUTF8(
-			 (char *) target,
-			 (Py_ssize_t) target_size - 1,
-			 errors );
-
-	PyMem_Free(
-	 target );
-
-	return( string_object );
-
-on_error:
-	if( target != NULL )
-	{
-		PyMem_Free(
-		 target );
-	}
-	return( NULL );
-}
-
-/* Retrieves the number of extended attributes
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_number_of_extended_attributes(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object          = NULL;
-	libcerror_error_t *error          = NULL;
-	static char *function             = "pyfsfat_file_entry_get_number_of_extended_attributes";
-	int number_of_extended_attributes = 0;
-	int result                        = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_number_of_extended_attributes(
-	          pyfsfat_file_entry->file_entry,
-	          &number_of_extended_attributes,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve .",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-#if PY_MAJOR_VERSION >= 3
-	integer_object = PyLong_FromLong(
-	                  (long) number_of_extended_attributes );
-#else
-	integer_object = PyInt_FromLong(
-	                  (long) number_of_extended_attributes );
-#endif
-	return( integer_object );
-}
-
-/* Retrieves a specific extended attribute by index
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_extended_attribute_by_index(
-           PyObject *pyfsfat_file_entry,
-           int extended_attribute_index )
-{
-	PyObject *extended_attribute_object               = NULL;
-	libcerror_error_t *error                          = NULL;
-	libfsfat_extended_attribute_t *extended_attribute = NULL;
-	static char *function                             = "pyfsfat_file_entry_get_extended_attribute_by_index";
-	int result                                        = 0;
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_extended_attribute_by_index(
-	          ( (pyfsfat_file_entry_t *) pyfsfat_file_entry )->file_entry,
-	          extended_attribute_index,
-	          &extended_attribute,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve : %d.",
-		 function,
-		 extended_attribute_index );
-
-		libcerror_error_free(
-		 &error );
-
-		goto on_error;
-	}
-	extended_attribute_object = pyfsfat_extended_attribute_new(
-	                             extended_attribute,
-	                             pyfsfat_file_entry );
-
-	if( extended_attribute_object == NULL )
-	{
-		PyErr_Format(
-		 PyExc_MemoryError,
-		 "%s: unable to create extended attribute object.",
-		 function );
-
-		goto on_error;
-	}
-	return( extended_attribute_object );
-
-on_error:
-	if( extended_attribute != NULL )
-	{
-		libfsfat_extended_attribute_free(
-		 &extended_attribute,
-		 NULL );
-	}
-	return( NULL );
-}
-
-/* Retrieves a specific extended attribute
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_extended_attribute(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords )
-{
-	PyObject *extended_attribute_object = NULL;
-	static char *keyword_list[]         = { "extended_attribute_index", NULL };
-	int extended_attribute_index        = 0;
-
-	if( PyArg_ParseTupleAndKeywords(
-	     arguments,
-	     keywords,
-	     "i",
-	     keyword_list,
-	     &extended_attribute_index ) == 0 )
-	{
-		return( NULL );
-	}
-	extended_attribute_object = pyfsfat_file_entry_get_extended_attribute_by_index(
-	                             (PyObject *) pyfsfat_file_entry,
-	                             extended_attribute_index );
-
-	return( extended_attribute_object );
-}
-
-/* Retrieves a sequence and iterator object for the extended attributes
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_extended_attributes(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *sequence_object         = NULL;
-	libcerror_error_t *error          = NULL;
-	static char *function             = "pyfsfat_file_entry_get_extended_attributes";
-	int number_of_extended_attributes = 0;
-	int result                        = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_number_of_extended_attributes(
-	          pyfsfat_file_entry->file_entry,
-	          &number_of_extended_attributes,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve number of extended attributes.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	sequence_object = pyfsfat_extended_attributes_new(
-	                   (PyObject *) pyfsfat_file_entry,
-	                   &pyfsfat_file_entry_get_extended_attribute_by_index,
-	                   number_of_extended_attributes );
-
-	if( sequence_object == NULL )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_MemoryError,
-		 "%s: unable to create sequence object.",
-		 function );
-
-		return( NULL );
-	}
-	return( sequence_object );
-}
-
-/* Determines if there is an extended attribute specified by the name
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_has_extended_attribute_by_name(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords )
-{
-	libcerror_error_t *error              = NULL;
-	char *extended_attribute_name         = NULL;
-	static char *keyword_list[]           = { "extended_attribute_name", NULL };
-	static char *function                 = "pyfsfat_file_entry_has_extended_attribute_by_name";
-	size_t extended_attribute_name_length = 0;
-	int result                            = 0;
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_TypeError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	if( PyArg_ParseTupleAndKeywords(
-	     arguments,
-	     keywords,
-	     "s",
-	     keyword_list,
-	     &extended_attribute_name ) == 0 )
-	{
-		return( NULL );
-	}
-	extended_attribute_name_length = narrow_string_length(
-	                                  extended_attribute_name );
-
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_has_extended_attribute_by_utf8_name(
-	           pyfsfat_file_entry->file_entry,
-	           (uint8_t *) extended_attribute_name,
-	           extended_attribute_name_length,
-	           &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to determine if extended attribute exists.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-	/* Check if the extended attribute is present
-	 */
-	if( result != 0 )
-	{
-		Py_IncRef(
-		 (PyObject *) Py_True );
-
-		return( Py_True );
-	}
-	Py_IncRef(
-	 (PyObject *) Py_False );
-
-	return( Py_False );
-}
-
-/* Retrieves the extended attribute specified by the name
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_extended_attribute_by_name(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords )
-{
-	libcerror_error_t *error                           = NULL;
-	libfsfat_extended_attribute_t *extended_attribute = NULL;
-	PyObject *extended_attribute_object                = NULL;
-	char *extended_attribute_name                      = NULL;
-	static char *keyword_list[]                        = { "extended_attribute_name", NULL };
-	static char *function                              = "pyfsfat_file_entry_get_extended_attribute_by_name";
-	size_t extended_attribute_name_length              = 0;
-	int result                                         = 0;
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_TypeError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	if( PyArg_ParseTupleAndKeywords(
-	     arguments,
-	     keywords,
-	     "s",
-	     keyword_list,
-	     &extended_attribute_name ) == 0 )
-	{
-		goto on_error;
-	}
-	extended_attribute_name_length = narrow_string_length(
-	                                  extended_attribute_name );
-
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_extended_attribute_by_utf8_name(
-	           pyfsfat_file_entry->file_entry,
-	           (uint8_t *) extended_attribute_name,
-	           extended_attribute_name_length,
-	           &extended_attribute,
-	           &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result == -1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve extended attribute.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		goto on_error;
-	}
-	/* Check if the extended attribute is present
-	 */
-	else if( result == 0 )
-	{
-		Py_IncRef(
-		 Py_None );
-
-		return( Py_None );
-	}
-	extended_attribute_object = pyfsfat_extended_attribute_new(
-	                             extended_attribute,
-	                             (PyObject *) pyfsfat_file_entry );
-
-	if( extended_attribute_object == NULL )
-	{
-		PyErr_Format(
-		 PyExc_MemoryError,
-		 "%s: unable to create extended attribute object.",
-		 function );
-
-		goto on_error;
-	}
-	return( extended_attribute_object );
-
-on_error:
-	if( extended_attribute != NULL )
-	{
-		libfsfat_extended_attribute_free(
-		 &extended_attribute,
-		 NULL );
 	}
 	return( NULL );
 }
@@ -3097,195 +1980,5 @@ PyObject *pyfsfat_file_entry_get_size(
 	                  (uint64_t) size );
 
 	return( integer_object );
-}
-
-/* Retrieves the number of extents of the data
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_number_of_extents(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
-{
-	PyObject *integer_object = NULL;
-	libcerror_error_t *error = NULL;
-	static char *function    = "pyfsfat_file_entry_get_number_of_extents";
-	int number_of_extents    = 0;
-	int result               = 0;
-
-	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_number_of_extents(
-	          pyfsfat_file_entry->file_entry,
-	          &number_of_extents,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve number of extents of the data.",
-		 function );
-
-		libcerror_error_free(
-		 &error );
-
-		return( NULL );
-	}
-#if PY_MAJOR_VERSION >= 3
-	integer_object = PyLong_FromLong(
-	                  (long) number_of_extents );
-#else
-	integer_object = PyInt_FromLong(
-	                  (long) number_of_extents );
-#endif
-	return( integer_object );
-}
-
-/* Retrieves a specific extent by index
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_extent_by_index(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           int extent_index )
-{
-	libcerror_error_t *error = NULL;
-	PyObject *integer_object = NULL;
-	PyObject *tuple_object   = NULL;
-	static char *function    = "pyfsfat_file_entry_get_extent_by_index";
-	off64_t extent_offset    = 0;
-	size64_t extent_size     = 0;
-	uint32_t extent_flags    = 0;
-	int result               = 0;
-
-	if( pyfsfat_file_entry == NULL )
-	{
-		PyErr_Format(
-		 PyExc_ValueError,
-		 "%s: invalid file entry.",
-		 function );
-
-		return( NULL );
-	}
-	Py_BEGIN_ALLOW_THREADS
-
-	result = libfsfat_file_entry_get_extent_by_index(
-	          pyfsfat_file_entry->file_entry,
-	          extent_index,
-	          &extent_offset,
-	          &extent_size,
-	          &extent_flags,
-	          &error );
-
-	Py_END_ALLOW_THREADS
-
-	if( result != 1 )
-	{
-		pyfsfat_error_raise(
-		 error,
-		 PyExc_IOError,
-		 "%s: unable to retrieve extent: %d.",
-		 function,
-		 extent_index );
-
-		libcerror_error_free(
-		 &error );
-
-		goto on_error;
-	}
-	tuple_object = PyTuple_New(
-                        3 );
-
-	integer_object = pyfsfat_integer_signed_new_from_64bit(
-	                  (int64_t) extent_offset );
-
-	/* Tuple set item does not increment the reference count of the integer object
-	 */
-	if( PyTuple_SetItem(
-	     tuple_object,
-	     0,
-	     integer_object ) != 0 )
-	{
-		goto on_error;
-	}
-	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
-	                  (uint64_t) extent_size );
-
-	/* Tuple set item does not increment the reference count of the integer object
-	 */
-	if( PyTuple_SetItem(
-	     tuple_object,
-	     1,
-	     integer_object ) != 0 )
-	{
-		goto on_error;
-	}
-	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
-	                  (uint64_t) extent_flags );
-
-	/* Tuple set item does not increment the reference count of the integer object
-	 */
-	if( PyTuple_SetItem(
-	     tuple_object,
-	     2,
-	     integer_object ) != 0 )
-	{
-		goto on_error;
-	}
-	return( tuple_object );
-
-on_error:
-	if( integer_object != NULL )
-	{
-		Py_DecRef(
-		 (PyObject *) integer_object );
-	}
-	if( tuple_object != NULL )
-	{
-		Py_DecRef(
-		 (PyObject *) tuple_object );
-	}
-	return( NULL );
-}
-
-/* Retrieves a specific extent
- * Returns a Python object if successful or NULL on error
- */
-PyObject *pyfsfat_file_entry_get_extent(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords )
-{
-	PyObject *sequence_object   = NULL;
-	static char *keyword_list[] = { "extent_index", NULL };
-	int extent_index            = 0;
-
-	if( PyArg_ParseTupleAndKeywords(
-	     arguments,
-	     keywords,
-	     "i",
-	     keyword_list,
-	     &extent_index ) == 0 )
-	{
-		return( NULL );
-	}
-	sequence_object = pyfsfat_file_entry_get_extent_by_index(
-	                   pyfsfat_file_entry,
-	                   extent_index );
-
-	return( sequence_object );
 }
 

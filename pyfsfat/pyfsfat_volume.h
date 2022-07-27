@@ -81,35 +81,6 @@ PyObject *pyfsfat_volume_get_label(
            pyfsfat_volume_t *pyfsfat_volume,
            PyObject *arguments );
 
-PyObject *pyfsfat_volume_get_last_mount_path(
-           pyfsfat_volume_t *pyfsfat_volume,
-           PyObject *arguments );
-
-PyObject *pyfsfat_volume_get_last_mount_time(
-           pyfsfat_volume_t *pyfsfat_volume,
-           PyObject *arguments );
-
-PyObject *pyfsfat_volume_get_last_mount_time_as_integer(
-           pyfsfat_volume_t *pyfsfat_volume,
-           PyObject *arguments );
-
-PyObject *pyfsfat_volume_get_last_written_time(
-           pyfsfat_volume_t *pyfsfat_volume,
-           PyObject *arguments );
-
-PyObject *pyfsfat_volume_get_last_written_time_as_integer(
-           pyfsfat_volume_t *pyfsfat_volume,
-           PyObject *arguments );
-
-PyObject *pyfsfat_volume_get_number_of_file_entries(
-           pyfsfat_volume_t *pyfsfat_volume,
-           PyObject *arguments );
-
-PyObject *pyfsfat_volume_get_file_entry_by_inode(
-           pyfsfat_volume_t *pyfsfat_volume,
-           PyObject *arguments,
-           PyObject *keywords );
-
 PyObject *pyfsfat_volume_get_root_directory(
            pyfsfat_volume_t *pyfsfat_volume,
            PyObject *arguments );

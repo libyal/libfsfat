@@ -19,8 +19,11 @@ TODO:
   - to expose short file name
   - to expose self directory entry
   - to expose parent directory entry
+  - to expose extents
 
 * implement Python bindings
+  - to retrieve file entry by identifiers
+  - to expose extents
 
 20210928
 * see `git log' for more recent change log

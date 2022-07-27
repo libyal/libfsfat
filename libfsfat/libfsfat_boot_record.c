@@ -149,7 +149,6 @@ int libfsfat_boot_record_read_data(
      size_t data_size,
      libcerror_error_t **error )
 {
-	const char *fshint                        = NULL;
 	static char *function                     = "libfsfat_boot_record_read_data";
 	uint64_t total_number_of_clusters         = 0;
 	uint64_t total_number_of_sectors          = 0;
@@ -164,6 +163,7 @@ int libfsfat_boot_record_read_data(
 	uint8_t sectors_per_cluster_block         = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
+	const char *fshint                        = NULL;
 	uint64_t value_64bit                      = 0;
 	uint32_t value_32bit                      = 0;
 	uint16_t value_16bit                      = 0;

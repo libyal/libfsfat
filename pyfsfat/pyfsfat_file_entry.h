@@ -62,11 +62,7 @@ int pyfsfat_file_entry_init(
 void pyfsfat_file_entry_free(
       pyfsfat_file_entry_t *pyfsfat_file_entry );
 
-PyObject *pyfsfat_file_entry_is_empty(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_inode_number(
+PyObject *pyfsfat_file_entry_get_identifier(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
 
@@ -86,14 +82,6 @@ PyObject *pyfsfat_file_entry_get_creation_time_as_integer(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
 
-PyObject *pyfsfat_file_entry_get_inode_change_time(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_inode_change_time_as_integer(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
 PyObject *pyfsfat_file_entry_get_modification_time(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
@@ -102,64 +90,13 @@ PyObject *pyfsfat_file_entry_get_modification_time_as_integer(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
 
-PyObject *pyfsfat_file_entry_get_deletion_time(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_deletion_time_as_integer(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_file_mode(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_number_of_links(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_owner_identifier(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_group_identifier(
+PyObject *pyfsfat_file_entry_get_file_attribute_flags(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
 
 PyObject *pyfsfat_file_entry_get_name(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_symbolic_link_target(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_number_of_extended_attributes(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_extended_attribute_by_index(
-           PyObject *pyfsfat_file_entry,
-           int extended_attribute_index );
-
-PyObject *pyfsfat_file_entry_get_extended_attribute(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords );
-
-PyObject *pyfsfat_file_entry_get_extended_attributes(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_has_extended_attribute_by_name(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords );
-
-PyObject *pyfsfat_file_entry_get_extended_attribute_by_name(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords );
 
 PyObject *pyfsfat_file_entry_get_number_of_sub_file_entries(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
@@ -205,19 +142,6 @@ PyObject *pyfsfat_file_entry_get_offset(
 PyObject *pyfsfat_file_entry_get_size(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_number_of_extents(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments );
-
-PyObject *pyfsfat_file_entry_get_extent_by_index(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           int extent_index );
-
-PyObject *pyfsfat_file_entry_get_extent(
-           pyfsfat_file_entry_t *pyfsfat_file_entry,
-           PyObject *arguments,
-           PyObject *keywords );
 
 #if defined( __cplusplus )
 }
