@@ -1,14 +1,24 @@
 TODO:
-* complete file entry API
-  - add support for file system identifier (cannot be data start cluster)
-  - add support for short file name
+* add docstring about timestamps in local time or UTC
+* use milli / micro seconds POSIX timestamp instead of seconds
+* add exFAT support
+  - debug print exFAT directory entry type
+* error on volume labels outside of root directory
+* add recursion depth checks
 * add support for case less comparision
 * add support for short and long file name comparison
-* add exFAT support
 * add volume (label) last modification time API function
-* implement Python bindings
 * complete info tool
+  - add get by identifier functionality
 * complete mount tool
+
+* add API functions
+  - to retrieve file entry by identifiers
+  - to expose short file name
+  - to expose self directory entry
+  - to expose parent directory entry
+
+* implement Python bindings
 
 20210928
 * see `git log' for more recent change log

@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="pyfsfat"
-	ProjectGUID="{49EF0652-2857-40F2-ABE8-C4528B974482}"
+	ProjectGUID="{272E449E-8E2C-4037-BFA6-C4A4C665DEE7}"
 	RootNamespace="pyfsfat"
 	TargetFrameworkVersion="131072"
 	>

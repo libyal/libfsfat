@@ -63,7 +63,7 @@ struct libfsfat_directory_entry
 
 	/* The file attribute flags
 	 */
-	uint8_t file_attribute_flags;
+	uint16_t file_attribute_flags;
 
 	/* The creation date
 	 */
@@ -77,9 +77,21 @@ struct libfsfat_directory_entry
 	 */
 	uint8_t creation_time_fraction;
 
+	/* The creation time UTC offset
+	 */
+	uint8_t creation_time_utc_offset;
+
 	/* The access date
 	 */
 	uint16_t access_date;
+
+	/* The access time
+	 */
+	uint16_t access_time;
+
+	/* The access time UTC offset
+	 */
+	uint8_t access_time_utc_offset;
 
 	/* The modification date
 	 */
@@ -88,6 +100,14 @@ struct libfsfat_directory_entry
 	/* The modification time
 	 */
 	uint16_t modification_time;
+
+	/* The modification time fraction of seconds
+	 */
+	uint8_t modification_time_fraction;
+
+	/* The modification time UTC offset
+	 */
+	uint8_t modification_time_utc_offset;
 
 	/* The (VFAT) long file name entries
 	 */
@@ -100,6 +120,10 @@ struct libfsfat_directory_entry
 	/* The data size
 	 */
 	uint32_t data_size;
+
+	/* The virtual identifier
+	 */
+	uint64_t identifier;
 };
 
 int libfsfat_directory_entry_initialize(
@@ -114,12 +138,19 @@ int libfsfat_directory_entry_read_data(
      libfsfat_directory_entry_t *directory_entry,
      const uint8_t *data,
      size_t data_size,
+     uint8_t file_system_format,
      libcerror_error_t **error );
 
 int libfsfat_directory_entry_read_file_io_handle(
      libfsfat_directory_entry_t *directory_entry,
      libbfio_handle_t *file_io_handle,
      off64_t file_offset,
+     uint8_t file_system_format,
+     libcerror_error_t **error );
+
+int libfsfat_directory_entry_get_identifier(
+     libfsfat_directory_entry_t *directory_entry,
+     uint64_t *identifier,
      libcerror_error_t **error );
 
 int libfsfat_directory_entry_get_access_time(
@@ -139,7 +170,7 @@ int libfsfat_directory_entry_get_modification_time(
 
 int libfsfat_directory_entry_get_file_attribute_flags(
      libfsfat_directory_entry_t *directory_entry,
-     uint8_t *file_attribute_flags,
+     uint16_t *file_attribute_flags,
      libcerror_error_t **error );
 
 int libfsfat_directory_entry_get_name(

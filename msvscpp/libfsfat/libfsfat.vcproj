@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="libfsfat"
-	ProjectGUID="{5EEDFD14-1F09-4FC6-97D1-EFCAECE0D1BF}"
+	ProjectGUID="{89C4A184-95CA-4AC9-AF07-72A3FD4CA748}"
 	RootNamespace="libfsfat"
 	TargetFrameworkVersion="131072"
 	>
@@ -186,6 +186,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libfsfat\libfsfat_date_time.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libfsfat\libfsfat_debug.c"
 				>
 			</File>
@@ -249,6 +253,10 @@
 			</File>
 			<File
 				RelativePath="..\..\libfsfat\libfsfat_cluster_block_data.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_date_time.h"
 				>
 			</File>
 			<File

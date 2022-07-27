@@ -281,9 +281,9 @@ on_error:
 int fsfat_test_directory_entry_read_data(
      void )
 {
-	libcerror_error_t *error            = NULL;
+	libcerror_error_t *error                    = NULL;
 	libfsfat_directory_entry_t *directory_entry = NULL;
-	int result                          = 0;
+	int result                                  = 0;
 
 	/* Initialize test
 	 */
@@ -310,6 +310,7 @@ int fsfat_test_directory_entry_read_data(
 	          directory_entry,
 	          fsfat_test_directory_entry_data1,
 	          32,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -327,6 +328,7 @@ int fsfat_test_directory_entry_read_data(
 	          NULL,
 	          fsfat_test_directory_entry_data1,
 	          32,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -345,6 +347,7 @@ int fsfat_test_directory_entry_read_data(
 	          directory_entry,
 	          NULL,
 	          32,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -363,6 +366,7 @@ int fsfat_test_directory_entry_read_data(
 	          directory_entry,
 	          fsfat_test_directory_entry_data1,
 	          (size_t) SSIZE_MAX + 1,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -381,6 +385,7 @@ int fsfat_test_directory_entry_read_data(
 	          directory_entry,
 	          fsfat_test_directory_entry_data1,
 	          0,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -437,10 +442,10 @@ on_error:
 int fsfat_test_directory_entry_read_file_io_handle(
      void )
 {
-	libbfio_handle_t *file_io_handle    = NULL;
-	libcerror_error_t *error            = NULL;
+	libbfio_handle_t *file_io_handle            = NULL;
+	libcerror_error_t *error                    = NULL;
 	libfsfat_directory_entry_t *directory_entry = NULL;
-	int result                          = 0;
+	int result                                  = 0;
 
 	/* Initialize test
 	 */
@@ -488,6 +493,7 @@ int fsfat_test_directory_entry_read_file_io_handle(
 	          directory_entry,
 	          file_io_handle,
 	          0,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -505,6 +511,7 @@ int fsfat_test_directory_entry_read_file_io_handle(
 	          NULL,
 	          file_io_handle,
 	          0,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -523,6 +530,7 @@ int fsfat_test_directory_entry_read_file_io_handle(
 	          directory_entry,
 	          NULL,
 	          0,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -541,6 +549,7 @@ int fsfat_test_directory_entry_read_file_io_handle(
 	          directory_entry,
 	          file_io_handle,
 	          -1,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -595,6 +604,7 @@ int fsfat_test_directory_entry_read_file_io_handle(
 	          directory_entry,
 	          file_io_handle,
 	          0,
+	          LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(

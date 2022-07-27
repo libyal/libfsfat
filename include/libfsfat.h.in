@@ -260,6 +260,15 @@ int libfsfat_volume_close(
      libfsfat_volume_t *volume,
      libfsfat_error_t **error );
 
+/* Retrieves the format version
+ * Returns 1 if successful or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_volume_get_format_version(
+     libfsfat_volume_t *volume,
+     uint8_t *format_version,
+     libfsfat_error_t **error );
+
 /* Retrieves the size of the UTF-8 encoded label
  * The returned size includes the end of string character
  * Returns 1 if successful or -1 on error
@@ -345,6 +354,18 @@ int libfsfat_file_entry_free(
      libfsfat_file_entry_t **file_entry,
      libfsfat_error_t **error );
 
+/* Retrieves the (virtual) identifier
+ * This value is calculated base on the volume offset of the short name directory entry
+ * relative to the root directory offset on FAT-12 and FAT-16 or first data cluster offset on FAT-32
+ * where 3 is the first identifier and 2 represents the root directory
+ * Returns 1 if successful or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_identifier(
+     libfsfat_file_entry_t *file_entry,
+     uint64_t *identifier,
+     libfsfat_error_t **error );
+
 /* Retrieves the access date and time
  * The timestamp is an unsigned 64-bit integer containing the 10 milli seconds intervals since January 1, 1980
  * This value is retrieved from the short file name directory entry
@@ -385,7 +406,7 @@ int libfsfat_file_entry_get_modification_time(
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_file_attribute_flags(
      libfsfat_file_entry_t *file_entry,
-     uint8_t *file_attribute_flags,
+     uint16_t *file_attribute_flags,
      libfsfat_error_t **error );
 
 /* Retrieves the size of the UTF-8 encoded name

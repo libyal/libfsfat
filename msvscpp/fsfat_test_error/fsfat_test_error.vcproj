@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="fsfat_test_error"
-	ProjectGUID="{3588C316-95AC-4D98-9DA4-A1EB7B9476F4}"
+	ProjectGUID="{666A9C45-2D9B-47F8-9BF9-0EE5398F1DEC}"
 	RootNamespace="fsfat_test_error"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"

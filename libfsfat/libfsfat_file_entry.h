@@ -69,7 +69,7 @@ struct libfsfat_internal_file_entry
 
 	/* The file attribute flags
 	 */
-	uint8_t file_attribute_flags;
+	uint16_t file_attribute_flags;
 
 	/* The cluster block stream
 	 */
@@ -102,6 +102,12 @@ int libfsfat_file_entry_free(
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_identifier(
+     libfsfat_file_entry_t *file_entry,
+     uint64_t *identifier,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_access_time(
      libfsfat_file_entry_t *file_entry,
      uint64_t *fat_timestamp,
@@ -122,7 +128,7 @@ int libfsfat_file_entry_get_modification_time(
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_file_attribute_flags(
      libfsfat_file_entry_t *file_entry,
-     uint8_t *file_attribute_flags,
+     uint16_t *file_attribute_flags,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \

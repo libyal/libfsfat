@@ -364,12 +364,14 @@ int libfsfat_file_system_read_directory(
 		goto on_error;
 	}
 	while( ( cluster_number >= 2 )
-	    && ( ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT12 )
+	    && ( ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
 	       &&  ( cluster_number < 0x00000ff8UL ) )
-	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT16 )
+	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
 	       &&  ( cluster_number < 0x0000fff8UL ) )
-	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT32 )
-	       &&  ( cluster_number < 0x0ffffff8UL ) ) ) )
+	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
+	       &&  ( cluster_number < 0x0ffffff8UL ) )
+	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+	       &&  ( cluster_number < 0xfffffff8UL ) ) ) )
 	{
 		cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
 		cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
@@ -389,10 +391,13 @@ int libfsfat_file_system_read_directory(
 
 				goto on_error;
 			}
+			directory_entry->identifier = (uint64_t) ( ( cluster_offset - file_system->io_handle->root_directory_offset ) / 32 ) + 3;
+
 			result = libfsfat_directory_entry_read_file_io_handle(
 			          directory_entry,
 			          file_io_handle,
 			          cluster_offset,
+			          file_system->io_handle->file_system_format,
 			          error );
 
 			if( result == -1 )
@@ -455,21 +460,6 @@ int libfsfat_file_system_read_directory(
 
 				continue;
 			}
-			if( libcdata_array_append_entry(
-			     safe_directory->entries_array,
-			     &entry_index,
-			     (intptr_t *) directory_entry,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-				 "%s: unable to append directory entry to array.",
-				 function );
-
-				goto on_error;
-			}
 			if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 			{
 				directory_entry->long_file_name_entries_array = long_file_name_entries_array;
@@ -505,8 +495,6 @@ int libfsfat_file_system_read_directory(
 						 "%s: unable to append directory entry to file entries array.",
 						 function );
 
-						directory_entry = NULL;
-
 						goto on_error;
 					}
 				}
@@ -531,8 +519,6 @@ int libfsfat_file_system_read_directory(
 							 "%s: unable to free long file name entries array.",
 							 function );
 
-							directory_entry = NULL;
-
 							goto on_error;
 						}
 					}
@@ -547,8 +533,6 @@ int libfsfat_file_system_read_directory(
 						 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
 						 "%s: unable to create long file name entries array.",
 						 function );
-
-						directory_entry = NULL;
 
 						goto on_error;
 					}
@@ -580,11 +564,39 @@ int libfsfat_file_system_read_directory(
 					 "%s: unable to append directory entry to long file name entries array.",
 					 function );
 
-					directory_entry = NULL;
-
 					goto on_error;
 				}
 				last_vfat_sequence_number = vfat_sequence_number;
+			}
+			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_VOLUME_LABEL )
+			{
+				if( safe_directory->volume_label_entry != NULL )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+					 "%s: invalid directory - volume label entry value already set.",
+					 function );
+
+					goto on_error;
+				}
+				safe_directory->volume_label_entry = directory_entry;
+			}
+			if( libcdata_array_append_entry(
+			     safe_directory->entries_array,
+			     &entry_index,
+			     (intptr_t *) directory_entry,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+				 "%s: unable to append directory entry to array.",
+				 function );
+
+				goto on_error;
 			}
 			directory_entry = NULL;
 
@@ -750,10 +762,13 @@ int libfsfat_file_system_read_directory_by_range(
 
 			goto on_error;
 		}
+		directory_entry->identifier = (uint64_t) ( ( file_offset - file_system->io_handle->root_directory_offset ) / 32 ) + 3;
+
 		result = libfsfat_directory_entry_read_file_io_handle(
 		          directory_entry,
 		          file_io_handle,
 		          file_offset,
+		          file_system->io_handle->file_system_format,
 		          error );
 
 		if( result == -1 )
@@ -978,7 +993,6 @@ int libfsfat_file_system_get_data_stream(
 	off64_t cluster_offset              = 0;
 	off64_t segment_end_offset          = 0;
 	off64_t segment_start_offset        = 0;
-	int result                          = 0;
 	int segment_index                   = 0;
 
 	if( file_system == NULL )
@@ -1047,12 +1061,14 @@ int libfsfat_file_system_get_data_stream(
 		goto on_error;
 	}
 	while( ( cluster_number >= 2 )
-	    && ( ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT12 )
+	    && ( ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
 	       &&  ( cluster_number < 0x00000ff8UL ) )
-	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT16 )
+	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
 	       &&  ( cluster_number < 0x0000fff8UL ) )
-	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT32 )
-	       &&  ( cluster_number < 0x0ffffff8UL ) ) ) )
+	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
+	       &&  ( cluster_number < 0x0ffffff8UL ) )
+	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+	       &&  ( cluster_number < 0xfffffff8UL ) ) ) )
 	{
 		cluster_offset = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
 

@@ -74,7 +74,7 @@ int info_handle_system_string_copy_from_64_bit_in_decimal(
      libcerror_error_t **error );
 
 void info_handle_file_attribute_flags_fprint(
-      uint8_t file_attribute_flags,
+      uint16_t file_attribute_flags,
       FILE *notify_stream );
 
 int info_handle_initialize(

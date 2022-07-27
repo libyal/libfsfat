@@ -1021,7 +1021,7 @@ int libfsfat_internal_volume_open_read(
 
 		goto on_error;
 	}
-	internal_volume->io_handle->file_system_type         = boot_record->file_system_type;
+	internal_volume->io_handle->file_system_format       = boot_record->file_system_format;
 	internal_volume->io_handle->bytes_per_sector         = boot_record->bytes_per_sector;
 	internal_volume->io_handle->cluster_block_size       = boot_record->cluster_block_size;
 	internal_volume->io_handle->total_number_of_clusters = boot_record->total_number_of_clusters;
@@ -1075,6 +1075,8 @@ int libfsfat_internal_volume_open_read(
 #endif
 	if( boot_record->root_directory_size > 0 )
 	{
+		internal_volume->io_handle->root_directory_offset = boot_record->root_directory_offset;
+
 		result = libfsfat_file_system_read_directory_by_range(
 		          internal_volume->file_system,
 		          file_io_handle,
@@ -1085,6 +1087,8 @@ int libfsfat_internal_volume_open_read(
 	}
 	else
 	{
+		internal_volume->io_handle->root_directory_offset = boot_record->first_cluster_offset;
+
 		result = libfsfat_file_system_read_directory(
 		          internal_volume->file_system,
 		          file_io_handle,
@@ -1138,6 +1142,87 @@ on_error:
 		 NULL );
 	}
 	return( -1 );
+}
+
+/* Retrieves the format version
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_volume_get_format_version(
+     libfsfat_volume_t *volume,
+     uint8_t *format_version,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_volume_t *internal_volume = NULL;
+	static char *function                       = "libfsfat_volume_get_format_version";
+
+	if( volume == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid volume.",
+		 function );
+
+		return( -1 );
+	}
+	internal_volume = (libfsfat_internal_volume_t *) volume;
+
+	if( internal_volume->io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid volume - missing IO handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( format_version == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid format version.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	*format_version = internal_volume->io_handle->file_system_format;
+
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( 1 );
 }
 
 /* Retrieves the size of the UTF-8 encoded label

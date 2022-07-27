@@ -123,6 +123,12 @@ int libfsfat_internal_volume_open_read(
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
+int libfsfat_volume_get_format_version(
+     libfsfat_volume_t *volume,
+     uint8_t *format_version,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
 int libfsfat_volume_get_utf8_label_size(
      libfsfat_volume_t *volume,
      size_t *utf8_string_size,

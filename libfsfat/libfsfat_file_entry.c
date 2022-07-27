@@ -52,7 +52,7 @@ int libfsfat_file_entry_initialize(
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
 	static char *function                               = "libfsfat_file_entry_initialize";
 	uint32_t cluster_number                             = 0;
-	uint8_t file_attribute_flags                        = 0;
+	uint16_t file_attribute_flags                       = 0;
 
 	if( file_entry == NULL )
 	{
@@ -266,6 +266,98 @@ int libfsfat_file_entry_free(
 		memory_free(
 		 internal_file_entry );
 	}
+	return( result );
+}
+
+/* Retrieves the (virtual) identifier
+ * This value is calculated base on the volume offset of the short name directory entry
+ * relative to the root directory offset on FAT-12 and FAT-16 or first data cluster offset on FAT-32
+ * where 3 is the first identifier and 2 represents the root directory
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_file_entry_get_identifier(
+     libfsfat_file_entry_t *file_entry,
+     uint64_t *identifier,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
+	static char *function                               = "libfsfat_file_entry_get_identifier";
+	uint64_t safe_identifier                            = 2;
+	int result                                          = 1;
+
+	if( file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
+
+	if( identifier == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid identifier.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file_entry->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( internal_file_entry->directory_entry != NULL )
+	{
+		if( libfsfat_directory_entry_get_identifier(
+		     internal_file_entry->directory_entry,
+		     &safe_identifier,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve identifier from directory entry.",
+			 function );
+
+			result = -1;
+		}
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file_entry->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	*identifier = safe_identifier;
+
 	return( result );
 }
 
@@ -512,7 +604,7 @@ int libfsfat_file_entry_get_modification_time(
  */
 int libfsfat_file_entry_get_file_attribute_flags(
      libfsfat_file_entry_t *file_entry,
-     uint8_t *file_attribute_flags,
+     uint16_t *file_attribute_flags,
      libcerror_error_t **error )
 {
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
@@ -1006,7 +1098,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 	libfsfat_directory_t *sub_directory             = NULL;
 	static char *function                           = "libfsfat_internal_file_entry_get_sub_file_entry_by_index";
 	uint32_t cluster_number                         = 0;
-	uint8_t file_attribute_flags                    = 0;
+	uint16_t file_attribute_flags                   = 0;
 
 	if( internal_file_entry == NULL )
 	{
@@ -1250,7 +1342,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 	libfsfat_directory_t *sub_directory             = NULL;
 	static char *function                           = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name";
 	uint32_t cluster_number                         = 0;
-	uint8_t file_attribute_flags                    = 0;
+	uint16_t file_attribute_flags                   = 0;
 	int result                                      = 0;
 
 	if( internal_file_entry == NULL )
@@ -1501,7 +1593,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 	libfsfat_directory_t *sub_directory             = NULL;
 	static char *function                           = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name";
 	uint32_t cluster_number                         = 0;
-	uint8_t file_attribute_flags                    = 0;
+	uint16_t file_attribute_flags                   = 0;
 	int result                                      = 0;
 
 	if( internal_file_entry == NULL )

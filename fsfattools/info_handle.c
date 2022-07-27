@@ -171,7 +171,7 @@ int info_handle_system_string_copy_from_64_bit_in_decimal(
 /* Prints the file attribute flags to the notify stream
  */
 void info_handle_file_attribute_flags_fprint(
-      uint8_t file_attribute_flags,
+      uint16_t file_attribute_flags,
       FILE *notify_stream )
 {
 	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_READ_ONLY ) != 0 )
@@ -1175,15 +1175,16 @@ int info_handle_file_entry_value_with_name_fprint(
 		'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
 		0 };
 
-	char file_mode_string[ 11 ]  = { '-', 'r', 'w', 'x', 'r', 'w', 'x', 'r', 'w', 'x', 0 };
+	char file_mode_string[ 11 ]    = { '-', 'r', 'w', 'x', 'r', 'w', 'x', 'r', 'w', 'x', 0 };
 
-	static char *function        = "info_handle_file_entry_value_with_name_fprint";
-	size64_t size                = 0;
-	uint64_t access_time         = 0;
-	uint64_t creation_time       = 0;
-	uint64_t modification_time   = 0;
-	uint8_t file_attribute_flags = 0;
-	int result                   = 0;
+	static char *function          = "info_handle_file_entry_value_with_name_fprint";
+	size64_t size                  = 0;
+	uint64_t access_time           = 0;
+	uint64_t creation_time         = 0;
+	uint64_t file_entry_identifier = 0;
+	uint64_t modification_time     = 0;
+	uint16_t file_attribute_flags  = 0;
+	int result                     = 0;
 
 	if( info_handle == NULL )
 	{
@@ -1192,6 +1193,20 @@ int info_handle_file_entry_value_with_name_fprint(
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
 		 "%s: invalid info handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( libfsfat_file_entry_get_identifier(
+	     file_entry,
+	     &file_entry_identifier,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve identifier.",
 		 function );
 
 		return( -1 );
@@ -1368,7 +1383,8 @@ int info_handle_file_entry_value_with_name_fprint(
 		}
 		fprintf(
 		 info_handle->bodyfile_stream,
-		 "||%s|0|0|%" PRIu64 "|%" PRIu64 "|%" PRIu64 "|0|%" PRIu64 ".%02" PRIu64 "\n",
+		 "|%" PRIu64 "|%s|0|0|%" PRIu64 "|%" PRIu64 "|%" PRIu64 "|0|%" PRIu64 ".%02" PRIu64 "\n",
+		 file_entry_identifier,
 		 file_mode_string,
 		 size,
 		 access_time / 100,
@@ -1378,6 +1394,11 @@ int info_handle_file_entry_value_with_name_fprint(
 	}
 	else
 	{
+		fprintf(
+		 info_handle->notify_stream,
+		 "\tIdentifier\t\t: %" PRIu64 "\n",
+		 file_entry_identifier );
+
 		if( file_entry_name != NULL )
 		{
 			fprintf(
@@ -1476,7 +1497,7 @@ int info_handle_file_entry_value_with_name_fprint(
 		}
 		fprintf(
 		 info_handle->notify_stream,
-		 "\tFile attribute flags\t: 0x%02" PRIx8 "\n",
+		 "\tFile attribute flags\t: 0x%04" PRIx16 "\n",
 		 file_attribute_flags );
 		info_handle_file_attribute_flags_fprint(
 		 file_attribute_flags,
@@ -2224,6 +2245,8 @@ int info_handle_volume_fprint(
 	system_character_t *value_string = NULL;
 	static char *function            = "info_handle_volume_fprint";
 	size_t value_string_size         = 0;
+	const char *fshint               = NULL;
+	uint8_t format_version           = 0;
 	int result                       = 0;
 
 	if( info_handle == NULL )
@@ -2245,9 +2268,50 @@ int info_handle_volume_fprint(
 	 info_handle->notify_stream,
 	 "Volume information:\n" );
 
+	if( libfsfat_volume_get_format_version(
+	     info_handle->input_volume,
+	     &format_version,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve format version.",
+		 function );
+
+		goto on_error;
+	}
+	switch( format_version )
+	{
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT:
+			fshint = "exFAT";
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12:
+			fshint = "FAT-12";
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16:
+			fshint = "FAT-16";
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32:
+			fshint = "FAT-32";
+			break;
+
+		default:
+			fshint = "UNKNOWN";
+			break;
+	}
 	fprintf(
 	 info_handle->notify_stream,
-	 "\tLabel\t\t\t\t: " );
+	 "\tFile system\t\t: %s\n",
+	 fshint );
+
+	fprintf(
+	 info_handle->notify_stream,
+	 "\tLabel\t\t\t: " );
 
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libfsfat_volume_get_utf16_label_size(

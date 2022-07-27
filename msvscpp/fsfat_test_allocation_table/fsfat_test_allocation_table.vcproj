@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="fsfat_test_allocation_table"
-	ProjectGUID="{D9B04252-10D9-48A7-832E-10EB6578F641}"
+	ProjectGUID="{2FD2FEDB-03B7-4D11-B3EC-9FB4D620705B}"
 	RootNamespace="fsfat_test_allocation_table"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"

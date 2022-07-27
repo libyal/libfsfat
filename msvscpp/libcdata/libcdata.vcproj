@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="libcdata"
-	ProjectGUID="{9416F0D9-E528-4564-A015-AA09ED6C133F}"
+	ProjectGUID="{4FA17299-D845-49AB-9D1E-C9CFFA921E82}"
 	RootNamespace="libcdata"
 	TargetFrameworkVersion="131072"
 	>

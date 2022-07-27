@@ -24,6 +24,7 @@
 #include <memory.h>
 #include <types.h>
 
+#include "libfsfat_date_time.h"
 #include "libfsfat_debug.h"
 #include "libfsfat_definitions.h"
 #include "libfsfat_directory_entry.h"
@@ -180,13 +181,14 @@ int libfsfat_directory_entry_read_data(
      libfsfat_directory_entry_t *directory_entry,
      const uint8_t *data,
      size_t data_size,
+     uint8_t file_system_format,
      libcerror_error_t **error )
 {
 	static char *function = "libfsfat_directory_entry_read_data";
 
 #if defined( HAVE_DEBUG_OUTPUT )
-	uint8_t fat_date_time[ 4 ];
-
+	uint64_t value_64bit  = 0;
+	uint32_t value_32bit  = 0;
 	uint16_t value_16bit  = 0;
 #endif
 
@@ -235,74 +237,73 @@ int libfsfat_directory_entry_read_data(
 		 LIBCNOTIFY_PRINT_DATA_FLAG_GROUP_DATA );
 	}
 #endif
-	if( memory_compare(
-	     data,
-	     libfsfat_directory_entry_empty,
-	     sizeof( fsfat_directory_entry_t ) ) == 0 )
+	if( file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+	{
+		switch( data[ 0 ] )
+		{
+			case 0:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_TERMINATOR;
+				break;
+
+			case 0x81:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_ALLOCATION_BITMAP;
+				break;
+
+			case 0x82:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_UPCASE_TABLE;
+				break;
+
+			case 0x83:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_VOLUME_LABEL;
+				break;
+
+			case 0x85:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY;
+				break;
+
+			case 0xc0:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_DATA_STREAM;
+				break;
+
+			case 0xc1:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY_NAME;
+				break;
+
+			default:
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_UNKNOWN;
+				break;
+		}
+	}
+	else if( memory_compare(
+	          data,
+	          libfsfat_directory_entry_empty,
+	          sizeof( fsfat_directory_entry_t ) ) == 0 )
+	{
+		directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_TERMINATOR;
+	}
+	else
+	{
+		directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME;
+
+		if( ( ( data[ 0 ] >= 0x01 )
+		  &&  ( data[ 0 ] <= 0x13 ) )
+		 || ( ( data[ 0 ] >= 0x41 )
+		  &&  ( data[ 0 ] <= 0x54 ) ) )
+		{
+			if( ( data[ 11 ] == 0x0f )
+			 && ( data[ 12 ] == 0x00 )
+			 && ( data[ 26 ] == 0x00 )
+			 && ( data[ 27 ] == 0x00 ) )
+			{
+				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME;
+			}
+		}
+	}
+	if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_TERMINATOR )
 	{
 		return( 0 );
 	}
-	if( ( ( data[ 0 ] >= 0x01 )
-	  &&  ( data[ 0 ] <= 0x13 ) )
-	 || ( ( data[ 0 ] >= 0x41 )
-	  &&  ( data[ 0 ] <= 0x54 ) ) )
-	{
-		if( ( data[ 11 ] == 0x0f )
-		 && ( data[ 12 ] == 0x00 )
-		 && ( data[ 26 ] == 0x00 )
-		 && ( data[ 27 ] == 0x00 ) )
-		{
-			directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME;
-		}
-	}
-	if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
-	{
-		directory_entry->vfat_sequence_number = ( (fsfat_directory_entry_vfat_t *) data )->sequence_number;
-
-		if( memory_copy(
-		     directory_entry->name_data,
-		     ( (fsfat_directory_entry_vfat_t *) data )->first_name_segment,
-		     10 ) == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-			 "%s: unable to copy first name segment.",
-			 function );
-
-			return( -1 );
-		}
-		if( memory_copy(
-		     &( directory_entry->name_data[ 10 ] ),
-		     ( (fsfat_directory_entry_vfat_t *) data )->second_name_segment,
-		     12 ) == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-			 "%s: unable to copy second name segment.",
-			 function );
-
-			return( -1 );
-		}
-		if( memory_copy(
-		     &( directory_entry->name_data[ 10 + 12 ] ),
-		     ( (fsfat_directory_entry_vfat_t *) data )->third_name_segment,
-		     4 ) == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-			 "%s: unable to copy third name segment.",
-			 function );
-
-			return( -1 );
-		}
-	}
-	else
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 	{
 		if( memory_copy(
 		     directory_entry->name_data,
@@ -363,11 +364,171 @@ int libfsfat_directory_entry_read_data(
 		byte_stream_copy_to_uint32_little_endian(
 		 ( (fsfat_directory_entry_t *) data )->data_size,
 		 directory_entry->data_size );
-	}
+
 #if defined( HAVE_DEBUG_OUTPUT )
-	if( libcnotify_verbose != 0 )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: name\t\t\t\t: %c%c%c%c%c%c%c%c\n",
+			 function,
+			 ( (fsfat_directory_entry_t *) data )->name[ 0 ],
+			 ( (fsfat_directory_entry_t *) data )->name[ 1 ],
+			 ( (fsfat_directory_entry_t *) data )->name[ 2 ],
+			 ( (fsfat_directory_entry_t *) data )->name[ 3 ],
+			 ( (fsfat_directory_entry_t *) data )->name[ 4 ],
+			 ( (fsfat_directory_entry_t *) data )->name[ 5 ],
+			 ( (fsfat_directory_entry_t *) data )->name[ 6 ],
+			 ( (fsfat_directory_entry_t *) data )->name[ 7 ] );
+
+			libcnotify_printf(
+			 "%s: extension\t\t\t\t: %c%c%c\n",
+			 function,
+			 ( (fsfat_directory_entry_t *) data )->extension[ 0 ],
+			 ( (fsfat_directory_entry_t *) data )->extension[ 1 ],
+			 ( (fsfat_directory_entry_t *) data )->extension[ 2 ] );
+
+			libcnotify_printf(
+			 "%s: file attribute flags\t\t: 0x%02" PRIx16 "\n",
+			 function,
+			 ( (fsfat_directory_entry_t *) data )->file_attribute_flags );
+			libfsfat_debug_print_file_attribute_flags(
+			 ( (fsfat_directory_entry_t *) data )->file_attribute_flags );
+			libcnotify_printf(
+			 "\n" );
+
+			libcnotify_printf(
+			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_t *) data )->unknown1 );
+
+			if( libfsfat_debug_print_fat_date_time_value(
+			     function,
+			     "creation time\t\t\t",
+			     directory_entry->creation_date,
+			     directory_entry->creation_time,
+			     directory_entry->creation_time_fraction,
+			     0,
+			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+				 "%s: unable to print FAT date time value.",
+				 function );
+
+				return( -1 );
+			}
+			if( libfsfat_debug_print_fat_date_time_value(
+			     function,
+			     "access time\t\t\t\t",
+			     directory_entry->access_date,
+			     0,
+			     0,
+			     0,
+			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+				 "%s: unable to print FAT date time value.",
+				 function );
+
+				return( -1 );
+			}
+			byte_stream_copy_to_uint16_little_endian(
+			 ( (fsfat_directory_entry_t *) data )->unknown3,
+			 value_16bit );
+			libcnotify_printf(
+			 "%s: unknown3\t\t\t\t: 0x%04" PRIx16 "\n",
+			 function,
+			 value_16bit );
+
+			if( libfsfat_debug_print_fat_date_time_value(
+			     function,
+			     "modification time\t\t\t",
+			     directory_entry->modification_date,
+			     directory_entry->modification_time,
+			     0,
+			     0,
+			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+				 "%s: unable to print FAT date time value.",
+				 function );
+
+				return( -1 );
+			}
+			libcnotify_printf(
+			 "%s: data start cluster\t\t\t: %" PRIu16 "\n",
+			 function,
+			 directory_entry->data_start_cluster );
+
+			libcnotify_printf(
+			 "%s: data size\t\t\t\t: %" PRIu32 "\n",
+			 function,
+			 directory_entry->data_size );
+
+			libcnotify_printf(
+			 "\n" );
+		}
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+	}
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
 	{
-		if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
+		directory_entry->vfat_sequence_number = ( (fsfat_directory_entry_vfat_t *) data )->sequence_number;
+
+		if( memory_copy(
+		     directory_entry->name_data,
+		     ( (fsfat_directory_entry_vfat_t *) data )->first_name_segment,
+		     10 ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy first name segment.",
+			 function );
+
+			return( -1 );
+		}
+		if( memory_copy(
+		     &( directory_entry->name_data[ 10 ] ),
+		     ( (fsfat_directory_entry_vfat_t *) data )->second_name_segment,
+		     12 ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy second name segment.",
+			 function );
+
+			return( -1 );
+		}
+		if( memory_copy(
+		     &( directory_entry->name_data[ 10 + 12 ] ),
+		     ( (fsfat_directory_entry_vfat_t *) data )->third_name_segment,
+		     4 ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy third name segment.",
+			 function );
+
+			return( -1 );
+		}
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
 			 "%s: VFAT sequence number\t\t: 0x%02" PRIx8 " (%" PRIu8 ")\n",
@@ -422,179 +583,278 @@ int libfsfat_directory_entry_read_data(
 			 4,
 			 0 );
 		}
-		else
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+	}
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_ALLOCATION_BITMAP )
+	{
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: name\t\t\t\t: %c%c%c%c%c%c%c%c\n",
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
 			 function,
-			 ( (fsfat_directory_entry_t *) data )->name[ 0 ],
-			 ( (fsfat_directory_entry_t *) data )->name[ 1 ],
-			 ( (fsfat_directory_entry_t *) data )->name[ 2 ],
-			 ( (fsfat_directory_entry_t *) data )->name[ 3 ],
-			 ( (fsfat_directory_entry_t *) data )->name[ 4 ],
-			 ( (fsfat_directory_entry_t *) data )->name[ 5 ],
-			 ( (fsfat_directory_entry_t *) data )->name[ 6 ],
-			 ( (fsfat_directory_entry_t *) data )->name[ 7 ] );
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type );
 
 			libcnotify_printf(
-			 "%s: extension\t\t\t\t: %c%c%c\n",
+			 "%s: bitmap flags\t\t\t: 0x%02" PRIx8 "\n",
 			 function,
-			 ( (fsfat_directory_entry_t *) data )->extension[ 0 ],
-			 ( (fsfat_directory_entry_t *) data )->extension[ 1 ],
-			 ( (fsfat_directory_entry_t *) data )->extension[ 2 ] );
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->bitmap_flags );
 
 			libcnotify_printf(
-			 "%s: file attribute flags\t\t: 0x%02" PRIx8 "\n",
-			 function,
-			 ( (fsfat_directory_entry_t *) data )->file_attribute_flags );
-			libfsfat_debug_print_file_attribute_flags(
-			 ( (fsfat_directory_entry_t *) data )->file_attribute_flags );
+			 "%s: unknown1:\n",
+			 function );
+			libcnotify_print_data(
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->unknown1,
+			 18,
+			 0 );
+
+			byte_stream_copy_to_uint32_little_endian(
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->data_start_cluster,
+			 value_32bit );
 			libcnotify_printf(
-			 "\n" );
-
-			libcnotify_printf(
-			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: data start cluster\t\t\t: %" PRIu32 "\n",
 			 function,
-			 ( (fsfat_directory_entry_t *) data )->unknown1 );
+			 value_32bit );
 
+			byte_stream_copy_to_uint64_little_endian(
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->data_size,
+			 value_64bit );
 			libcnotify_printf(
-			 "%s: creation time fraction\t\t: %" PRIu8 "\n",
+			 "%s: data size\t\t\t\t: %" PRIu64 "\n",
 			 function,
-			 ( (fsfat_directory_entry_t *) data )->creation_time_fraction);
-
-			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->creation_time,
-			 value_16bit );
-			libcnotify_printf(
-			 "%s: creation time\t\t\t: 0x%04" PRIx16 "\n",
-			 function,
-			 value_16bit );
-
-			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->creation_date,
-			 value_16bit );
-			libcnotify_printf(
-			 "%s: creation date\t\t\t: 0x%04" PRIx16 "\n",
-			 function,
-			 value_16bit );
-
-			fat_date_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->creation_date[ 0 ];
-			fat_date_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->creation_date[ 1 ];
-			fat_date_time[ 2 ] = ( (fsfat_directory_entry_t *) data )->creation_time[ 0 ];
-			fat_date_time[ 3 ] = ( (fsfat_directory_entry_t *) data )->creation_time[ 1 ];
-
-			if( libfsfat_debug_print_fat_date_time_value(
-			     function,
-			     "creation date and time\t\t",
-			     fat_date_time,
-			     4,
-			     LIBFDATETIME_ENDIAN_LITTLE,
-			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-				 "%s: unable to print FAT date time value.",
-				 function );
-
-				return( -1 );
-			}
-			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->access_date,
-			 value_16bit );
-			libcnotify_printf(
-			 "%s: access date\t\t\t\t: 0x%04" PRIx16 "\n",
-			 function,
-			 value_16bit );
-
-			fat_date_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->access_date[ 0 ];
-			fat_date_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->access_date[ 1 ];
-			fat_date_time[ 2 ] = 0;
-			fat_date_time[ 3 ] = 0;
-
-			if( libfsfat_debug_print_fat_date_time_value(
-			     function,
-			     "access date and time\t\t",
-			     fat_date_time,
-			     4,
-			     LIBFDATETIME_ENDIAN_LITTLE,
-			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-				 "%s: unable to print FAT date time value.",
-				 function );
-
-				return( -1 );
-			}
-			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->unknown3,
-			 value_16bit );
-			libcnotify_printf(
-			 "%s: unknown3\t\t\t\t: 0x%04" PRIx16 "\n",
-			 function,
-			 value_16bit );
-
-			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->modification_time,
-			 value_16bit );
-			libcnotify_printf(
-			 "%s: modification time\t\t\t: 0x%04" PRIx16 "\n",
-			 function,
-			 value_16bit );
-
-			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->modification_date,
-			 value_16bit );
-			libcnotify_printf(
-			 "%s: modification date\t\t\t: 0x%04" PRIx16 "\n",
-			 function,
-			 value_16bit );
-
-			fat_date_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->modification_date[ 0 ];
-			fat_date_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->modification_date[ 1 ];
-			fat_date_time[ 2 ] = ( (fsfat_directory_entry_t *) data )->modification_time[ 0 ];
-			fat_date_time[ 3 ] = ( (fsfat_directory_entry_t *) data )->modification_time[ 1 ];
-
-			if( libfsfat_debug_print_fat_date_time_value(
-			     function,
-			     "modification date and time\t\t",
-			     fat_date_time,
-			     4,
-			     LIBFDATETIME_ENDIAN_LITTLE,
-			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
-				 "%s: unable to print FAT date time value.",
-				 function );
-
-				return( -1 );
-			}
-			libcnotify_printf(
-			 "%s: data start cluster\t\t\t: %" PRIu16 "\n",
-			 function,
-			 directory_entry->data_start_cluster );
-
-			libcnotify_printf(
-			 "%s: data size\t\t\t\t: %" PRIu32 "\n",
-			 function,
-			 directory_entry->data_size );
+			 value_64bit );
 
 			libcnotify_printf(
 			 "\n" );
 		}
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
 	}
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
+	{
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->creation_date,
+		 directory_entry->creation_date );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->creation_time,
+		 directory_entry->creation_time );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->modification_date,
+		 directory_entry->modification_date );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->modification_time,
+		 directory_entry->modification_time );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->access_date,
+		 directory_entry->access_date );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->access_time,
+		 directory_entry->access_time );
+
+		directory_entry->creation_time_fraction = ( (fsfat_directory_entry_exfat_file_entry_t *) data )->creation_time_fraction;
+
+		directory_entry->modification_time_fraction = ( (fsfat_directory_entry_exfat_file_entry_t *) data )->modification_time_fraction;
+
+		directory_entry->creation_time_utc_offset = ( (fsfat_directory_entry_exfat_file_entry_t *) data )->creation_time_utc_offset;
+
+		directory_entry->access_time_utc_offset = ( (fsfat_directory_entry_exfat_file_entry_t *) data )->access_time_utc_offset;
+
+		directory_entry->modification_time_utc_offset = ( (fsfat_directory_entry_exfat_file_entry_t *) data )->modification_time_utc_offset;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->entry_type );
+
+			libcnotify_printf(
+			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->unknown1 );
+
+			byte_stream_copy_to_uint16_little_endian(
+			 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->unknown2,
+			 value_16bit );
+			libcnotify_printf(
+			 "%s: unknown2\t\t\t\t: 0x%04" PRIx16 "\n",
+			 function,
+			 value_16bit );
+
+			if( libfsfat_debug_print_fat_date_time_value(
+			     function,
+			     "creation time\t\t\t",
+			     directory_entry->creation_date,
+			     directory_entry->creation_time,
+			     directory_entry->creation_time_fraction,
+			     directory_entry->creation_time_utc_offset,
+			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+				 "%s: unable to print FAT date time value.",
+				 function );
+
+				return( -1 );
+			}
+			if( libfsfat_debug_print_fat_date_time_value(
+			     function,
+			     "modification time\t\t\t",
+			     directory_entry->modification_date,
+			     directory_entry->modification_time,
+			     directory_entry->modification_time_fraction,
+			     directory_entry->modification_time_utc_offset,
+			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+				 "%s: unable to print FAT date time value.",
+				 function );
+
+				return( -1 );
+			}
+			if( libfsfat_debug_print_fat_date_time_value(
+			     function,
+			     "access time\t\t\t\t",
+			     directory_entry->access_date,
+			     directory_entry->access_time,
+			     0,
+			     directory_entry->access_time_utc_offset,
+			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+				 "%s: unable to print FAT date time value.",
+				 function );
+
+				return( -1 );
+			}
+			libcnotify_printf(
+			 "%s: unknown4:\n",
+			 function );
+			libcnotify_print_data(
+			 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->unknown4,
+			 7,
+			 0 );
+		}
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+	}
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY_NAME )
+	{
+		if( memory_copy(
+		     directory_entry->name_data,
+		     30,
+		     directory_entry->name_size ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy exFAT file entry name.",
+			 function );
+
+			return( -1 );
+		}
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_file_entry_name_t *) data )->entry_type );
+
+			libcnotify_printf(
+			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_file_entry_name_t *) data )->unknown1 );
+
+			libcnotify_printf(
+			 "%s: name data:\n",
+			 function );
+			libcnotify_print_data(
+			 ( (fsfat_directory_entry_exfat_file_entry_name_t *) data )->name,
+			 30,
+			 0 );
+		}
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+	}
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_VOLUME_LABEL )
+	{
+		if( memory_copy(
+		     directory_entry->name_data,
+		     ( (fsfat_directory_entry_exfat_volume_label_t *) data )->name,
+		     22 ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy exFAT volume label name.",
+			 function );
+
+			return( -1 );
+		}
+		directory_entry->name_size = ( (fsfat_directory_entry_exfat_volume_label_t *) data )->name_size;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 function,
+			 ( (fsfat_directory_entry_exfat_volume_label_t *) data )->entry_type );
+
+			libcnotify_printf(
+			 "%s: name size\t\t\t\t: %" PRIu16 " (%" PRIu8 " characters)\n",
+			 function,
+			 (uint16_t) ( (fsfat_directory_entry_exfat_volume_label_t *) data )->name_size * 2,
+			 ( (fsfat_directory_entry_exfat_volume_label_t *) data )->name_size );
+
+			libcnotify_printf(
+			 "%s: name data:\n",
+			 function );
+			libcnotify_print_data(
+			 ( (fsfat_directory_entry_exfat_volume_label_t *) data )->name,
+			 22,
+			 0 );
+
+			libcnotify_printf(
+			 "%s: unknown1:\n",
+			 function );
+			libcnotify_print_data(
+			 ( (fsfat_directory_entry_exfat_volume_label_t *) data )->unknown1,
+			 8,
+			 0 );
+		}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 
+		if( directory_entry->name_size > 11 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid exFAT volume label name size value out of bounds.",
+			 function );
+
+			return( -1 );
+		}
+		directory_entry->name_size *= 2;
+	}
 	return( 1 );
 }
 
@@ -605,6 +865,7 @@ int libfsfat_directory_entry_read_file_io_handle(
      libfsfat_directory_entry_t *directory_entry,
      libbfio_handle_t *file_io_handle,
      off64_t file_offset,
+     uint8_t file_system_format,
      libcerror_error_t **error )
 {
 	uint8_t directory_entry_data[ sizeof( fsfat_directory_entry_t ) ];
@@ -658,6 +919,7 @@ int libfsfat_directory_entry_read_file_io_handle(
 	          directory_entry,
 	          directory_entry_data,
 	          sizeof( fsfat_directory_entry_t ),
+	          file_system_format,
 	          error );
 
 	if( result == -1 )
@@ -674,20 +936,15 @@ int libfsfat_directory_entry_read_file_io_handle(
 	return( result );
 }
 
-/* Retrieves the access date and time
- * The timestamp is an unsigned 64-bit integer containing the 10 milli seconds intervals since January 1, 1980
+/* Retrieves the identifier
  * Returns 1 if successful or -1 on error
  */
-int libfsfat_directory_entry_get_access_time(
+int libfsfat_directory_entry_get_identifier(
      libfsfat_directory_entry_t *directory_entry,
-     uint64_t *fat_timestamp,
+     uint64_t *identifier,
      libcerror_error_t **error )
 {
-	static char *function       = "libfsfat_directory_entry_get_access_time";
-	uint64_t safe_fat_timestamp = 0;
-	uint16_t year               = 0;
-	uint8_t day_of_month        = 0;
-	uint8_t month               = 0;
+	static char *function = "libfsfat_directory_entry_get_identifier";
 
 	if( directory_entry == NULL )
 	{
@@ -700,94 +957,61 @@ int libfsfat_directory_entry_get_access_time(
 
 		return( -1 );
 	}
-	if( fat_timestamp == NULL )
+	if( identifier == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid FAT timestamp.",
+		 "%s: invalid identifier.",
 		 function );
 
 		return( -1 );
 	}
-	/* The year value is stored in bits 9 - 15 of the date (7 bits)
-	 * A year value of 0 represents 1980
-	 */
-	year = (uint16_t) ( 1980 + ( ( directory_entry->access_date >> 9 ) & 0x7f ) );
+	*identifier = directory_entry->identifier;
 
-	/* The month value is stored in bits 5 - 8 of the date (4 bits)
-	 * A month value of 1 represents January
-	 */
-	month = (uint8_t) ( ( directory_entry->access_date >> 5 ) & 0x0f );
+	return( 1 );
+}
 
-	/* The day value is stored in bits 0 - 4 of the date (5 bits)
-	 */
-	day_of_month = (uint8_t) ( directory_entry->access_date & 0x1f );
+/* Retrieves the access date and time
+ * The timestamp is an unsigned 64-bit integer containing the 10 milli seconds intervals since January 1, 1980
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_entry_get_access_time(
+     libfsfat_directory_entry_t *directory_entry,
+     uint64_t *fat_timestamp,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_entry_get_access_time";
 
-	safe_fat_timestamp = day_of_month;
-
-	while( month > 0 )
+	if( directory_entry == NULL )
 	{
-		/* February (2)
-		 */
-		if( month == 2 )
-		{
-			if( ( ( ( year % 4 ) == 0 )
-			  &&  ( ( year % 100 ) != 0 ) )
-			 || ( ( year % 400 ) == 0 ) )
-			{
-				safe_fat_timestamp += 29;
-			}
-			else
-			{
-				safe_fat_timestamp += 28;
-			}
-		}
-		/* April (4), June (6), September (9), November (11)
-		 */
-		else if( ( month == 4 )
-		      || ( month == 6 )
-		      || ( month == 9 )
-		      || ( month == 11 ) )
-		{
-			safe_fat_timestamp += 30;
-		}
-		/* January (1), March (3), May (5), July (7), August (8), October (10), December (12)
-		 */
-		else if( ( month == 1 )
-		      || ( month == 3 )
-		      || ( month == 5 )
-		      || ( month == 7 )
-		      || ( month == 8 )
-		      || ( month == 10 )
-		      || ( month == 12 ) )
-		{
-			safe_fat_timestamp += 31;
-		}
-		month--;
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
 	}
-	while( year > 1980 )
+	if( libfsfat_date_time_get_timestamp(
+	     directory_entry->access_date,
+	     directory_entry->access_time,
+	     0,
+	     directory_entry->access_time_utc_offset,
+	     fat_timestamp,
+	     error ) != 1 )
 	{
-		if( ( ( ( year % 4 ) == 0 )
-		  &&  ( ( year % 100 ) != 0 ) )
-		 || ( ( year % 400 ) == 0 ) )
-		{
-			safe_fat_timestamp += 366;
-		}
-		else
-		{
-			safe_fat_timestamp += 365;
-		}
-		year--;
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve access timestamp.",
+		 function );
+
+		return( -1 );
 	}
-	safe_fat_timestamp *= 24;
-	safe_fat_timestamp *= 60;
-	safe_fat_timestamp *= 60;
-	safe_fat_timestamp *= 100;
-
-	*fat_timestamp = safe_fat_timestamp;
-
 	return( 1 );
 }
 
@@ -800,14 +1024,7 @@ int libfsfat_directory_entry_get_creation_time(
      uint64_t *fat_timestamp,
      libcerror_error_t **error )
 {
-	static char *function       = "libfsfat_directory_entry_get_creation_time";
-	uint64_t safe_fat_timestamp = 0;
-	uint16_t year               = 0;
-	uint8_t day_of_month        = 0;
-	uint8_t hours               = 0;
-	uint8_t month               = 0;
-	uint8_t minutes             = 0;
-	uint8_t seconds             = 0;
+	static char *function = "libfsfat_directory_entry_get_creation_time";
 
 	if( directory_entry == NULL )
 	{
@@ -820,111 +1037,23 @@ int libfsfat_directory_entry_get_creation_time(
 
 		return( -1 );
 	}
-	if( fat_timestamp == NULL )
+	if( libfsfat_date_time_get_timestamp(
+	     directory_entry->creation_date,
+	     directory_entry->creation_time,
+	     directory_entry->creation_time_fraction,
+	     directory_entry->creation_time_utc_offset,
+	     fat_timestamp,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid FAT timestamp.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve creation timestamp.",
 		 function );
 
 		return( -1 );
 	}
-	/* The year value is stored in bits 9 - 15 of the date (7 bits)
-	 * A year value of 0 represents 1980
-	 */
-	year = (uint16_t) ( 1980 + ( ( directory_entry->creation_date >> 9 ) & 0x7f ) );
-
-	/* The month value is stored in bits 5 - 8 of the date (4 bits)
-	 * A month value of 1 represents January
-	 */
-	month = (uint8_t) ( ( directory_entry->creation_date >> 5 ) & 0x0f );
-
-	/* The day value is stored in bits 0 - 4 of the date (5 bits)
-	 */
-	day_of_month = (uint8_t) ( directory_entry->creation_date & 0x1f );
-
-	/* The hours value is stored in bits 11 - 15 of the time (5 bits)
-	 */
-	hours = (uint8_t) ( ( directory_entry->creation_time >> 11 ) & 0x1f );
-
-	/* The minutes value is stored in bits 5 - 10 of the time (6 bits)
-	 */
-	minutes = (uint8_t) ( ( directory_entry->creation_time >> 5 ) & 0x3f );
-
-	/* The seconds value is stored in bits 0 - 4 of the time (5 bits)
-	 * The seconds are stored as 2 second intervals
-	 */
-	seconds = (uint8_t) ( directory_entry->creation_time & 0x1f ) * 2;
-
-	safe_fat_timestamp = day_of_month;
-
-	while( month > 0 )
-	{
-		/* February (2)
-		 */
-		if( month == 2 )
-		{
-			if( ( ( ( year % 4 ) == 0 )
-			  &&  ( ( year % 100 ) != 0 ) )
-			 || ( ( year % 400 ) == 0 ) )
-			{
-				safe_fat_timestamp += 29;
-			}
-			else
-			{
-				safe_fat_timestamp += 28;
-			}
-		}
-		/* April (4), June (6), September (9), November (11)
-		 */
-		else if( ( month == 4 )
-		      || ( month == 6 )
-		      || ( month == 9 )
-		      || ( month == 11 ) )
-		{
-			safe_fat_timestamp += 30;
-		}
-		/* January (1), March (3), May (5), July (7), August (8), October (10), December (12)
-		 */
-		else if( ( month == 1 )
-		      || ( month == 3 )
-		      || ( month == 5 )
-		      || ( month == 7 )
-		      || ( month == 8 )
-		      || ( month == 10 )
-		      || ( month == 12 ) )
-		{
-			safe_fat_timestamp += 31;
-		}
-		month--;
-	}
-	while( year > 1980 )
-	{
-		if( ( ( ( year % 4 ) == 0 )
-		  &&  ( ( year % 100 ) != 0 ) )
-		 || ( ( year % 400 ) == 0 ) )
-		{
-			safe_fat_timestamp += 366;
-		}
-		else
-		{
-			safe_fat_timestamp += 365;
-		}
-		year--;
-	}
-	safe_fat_timestamp *= 24;
-	safe_fat_timestamp += hours;
-	safe_fat_timestamp *= 60;
-	safe_fat_timestamp += minutes;
-	safe_fat_timestamp *= 60;
-	safe_fat_timestamp += seconds;
-	safe_fat_timestamp *= 100;
-	safe_fat_timestamp += directory_entry->creation_time_fraction;
-
-	*fat_timestamp = safe_fat_timestamp;
-
 	return( 1 );
 }
 
@@ -937,14 +1066,7 @@ int libfsfat_directory_entry_get_modification_time(
      uint64_t *fat_timestamp,
      libcerror_error_t **error )
 {
-	static char *function       = "libfsfat_directory_entry_get_modification_time";
-	uint64_t safe_fat_timestamp = 0;
-	uint16_t year               = 0;
-	uint8_t day_of_month        = 0;
-	uint8_t hours               = 0;
-	uint8_t month               = 0;
-	uint8_t minutes             = 0;
-	uint8_t seconds             = 0;
+	static char *function = "libfsfat_directory_entry_get_modification_time";
 
 	if( directory_entry == NULL )
 	{
@@ -957,110 +1079,23 @@ int libfsfat_directory_entry_get_modification_time(
 
 		return( -1 );
 	}
-	if( fat_timestamp == NULL )
+	if( libfsfat_date_time_get_timestamp(
+	     directory_entry->modification_date,
+	     directory_entry->modification_time,
+	     directory_entry->modification_time_fraction,
+	     directory_entry->modification_time_utc_offset,
+	     fat_timestamp,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid FAT timestamp.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve modification timestamp.",
 		 function );
 
 		return( -1 );
 	}
-	/* The year value is stored in bits 9 - 15 of the date (7 bits)
-	 * A year value of 0 represents 1980
-	 */
-	year = (uint16_t) ( 1980 + ( ( directory_entry->modification_date >> 9 ) & 0x7f ) );
-
-	/* The month value is stored in bits 5 - 8 of the date (4 bits)
-	 * A month value of 1 represents January
-	 */
-	month = (uint8_t) ( ( directory_entry->modification_date >> 5 ) & 0x0f );
-
-	/* The day value is stored in bits 0 - 4 of the date (5 bits)
-	 */
-	day_of_month = (uint8_t) ( directory_entry->modification_date & 0x1f );
-
-	/* The hours value is stored in bits 11 - 15 of the time (5 bits)
-	 */
-	hours = (uint8_t) ( ( directory_entry->modification_time >> 11 ) & 0x1f );
-
-	/* The minutes value is stored in bits 5 - 10 of the time (6 bits)
-	 */
-	minutes = (uint8_t) ( ( directory_entry->modification_time >> 5 ) & 0x3f );
-
-	/* The seconds value is stored in bits 0 - 4 of the time (5 bits)
-	 * The seconds are stored as 2 second intervals
-	 */
-	seconds = (uint8_t) ( directory_entry->modification_time & 0x1f ) * 2;
-
-	safe_fat_timestamp = day_of_month;
-
-	while( month > 0 )
-	{
-		/* February (2)
-		 */
-		if( month == 2 )
-		{
-			if( ( ( ( year % 4 ) == 0 )
-			  &&  ( ( year % 100 ) != 0 ) )
-			 || ( ( year % 400 ) == 0 ) )
-			{
-				safe_fat_timestamp += 29;
-			}
-			else
-			{
-				safe_fat_timestamp += 28;
-			}
-		}
-		/* April (4), June (6), September (9), November (11)
-		 */
-		else if( ( month == 4 )
-		      || ( month == 6 )
-		      || ( month == 9 )
-		      || ( month == 11 ) )
-		{
-			safe_fat_timestamp += 30;
-		}
-		/* January (1), March (3), May (5), July (7), August (8), October (10), December (12)
-		 */
-		else if( ( month == 1 )
-		      || ( month == 3 )
-		      || ( month == 5 )
-		      || ( month == 7 )
-		      || ( month == 8 )
-		      || ( month == 10 )
-		      || ( month == 12 ) )
-		{
-			safe_fat_timestamp += 31;
-		}
-		month--;
-	}
-	while( year > 1980 )
-	{
-		if( ( ( ( year % 4 ) == 0 )
-		  &&  ( ( year % 100 ) != 0 ) )
-		 || ( ( year % 400 ) == 0 ) )
-		{
-			safe_fat_timestamp += 366;
-		}
-		else
-		{
-			safe_fat_timestamp += 365;
-		}
-		year--;
-	}
-	safe_fat_timestamp *= 24;
-	safe_fat_timestamp += hours;
-	safe_fat_timestamp *= 60;
-	safe_fat_timestamp += minutes;
-	safe_fat_timestamp *= 60;
-	safe_fat_timestamp += seconds;
-	safe_fat_timestamp *= 100;
-
-	*fat_timestamp = safe_fat_timestamp;
-
 	return( 1 );
 }
 
@@ -1069,7 +1104,7 @@ int libfsfat_directory_entry_get_modification_time(
  */
 int libfsfat_directory_entry_get_file_attribute_flags(
      libfsfat_directory_entry_t *directory_entry,
-     uint8_t *file_attribute_flags,
+     uint16_t *file_attribute_flags,
      libcerror_error_t **error )
 {
 	static char *function = "libfsfat_directory_entry_get_file_attribute_flags";
@@ -1260,7 +1295,7 @@ int libfsfat_directory_entry_get_name(
 		}
 #endif
 	}
-	else
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 	{
 		name_size = 8 + 3 + 1;
 
@@ -1318,6 +1353,44 @@ int libfsfat_directory_entry_get_name(
 			 0 );
 		}
 #endif
+	}
+	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_VOLUME_LABEL )
+	{
+		name_offset = directory_entry->name_size;
+		name_size   = directory_entry->name_size + 2;
+
+		directory_entry->name = (uint8_t *) memory_allocate(
+		                                     sizeof( uint8_t ) * name_size );
+
+		if( directory_entry->name == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create name.",
+			 function );
+
+			goto on_error;
+		}
+		if( memory_copy(
+		     directory_entry->name,
+		     directory_entry->name_data,
+		     directory_entry->name_size ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to volume label name: %d.",
+			 function );
+
+			goto on_error;
+		}
+		directory_entry->name[ name_offset ]     = 0;
+		directory_entry->name[ name_offset + 1 ] = 0;
+		directory_entry->name_size               = name_size;
+		directory_entry->is_unicode              = 1;
 	}
 	return( 1 );
 

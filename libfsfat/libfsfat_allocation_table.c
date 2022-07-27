@@ -314,7 +314,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 			{
 				break;
 			}
-			if( io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT12 )
+			if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
 			{
 				byte_stream_copy_to_uint24_little_endian(
 				 &( table_data[ table_data_offset ] ),
@@ -378,7 +378,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 #endif
 				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number;
 			}
-			else if( io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT16 )
+			else if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
 			{
 				byte_stream_copy_to_uint16_little_endian(
 				 &( table_data[ table_data_offset ] ),
@@ -424,13 +424,26 @@ int libfsfat_allocation_table_read_file_io_handle(
 				{
 					if( cluster_number >= 0x08000000UL )
 					{
-						libcnotify_printf(
-						 "%s: cluster: %04d number\t: 0x%08" PRIx32 " (%s)\n",
-						 function,
-						 table_index,
-						 cluster_number,
-						 libfsfat_debug_print_fat32_cluster_type(
-						  cluster_number ) );
+						if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
+						{
+							libcnotify_printf(
+							 "%s: cluster: %04d number\t: 0x%08" PRIx32 " (%s)\n",
+							 function,
+							 table_index,
+							 cluster_number,
+							 libfsfat_debug_print_fat32_cluster_type(
+							  cluster_number ) );
+						}
+						else
+						{
+							libcnotify_printf(
+							 "%s: cluster: %04d number\t: 0x%08" PRIx32 " (%s)\n",
+							 function,
+							 table_index,
+							 cluster_number,
+							 libfsfat_debug_print_exfat_cluster_type(
+							  cluster_number ) );
+						}
 					}
 					else if( cluster_number != 0 )
 					{
@@ -441,7 +454,8 @@ int libfsfat_allocation_table_read_file_io_handle(
 						 cluster_number );
 					}
 				}
-#endif
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+
 				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number;
 			}
 		}

@@ -27,6 +27,7 @@ libfsfat_la_SOURCES = \
 	libfsfat_allocation_table.c libfsfat_allocation_table.h \
 	libfsfat_boot_record.c libfsfat_boot_record.h \
 	libfsfat_cluster_block_data.c libfsfat_cluster_block_data.h \
+	libfsfat_date_time.c libfsfat_date_time.h \
 	libfsfat_debug.c libfsfat_debug.h \
 	libfsfat_definitions.h \
 	libfsfat_directory.c libfsfat_directory.h \

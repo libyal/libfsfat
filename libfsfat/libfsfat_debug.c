@@ -26,6 +26,7 @@
 #include <types.h>
 #include <wide_string.h>
 
+#include "libfsfat_date_time.h"
 #include "libfsfat_debug.h"
 #include "libfsfat_definitions.h"
 #include "libfsfat_libbfio.h"
@@ -34,6 +35,36 @@
 #include "libfsfat_libfdatetime.h"
 
 #if defined( HAVE_DEBUG_OUTPUT )
+
+/* Prints the exFAT cluster type
+ */
+const char *libfsfat_debug_print_exfat_cluster_type(
+             uint32_t cluster_type )
+{
+	if( cluster_type == 0UL )
+	{
+		return( "Free" );
+	}
+	if( cluster_type == 1UL )
+	{
+		return( "Invalid" );
+	}
+	if( ( cluster_type >= 0xfffffff0UL )
+	 && ( cluster_type <= 0xfffffff6UL ) )
+	{
+		return( "Reserved" );
+	}
+	if( cluster_type == 0xfffffff7UL )
+	{
+		return( "Bad" );
+	}
+	if( ( cluster_type >= 0xfffffff8UL )
+	 && ( cluster_type <= 0xffffffffUL ) )
+	{
+		return( "End of chain" );
+	}
+	return( "Used" );
+}
 
 /* Prints the FAT-12 cluster type
  */
@@ -132,7 +163,7 @@ const char *libfsfat_debug_print_fat32_cluster_type(
 /* Prints the file attribute flags
  */
 void libfsfat_debug_print_file_attribute_flags(
-      uint8_t file_attribute_flags )
+      uint16_t file_attribute_flags )
 {
 	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_READ_ONLY ) != 0 )
 	{
@@ -177,48 +208,66 @@ void libfsfat_debug_print_file_attribute_flags(
 int libfsfat_debug_print_fat_date_time_value(
      const char *function_name,
      const char *value_name,
-     const uint8_t *byte_stream,
-     size_t byte_stream_size,
-     int byte_order,
+     uint16_t fat_date,
+     uint16_t fat_time,
+     uint8_t fat_time_fraction,
+     uint8_t fat_time_utc_offset,
      uint32_t string_format_flags,
      libcerror_error_t **error )
 {
 	char date_time_string[ 32 ];
 
-	libfdatetime_fat_date_time_t *fat_date_time = NULL;
-	static char *function                       = "libfsfat_debug_print_fat_date_time_value";
+	libfdatetime_posix_time_t *posix_time = NULL;
+	static char *function                 = "libfsfat_debug_print_fat_date_time_value";
+	uint64_t fat_timestamp                = 0;
 
-	if( libfdatetime_fat_date_time_initialize(
-	     &fat_date_time,
+	if( libfsfat_date_time_get_timestamp(
+	     fat_date,
+	     fat_time,
+	     fat_time_fraction,
+	     fat_time_utc_offset,
+	     &fat_timestamp,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve timestamp.",
+		 function );
+
+		goto on_error;
+	}
+	if( libfdatetime_posix_time_initialize(
+	     &posix_time,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create FAT date time.",
+		 "%s: unable to create POSIX time.",
 		 function );
 
 		goto on_error;
 	}
-	if( libfdatetime_fat_date_time_copy_from_byte_stream(
-	     fat_date_time,
-	     byte_stream,
-	     byte_stream_size,
-	     byte_order,
+	if( libfdatetime_posix_time_copy_from_32bit(
+	     posix_time,
+	     (uint32_t) ( ( fat_timestamp + 31553280000UL ) / 100 ),
+	     LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_32BIT_SIGNED,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_COPY_FAILED,
-		 "%s: unable to copy byte stream to FAT date time.",
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to copy POSIX time from 32-bit.",
 		 function );
 
 		goto on_error;
 	}
-	if( libfdatetime_fat_date_time_copy_to_utf8_string(
-	     fat_date_time,
+	if( libfdatetime_posix_time_copy_to_utf8_string(
+	     posix_time,
 	     (uint8_t *) date_time_string,
 	     32,
 	     string_format_flags,
@@ -227,27 +276,28 @@ int libfsfat_debug_print_fat_date_time_value(
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_COPY_FAILED,
-		 "%s: unable to copy FAT date time to string.",
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to copy POSIX time to string.",
 		 function );
 
 		goto on_error;
 	}
 	libcnotify_printf(
-	 "%s: %s: %s UTC\n",
+	 "%s: %s: %s.%02" PRIu64 " UTC\n",
 	 function_name,
 	 value_name,
-	 date_time_string );
+	 date_time_string,
+	 fat_timestamp % 100 );
 
-	if( libfdatetime_fat_date_time_free(
-	     &fat_date_time,
+	if( libfdatetime_posix_time_free(
+	     &posix_time,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-		 "%s: unable to free FAT date time.",
+		 "%s: unable to free POSIX time.",
 		 function );
 
 		goto on_error;
@@ -255,10 +305,10 @@ int libfsfat_debug_print_fat_date_time_value(
 	return( 1 );
 
 on_error:
-	if( fat_date_time != NULL )
+	if( posix_time != NULL )
 	{
-		libfdatetime_fat_date_time_free(
-		 &fat_date_time,
+		libfdatetime_posix_time_free(
+		 &posix_time,
 		 NULL );
 	}
 	return( -1 );

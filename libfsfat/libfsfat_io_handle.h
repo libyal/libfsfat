@@ -36,9 +36,9 @@ typedef struct libfsfat_io_handle libfsfat_io_handle_t;
 
 struct libfsfat_io_handle
 {
-	/* The file system type
+	/* The file system format
 	 */
-	int8_t file_system_type;
+	uint8_t file_system_format;
 
 	/* The bytes per sector
 	 */
@@ -51,6 +51,10 @@ struct libfsfat_io_handle
 	/* The total number of clusters
 	 */
 	uint32_t total_number_of_clusters;
+
+	/* The root directory offset
+	 */
+	off64_t root_directory_offset;
 
 	/* The first cluster offset
 	 */

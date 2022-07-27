@@ -36,9 +36,9 @@ typedef struct libfsfat_boot_record libfsfat_boot_record_t;
 
 struct libfsfat_boot_record
 {
-	/* The file system type
+	/* The file system format
 	 */
-	int8_t file_system_type;
+	uint8_t file_system_format;
 
 	/* The bytes per sector
 	 */

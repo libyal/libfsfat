@@ -93,7 +93,7 @@ struct fsfat_directory_entry
 	 */
 	uint8_t data_start_cluster[ 2 ];
 
-	/* The data size:
+	/* The data size
 	 * Consists of 4 bytes
 	 */
 	uint8_t data_size[ 4 ];
@@ -142,6 +142,171 @@ struct fsfat_directory_entry_vfat
 	 * Consists of 4 bytes
 	 */
 	uint8_t third_name_segment[ 4 ];
+};
+
+typedef struct fsfat_directory_entry_exfat_allocation_bitmap fsfat_directory_entry_exfat_allocation_bitmap_t;
+
+struct fsfat_directory_entry_exfat_allocation_bitmap
+{
+	/* The entry type
+	 * Consists of 1 byte
+	 */
+	uint8_t entry_type;
+
+	/* The bitmap flags
+	 * Consists of 1 byte
+	 */
+	uint8_t bitmap_flags;
+
+	/* Unknown (reserved)
+	 * Consists of 18 bytes
+	 */
+	uint8_t unknown1[ 18 ];
+
+	/* The data start cluster
+	 * Consists of 4 bytes
+	 */
+	uint8_t data_start_cluster[ 4 ];
+
+	/* The data size
+	 * Consists of 8 bytes
+	 */
+	uint8_t data_size[ 8 ];
+};
+
+typedef struct fsfat_directory_entry_exfat_file_entry fsfat_directory_entry_exfat_file_entry_t;
+
+struct fsfat_directory_entry_exfat_file_entry
+{
+	/* The entry type
+	 * Consists of 1 byte
+	 */
+	uint8_t entry_type;
+
+	/* Unknown
+	 * Consists of 1 byte
+	 */
+	uint8_t unknown1;
+
+	/* Unknown
+	 * Consists of 2 bytes
+	 */
+	uint8_t unknown2[ 2 ];
+
+	/* The file attribute flags
+	 * Consists of 2 bytes
+	 */
+	uint8_t file_attribute_flags[ 2 ];
+
+	/* Unknown (reserved)
+	 * Consists of 2 bytes
+	 */
+	uint8_t unknown3[ 2 ];
+
+	/* The creation time
+	 * Consists of 2 bytes
+	 */
+	uint8_t creation_time[ 2 ];
+
+	/* The creation date
+	 * Consists of 2 bytes
+	 */
+	uint8_t creation_date[ 2 ];
+
+	/* The (last) modification time
+	 * Consists of 2 bytes
+	 */
+	uint8_t modification_time[ 2 ];
+
+	/* The (last) modification date
+	 * Consists of 2 bytes
+	 */
+	uint8_t modification_date[ 2 ];
+
+	/* The (last) access time
+	 * Consists of 2 bytes
+	 */
+	uint8_t access_time[ 2 ];
+
+	/* The (last) access date
+	 * Consists of 2 bytes
+	 */
+	uint8_t access_date[ 2 ];
+
+	/* The creation time fraction of seconds
+	 * Consists of 1 byte
+	 */
+	uint8_t creation_time_fraction;
+
+	/* The modification time fraction of seconds
+	 * Consists of 1 byte
+	 */
+	uint8_t modification_time_fraction;
+
+	/* The creation time UTC offset
+	 * Consists of 1 byte
+	 */
+	uint8_t creation_time_utc_offset;
+
+	/* The modification time UTC offset
+	 * Consists of 1 byte
+	 */
+	uint8_t modification_time_utc_offset;
+
+	/* The (last) access time UTC offset
+	 * Consists of 1 byte
+	 */
+	uint8_t access_time_utc_offset;
+
+	/* Unknown (reserved)
+	 * Consists of 7 bytes
+	 */
+	uint8_t unknown4[ 7 ];
+};
+
+typedef struct fsfat_directory_entry_exfat_file_entry_name fsfat_directory_entry_exfat_file_entry_name_t;
+
+struct fsfat_directory_entry_exfat_file_entry_name
+{
+	/* The entry type
+	 * Consists of 1 byte
+	 */
+	uint8_t entry_type;
+
+	/* Unknown
+	 * Consists of 1 byte
+	 */
+	uint8_t unknown1;
+
+	/* The name
+	 * Consists of 30 bytes
+	 */
+	uint8_t name[ 30 ];
+};
+
+typedef struct fsfat_directory_entry_exfat_volume_label fsfat_directory_entry_exfat_volume_label_t;
+
+struct fsfat_directory_entry_exfat_volume_label
+{
+	/* The entry type
+	 * Consists of 1 byte
+	 */
+	uint8_t entry_type;
+
+	/* The name size
+	 * Consists of 1 byte
+	 */
+	uint8_t name_size;
+
+	/* The name
+	 * Consists of 22 bytes
+	 */
+	uint8_t name[ 22 ];
+
+	/* Unknown (reserved)
+	 * Consists of 8 bytes
+	 */
+	uint8_t unknown1[ 8 ];
 };
 
 #if defined( __cplusplus )

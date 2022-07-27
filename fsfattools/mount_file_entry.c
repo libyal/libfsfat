@@ -253,7 +253,7 @@ int mount_file_entry_get_creation_time(
      libcerror_error_t **error )
 {
 	static char *function  = "mount_file_entry_get_creation_time";
-	uint32_t fat_date_time = 0;
+	uint64_t fat_timestamp = 0;
 
 #if defined( WINAPI )
 	uint64_t filetime      = 0;
@@ -285,7 +285,7 @@ int mount_file_entry_get_creation_time(
 	}
 	if( libfsfat_file_entry_get_creation_time(
 	     file_entry->fsfat_file_entry,
-	     &fat_date_time,
+	     &fat_timestamp,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -298,14 +298,16 @@ int mount_file_entry_get_creation_time(
 		return( -1 );
 	}
 #if defined( WINAPI )
-	if( posix_time != 0 )
+	if( fat_timestamp != 0 )
 	{
-		/* Convert the POSIX nanoseconds timestamp into a FILETIME timestamp
-		 */
-		filetime = (uint64_t) ( ( posix_time / 100 ) + 116444736000000000L );
+		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
 	}
 	*creation_time = filetime;
 #else
+	if( fat_timestamp != 0 )
+	{
+		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+	}
 	*creation_time = (uint64_t) posix_time;
 #endif
 	return( 1 );
@@ -321,8 +323,8 @@ int mount_file_entry_get_access_time(
      uint64_t *access_time,
      libcerror_error_t **error )
 {
-	static char *function = "mount_file_entry_get_access_time";
-	uint32_t fat_date_time = 0;
+	static char *function  = "mount_file_entry_get_access_time";
+	uint64_t fat_timestamp = 0;
 
 #if defined( WINAPI )
 	uint64_t filetime      = 0;
@@ -354,7 +356,7 @@ int mount_file_entry_get_access_time(
 	}
 	if( libfsfat_file_entry_get_access_time(
 	     file_entry->fsfat_file_entry,
-	     &fat_date_time,
+	     &fat_timestamp,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -367,14 +369,16 @@ int mount_file_entry_get_access_time(
 		return( -1 );
 	}
 #if defined( WINAPI )
-	if( posix_time != 0 )
+	if( fat_timestamp != 0 )
 	{
-		/* Convert the POSIX nanoseconds timestamp into a FILETIME timestamp
-		 */
-		filetime = (uint64_t) ( ( posix_time / 100 ) + 116444736000000000L );
+		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
 	}
 	*access_time = filetime;
 #else
+	if( fat_timestamp != 0 )
+	{
+		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+	}
 	*access_time = (uint64_t) posix_time;
 #endif
 	return( 1 );
@@ -390,8 +394,8 @@ int mount_file_entry_get_modification_time(
      uint64_t *modification_time,
      libcerror_error_t **error )
 {
-	static char *function = "mount_file_entry_get_modification_time";
-	uint32_t fat_date_time = 0;
+	static char *function  = "mount_file_entry_get_modification_time";
+	uint64_t fat_timestamp = 0;
 
 #if defined( WINAPI )
 	uint64_t filetime      = 0;
@@ -423,7 +427,7 @@ int mount_file_entry_get_modification_time(
 	}
 	if( libfsfat_file_entry_get_modification_time(
 	     file_entry->fsfat_file_entry,
-	     &fat_date_time,
+	     &fat_timestamp,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -436,14 +440,16 @@ int mount_file_entry_get_modification_time(
 		return( -1 );
 	}
 #if defined( WINAPI )
-	if( posix_time != 0 )
+	if( fat_timestamp != 0 )
 	{
-		/* Convert the POSIX nanoseconds timestamp into a FILETIME timestamp
-		 */
-		filetime = (uint64_t) ( ( posix_time / 100 ) + 116444736000000000L );
+		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
 	}
 	*modification_time = filetime;
 #else
+	if( fat_timestamp != 0 )
+	{
+		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+	}
 	*modification_time = (uint64_t) posix_time;
 #endif
 	return( 1 );
@@ -496,9 +502,8 @@ int mount_file_entry_get_file_mode(
      uint16_t *file_mode,
      libcerror_error_t **error )
 {
-	static char *function        = "mount_file_entry_get_file_mode";
-	uint8_t file_attribute_flags = 0;
-	int result                   = 0;
+	static char *function         = "mount_file_entry_get_file_mode";
+	uint16_t file_attribute_flags = 0;
 
 	if( file_entry == NULL )
 	{

@@ -261,11 +261,11 @@ The boot sector is at least 512 bytes of size and consists of:
 Must be 0 according to `[MICROSOFT22]`.
 | 64 | 8 | | Partition offset
 | 72 | 8 | | Total number of sectors
-| 80 | 4 | | File allocation table size start sector
+| 80 | 4 | | File allocation table start sector
 | 84 | 4 | | File allocation table size +
 Contains the number of sectors of a File Allocation Table, must be non 0
-| 88 | 4 | | [yellow-background]*Unknown (cluster heap start sector)*
-| 92 | 4 | | [yellow-background]*Unknown (cluster heap number of sectors)*
+| 88 | 4 | | Data cluster start sector
+| 92 | 4 | | Total number of data clusters
 | 96 | 4 | | Root directory start cluster
 | 100 | 4 | | Volume serial number
 | 104 | 1 | | Format revision minor number
@@ -391,6 +391,28 @@ Only the lower 28-bits are used
 | 0x10000000 - 0xffffffff | [yellow-background]*Unknown*
 |===
 
+=== exFAT file allocation table entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 4 | | Data cluster number
+|===
+
+[NOTE]
+Only the lower 28-bits are used
+
+[cols="1,5",options="header"]
+|===
+| Value(s) | Description
+| 0x00000000 | Unused (free) cluster
+| 0x00000001 | [yellow-background]*Unknown (invalid)*
+| 0x00000002 - 0xffffffef | Used cluster
+| 0xfffffff0 - 0xfffffff6 | Reserved
+| 0xfffffff7 | Bad cluster
+| 0xfffffff8 - 0xffffffff | End of cluster chain
+|===
+
 == Directory
 
 A directory consists of:
@@ -402,7 +424,9 @@ A directory consists of:
 
 === Directory entry
 
-A directory entry is 32 bytes of size and consists of:
+==== FAT-12, FAT-16 and FAT-32 directory entry
+
+A FAT-12, FAT-16 and FAT-32 directory entry is 32 bytes of size and consists of:
 
 [cols="1,1,1,5",options="header"]
 |===
@@ -420,10 +444,182 @@ Contains fraction of 2-seconds in 10 ms intervals
 | 18 | 2 | | Last access date
 | 20 | 2 | | [yellow-background]*Unknown (OS/2 extended attribute)* +
 Not used by FAT-12
-| 22 | 2 | | Last written time
-| 24 | 2 | | Last written date
-| 26 | 2 | | File content data start cluster
-| 28 | 4 | | File content data size
+| 22 | 2 | | Last modification time
+| 24 | 2 | | Last modification date
+| 26 | 2 | | Data stream start cluster
+| 28 | 4 | | Data stream data size
+|===
+
+==== exFAT directory entry
+
+An exFAT directory entry is 32 bytes of size and consists of:
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | | Entry type
+| 1 | 19 | | Entry data
+| 20 | 4 | | Data stream start cluster
+| 24 | 8 | | Data stream size
+|===
+
+===== exFAT directory entry type
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 5 bits | | Type type code
+| 0.5 | 1 bit | | Is non-critical (also referred to as type importance)
+| 0.6 | 1 bit | | Is secondary entry (also referred to as type category)
+| 0.7 | 1 bit | | In use
+|===
+
+[cols="1,5",options="header"]
+|===
+| Value | Description
+| 0x00 | Terminator directory entry
+| 0x01 - 0x7f | Unused
+| 0x80 | Invalid
+| 0x81 - 0xff | Used
+|===
+
+===== exFAT directory entry type codes
+
+[cols="1,5",options="header"]
+|===
+| Value | Description
+2+| _Critical and primary_
+| 0x81 | Allocation bitmap
+| 0x82 | Up-case table +
+Table of uppercase characters used for ensuring case insensitivity in Windows and DOS name spaces.
+| 0x83 | Volume label
+| |
+| 0x85 | File entry
+| |
+2+| _Non-critical and primary_
+| 0xa0 | Volume identifier
+| 0xa1 | TexFAT padding
+| |
+2+| _Critical and secondary_
+| 0xc0 | Data stream
+| 0xc1 | File entry name
+| |
+2+| _Non-critical and secondary_
+| 0xe0 | Vendor extension
+| 0xe1 | Vendor allocation
+|===
+
+===== exFAT allocation bitmap directory entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | 0x81 | Entry type
+| 1 | 1 | | Bitmap flags
+| 2 | 18 | 0 | [yellow-background]*Unknown (Reserved)*
+| 20 | 4 | | Data stream start cluster
+| 24 | 8 | | Data stream size
+|===
+
+===== exFAT up-case table directory entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | 0x82 | Entry type
+| 1 | 3 | 0 | [yellow-background]*Unknown (Reserved)*
+| 4 | 4 | | Checksum
+| 8 | 12 | 0 | [yellow-background]*Unknown (Reserved)*
+| 20 | 4 | | Data stream start cluster
+| 24 | 8 | | Data stream size
+|===
+
+===== exFAT volume label directory entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | 0x83 | Entry type
+| 1 | 1 | | Number of characters
+| 2 | 22 | | Volume label +
+UTF-16 little-endian string without an end-of-string character
+| 24 | 8 | 0 | [yellow-background]*Unknown (Reserved)*
+|===
+
+[NOTE]
+Should only be stored in the first and/or second directory entry of the root
+directory.
+
+===== exFAT file entry directory entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | 0x85 | Entry type
+| 1 | 1 | | [yellow-background]*Unknown (Secondary count)*
+| 2 | 2 | | [yellow-background]*Unknown (Set checksum)*
+| 4 | 2 | | File attributes +
+See section: <<file_attributes,File attributes>>
+| 6 | 2 | 0 | [yellow-background]*Unknown (Reserved)*
+| 8 | 2 | | Creation time
+| 10 | 2 | | Creation date
+| 12 | 2 | | Last modification time
+| 14 | 2 | | Last modification date
+| 16 | 2 | | Last access time
+| 18 | 2 | | Last access date
+| 20 | 1 | | Creation time fraction of seconds +
+Contains fraction of 2-seconds in 10 ms intervals
+| 21 | 1 | | Last modification time fraction of seconds +
+Contains fraction of 2-seconds in 10 ms intervals
+| 22 | 1 | | Creation time UTC offset +
+Contains number of 15 minute intervals of the time relative to UTC, where the MSB indicates the offset is valid
+| 23 | 1 | | Last modification time UTC offset +
+Contains number of 15 minute intervals of the time relative to UTC, where the MSB indicates the offset is valid
+| 24 | 1 | | Last access time UTC offset +
+Contains number of 15 minute intervals of the time relative to UTC, where the MSB indicates the offset is valid
+| 25 | 7 | 0 | [yellow-background]*Unknown (Reserved)*
+|===
+
+===== exFAT volume identifier directory entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | 0xa0 | Entry type
+| 1 | 1 | | [yellow-background]*Unknown (Secondary count)*
+| 2 | 2 | | [yellow-background]*Unknown (Set checksum)*
+| 4 | 2 | | [yellow-background]*Unknown (Flags)*
+| 6 | 16 | | Volume identifier +
+Contains a GUID
+| 22 | 10 | 0 | [yellow-background]*Unknown (Reserved)*
+|===
+
+===== exFAT data stream directory entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | 0xc0 | Entry type
+| 1 | 1 | | [yellow-background]*Unknown (Flags)*
+| 2 | 1 | 0 | [yellow-background]*Unknown (Reserved)*
+| 3 | 1 | | Name size
+| 4 | 2 | | Name hash
+| 6 | 2 | 0 | [yellow-background]*Unknown (Reserved)*
+| 8 | 8 | | Data stream valid data size
+| 16 | 4 | 0 | [yellow-background]*Unknown (Reserved)*
+| 20 | 4 | | Data stream start cluster
+| 24 | 8 | | Data stream size
+|===
+
+===== exFAT file entry name directory entry
+
+[cols="1,1,1,5",options="header"]
+|===
+| Offset | Size | Value | Description
+| 0 | 1 | 0xc1 | Entry type
+| 1 | 1 | | [yellow-background]*Unknown (Flags)*
+| 2 | 30 | | Name +
+UTF-16 little-endian string without an end-of-string character
 |===
 
 === Short (8.3) file name

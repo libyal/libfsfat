@@ -1,4 +1,4 @@
-.Dd July 26, 2022
+.Dd July 27, 2022
 .Dt libfsfat 3
 .Os libfsfat
 .Sh NAME
@@ -61,6 +61,8 @@ Volume functions
 .Ft int
 .Fn libfsfat_volume_close "libfsfat_volume_t *volume" "libfsfat_error_t **error"
 .Ft int
+.Fn libfsfat_volume_get_format_version "libfsfat_volume_t *volume" "uint8_t *format_version" "libfsfat_error_t **error"
+.Ft int
 .Fn libfsfat_volume_get_utf8_label_size "libfsfat_volume_t *volume" "size_t *utf8_string_size" "libfsfat_error_t **error"
 .Ft int
 .Fn libfsfat_volume_get_utf8_label "libfsfat_volume_t *volume" "uint8_t *utf8_string" "size_t utf8_string_size" "libfsfat_error_t **error"
@@ -86,6 +88,10 @@ Available when compiled with libbfio support:
 File entry functions
 .Ft int
 .Fn libfsfat_file_entry_free "libfsfat_file_entry_t **file_entry" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_identifier "libfsfat_file_entry_t *file_entry" "uint64_t *identifier" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_file_attribute_flags "libfsfat_file_entry_t *file_entry" "uint16_t *file_attribute_flags" "libfsfat_error_t **error"
 .Ft int
 .Fn libfsfat_file_entry_get_number_of_sub_file_entries "libfsfat_file_entry_t *file_entry" "int *number_of_sub_entries" "libfsfat_error_t **error"
 .Ft int
