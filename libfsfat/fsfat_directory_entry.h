@@ -53,10 +53,10 @@ struct fsfat_directory_entry
 	 */
 	uint8_t unknown1;
 
-	/* Unknown
+	/* The creation time fraction of seconds
 	 * Consists of 1 byte
 	 */
-	uint8_t unknown2;
+	uint8_t creation_time_fraction;
 
 	/* The creation time
 	 * Consists of 2 bytes

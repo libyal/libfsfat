@@ -939,6 +939,7 @@ int libfsfat_internal_volume_open_read(
 {
 	libfsfat_boot_record_t *boot_record = NULL;
 	static char *function               = "libfsfat_internal_volume_open_read";
+	int result                          = 0;
 
 	if( internal_volume == NULL )
 	{
@@ -1072,12 +1073,26 @@ int libfsfat_internal_volume_open_read(
 		 function );
 	}
 #endif
-	if( libfsfat_file_system_read_directory(
-	     internal_volume->file_system,
-	     file_io_handle,
-	     boot_record->root_directory_cluster,
-	     &( internal_volume->root_directory ),
-	     error ) != 1 )
+	if( boot_record->root_directory_size > 0 )
+	{
+		result = libfsfat_file_system_read_directory_by_range(
+		          internal_volume->file_system,
+		          file_io_handle,
+		          boot_record->root_directory_offset,
+		          boot_record->root_directory_size,
+		          &( internal_volume->root_directory ),
+		          error );
+	}
+	else
+	{
+		result = libfsfat_file_system_read_directory(
+		          internal_volume->file_system,
+		          file_io_handle,
+		          boot_record->root_directory_cluster,
+		          &( internal_volume->root_directory ),
+		          error );
+	}
+	if( result != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1136,7 +1151,6 @@ int libfsfat_volume_get_utf8_label_size(
 {
 	libfsfat_internal_volume_t *internal_volume = NULL;
 	static char *function                       = "libfsfat_volume_get_utf8_label_size";
-	size_t safe_utf8_string_size                = 1;
 	int result                                  = 1;
 
 	if( volume == NULL )
@@ -1152,13 +1166,13 @@ int libfsfat_volume_get_utf8_label_size(
 	}
 	internal_volume = (libfsfat_internal_volume_t *) volume;
 
-	if( utf8_string_size == NULL )
+	if( internal_volume->root_directory == NULL )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid UTF-8 string size.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid internal volume - missing root directory.",
 		 function );
 
 		return( -1 );
@@ -1178,8 +1192,20 @@ int libfsfat_volume_get_utf8_label_size(
 		return( -1 );
 	}
 #endif
-/* TODO implement */
+	if( libfsfat_directory_get_utf8_volume_label_size(
+	     internal_volume->root_directory,
+	     utf8_string_size,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve size of UTF-8 name from volume label.",
+		 function );
 
+		result = -1;
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_volume->read_write_lock,
@@ -1195,10 +1221,6 @@ int libfsfat_volume_get_utf8_label_size(
 		return( -1 );
 	}
 #endif
-	if( result == 1 )
-	{
-		*utf8_string_size = safe_utf8_string_size;
-	}
 	return( result );
 }
 
@@ -1229,35 +1251,13 @@ int libfsfat_volume_get_utf8_label(
 	}
 	internal_volume = (libfsfat_internal_volume_t *) volume;
 
-	if( utf8_string == NULL )
+	if( internal_volume->root_directory == NULL )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid UTF-8 string.",
-		 function );
-
-		return( -1 );
-	}
-	if( utf8_string_size == 0 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_SMALL,
-		 "%s: invalid UTF-8 string size value too small.",
-		 function );
-
-		return( -1 );
-	}
-	if( utf8_string_size > (size_t) SSIZE_MAX )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid UTF-8 string size value exceeds maximum.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid internal volume - missing root directory.",
 		 function );
 
 		return( -1 );
@@ -1277,8 +1277,21 @@ int libfsfat_volume_get_utf8_label(
 		return( -1 );
 	}
 #endif
-/* TODO implement */
+	if( libfsfat_directory_get_utf8_volume_label(
+	     internal_volume->root_directory,
+	     utf8_string,
+	     utf8_string_size,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve UTF-8 name from volume label.",
+		 function );
 
+		result = -1;
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_volume->read_write_lock,
@@ -1308,7 +1321,6 @@ int libfsfat_volume_get_utf16_label_size(
 {
 	libfsfat_internal_volume_t *internal_volume = NULL;
 	static char *function                       = "libfsfat_volume_get_utf16_label_size";
-	size_t safe_utf16_string_size               = 1;
 	int result                                  = 1;
 
 	if( volume == NULL )
@@ -1324,13 +1336,13 @@ int libfsfat_volume_get_utf16_label_size(
 	}
 	internal_volume = (libfsfat_internal_volume_t *) volume;
 
-	if( utf16_string_size == NULL )
+	if( internal_volume->root_directory == NULL )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid UTF-16 string size.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid internal volume - missing root directory.",
 		 function );
 
 		return( -1 );
@@ -1350,8 +1362,20 @@ int libfsfat_volume_get_utf16_label_size(
 		return( -1 );
 	}
 #endif
-/* TODO implement */
+	if( libfsfat_directory_get_utf16_volume_label_size(
+	     internal_volume->root_directory,
+	     utf16_string_size,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve size of UTF-16 name from volume label.",
+		 function );
 
+		result = -1;
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_volume->read_write_lock,
@@ -1367,10 +1391,6 @@ int libfsfat_volume_get_utf16_label_size(
 		return( -1 );
 	}
 #endif
-	if( result == 1 )
-	{
-		*utf16_string_size = safe_utf16_string_size;
-	}
 	return( result );
 }
 
@@ -1401,35 +1421,13 @@ int libfsfat_volume_get_utf16_label(
 	}
 	internal_volume = (libfsfat_internal_volume_t *) volume;
 
-	if( utf16_string == NULL )
+	if( internal_volume->root_directory == NULL )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid UTF-16 string.",
-		 function );
-
-		return( -1 );
-	}
-	if( utf16_string_size == 0 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_SMALL,
-		 "%s: invalid UTF-16 string size value too small.",
-		 function );
-
-		return( -1 );
-	}
-	if( utf16_string_size > (size_t) SSIZE_MAX )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid UTF-16 string size value exceeds maximum.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid internal volume - missing root directory.",
 		 function );
 
 		return( -1 );
@@ -1449,8 +1447,21 @@ int libfsfat_volume_get_utf16_label(
 		return( -1 );
 	}
 #endif
-/* TODO implement */
+	if( libfsfat_directory_get_utf16_volume_label(
+	     internal_volume->root_directory,
+	     utf16_string,
+	     utf16_string_size,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve UTF-16 name from volume label.",
+		 function );
 
+		result = -1;
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_volume->read_write_lock,
@@ -1549,6 +1560,7 @@ int libfsfat_volume_get_root_directory(
 	     internal_volume->file_system,
 	     internal_volume->root_directory,
 	     NULL,
+	     0,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1592,11 +1604,15 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error )
 {
+	libfsfat_directory_t *directory              = NULL;
+	libfsfat_directory_entry_t *directory_entry  = NULL;
 	const uint8_t *utf8_string_segment           = NULL;
 	static char *function                        = "libfsfat_internal_volume_get_file_entry_by_utf8_path";
 	libuna_unicode_character_t unicode_character = 0;
 	size_t utf8_string_index                     = 0;
 	size_t utf8_string_segment_length            = 0;
+	uint32_t cluster_number                      = 0;
+	uint8_t flags                                = 0;
 	int result                                   = 0;
 
 	if( internal_volume == NULL )
@@ -1663,26 +1679,8 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 			utf8_string_index++;
 		}
 	}
-/* TODO
-	inode_number = LIBFSFAT_INODE_NUMBER_ROOT_DIRECTORY;
+	directory = internal_volume->root_directory;
 
-	if( libfsfat_inode_table_get_inode_by_number(
-	     internal_volume->inode_table,
-	     internal_volume->file_io_handle,
-	     inode_number,
-	     &inode,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve inode: %" PRIu32 ".",
-		 function,
-		 inode_number );
-
-		goto on_error;
-	}
 	if( ( utf8_string_length == 0 )
 	 || ( utf8_string_length == 1 ) )
 	{
@@ -1690,51 +1688,41 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 	}
 	else while( utf8_string_index < utf8_string_length )
 	{
-		if( directory != NULL )
+		if( directory != internal_volume->root_directory )
 		{
-			if( libfsfat_directory_free(
+			if( directory != NULL )
+			{
+				if( libfsfat_directory_free(
+				     &directory,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+					 "%s: unable to free directory.",
+					 function );
+
+					goto on_error;
+				}
+			}
+			if( libfsfat_file_system_read_directory(
+			     internal_volume->file_system,
+			     internal_volume->file_io_handle,
+			     cluster_number,
 			     &directory,
 			     error ) != 1 )
 			{
 				libcerror_error_set(
 				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-				 "%s: unable to free directory.",
-				 function );
+				 LIBCERROR_ERROR_DOMAIN_IO,
+				 LIBCERROR_IO_ERROR_READ_FAILED,
+				 "%s: unable to read directory: %" PRIu32 ".",
+				 function,
+				 cluster_number );
 
 				goto on_error;
 			}
-		}
-		if( libfsfat_directory_initialize(
-		     &directory,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-			 "%s: unable to create directory.",
-			 function );
-
-			goto on_error;
-		}
-		if( libfsfat_directory_read_file_io_handle(
-		     directory,
-		     internal_volume->io_handle,
-		     internal_volume->file_io_handle,
-		     inode,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: unable to read directory from inode: %" PRIu32 ".",
-			 function,
-			 inode_number );
-
-			goto on_error;
 		}
 		utf8_string_segment        = &( utf8_string[ utf8_string_index ] );
 		utf8_string_segment_length = utf8_string_index;
@@ -1773,7 +1761,7 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 		}
 		else
 		{
-			result = libfsfat_directory_get_entry_by_utf8_name(
+			result = libfsfat_directory_get_file_entry_by_utf8_name(
 			          directory,
 			          utf8_string_segment,
 			          utf8_string_segment_length,
@@ -1795,51 +1783,39 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 		{
 			break;
 		}
-		if( libfsfat_directory_entry_get_inode_number(
+		if( directory == internal_volume->root_directory )
+		{
+			directory = NULL;
+		}
+		if( libfsfat_directory_entry_get_data_start_cluster(
 		     directory_entry,
-		     &inode_number,
+		     &cluster_number,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve inode number from directory entry.",
+			 "%s: unable to retrieve data start cluster from directory entry.",
 			 function );
 
 			goto on_error;
 		}
-		if( libfsfat_inode_table_get_inode_by_number(
-		     internal_volume->inode_table,
-		     internal_volume->file_io_handle,
-		     inode_number,
-		     &inode,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve inode: %" PRIu32 ".",
-			 function,
-			 inode_number );
-
-			goto on_error;
-		}
 	}
-*/
-	/* libfsfat_file_entry_initialize takes over management of safe_inode and safe_directory_entry
-	 */
-/* TODO
+	if( directory != internal_volume->root_directory )
+	{
+		/* The file_entry takes over management of directory
+		 */
+		flags = 1;
+	}
 	if( libfsfat_file_entry_initialize(
 	     file_entry,
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
-	     internal_volume->inode_table,
-	     inode_number,
-	     safe_inode,
-	     safe_directory_entry,
-	     0,
+	     internal_volume->file_system,
+	     directory,
+	     directory_entry,
+	     flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1851,10 +1827,16 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 
 		goto on_error;
 	}
-*/
 	return( result );
 
 on_error:
+	if( ( directory != NULL )
+	 && ( directory != internal_volume->root_directory ) )
+	{
+		libfsfat_directory_free(
+		 &directory,
+		 NULL );
+	}
 	return( -1 );
 }
 
@@ -1972,11 +1954,15 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error )
 {
+	libfsfat_directory_t *directory              = NULL;
+	libfsfat_directory_entry_t *directory_entry  = NULL;
 	const uint16_t *utf16_string_segment         = NULL;
 	static char *function                        = "libfsfat_internal_volume_get_file_entry_by_utf16_path";
 	libuna_unicode_character_t unicode_character = 0;
 	size_t utf16_string_index                    = 0;
 	size_t utf16_string_segment_length           = 0;
+	uint32_t cluster_number                      = 0;
+	uint8_t flags                                = 0;
 	int result                                   = 0;
 
 	if( internal_volume == NULL )
@@ -2043,26 +2029,8 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 			utf16_string_index++;
 		}
 	}
-/* TODO
-	inode_number = LIBFSFAT_INODE_NUMBER_ROOT_DIRECTORY;
+	directory = internal_volume->root_directory;
 
-	if( libfsfat_inode_table_get_inode_by_number(
-	     internal_volume->inode_table,
-	     internal_volume->file_io_handle,
-	     inode_number,
-	     &inode,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve inode: %" PRIu32 ".",
-		 function,
-		 inode_number );
-
-		goto on_error;
-	}
 	if( ( utf16_string_length == 0 )
 	 || ( utf16_string_length == 1 ) )
 	{
@@ -2070,51 +2038,41 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 	}
 	else while( utf16_string_index < utf16_string_length )
 	{
-		if( directory != NULL )
+		if( directory != internal_volume->root_directory )
 		{
-			if( libfsfat_directory_free(
+			if( directory != NULL )
+			{
+				if( libfsfat_directory_free(
+				     &directory,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+					 "%s: unable to free directory.",
+					 function );
+
+					goto on_error;
+				}
+			}
+			if( libfsfat_file_system_read_directory(
+			     internal_volume->file_system,
+			     internal_volume->file_io_handle,
+			     cluster_number,
 			     &directory,
 			     error ) != 1 )
 			{
 				libcerror_error_set(
 				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-				 "%s: unable to free directory.",
-				 function );
+				 LIBCERROR_ERROR_DOMAIN_IO,
+				 LIBCERROR_IO_ERROR_READ_FAILED,
+				 "%s: unable to read directory: %" PRIu32 ".",
+				 function,
+				 cluster_number );
 
 				goto on_error;
 			}
-		}
-		if( libfsfat_directory_initialize(
-		     &directory,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-			 "%s: unable to create directory.",
-			 function );
-
-			goto on_error;
-		}
-		if( libfsfat_directory_read_file_io_handle(
-		     directory,
-		     internal_volume->io_handle,
-		     internal_volume->file_io_handle,
-		     inode,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: unable to read directory from inode: %" PRIu32 ".",
-			 function,
-			 inode_number );
-
-			goto on_error;
 		}
 		utf16_string_segment        = &( utf16_string[ utf16_string_index ] );
 		utf16_string_segment_length = utf16_string_index;
@@ -2153,7 +2111,7 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 		}
 		else
 		{
-			result = libfsfat_directory_get_entry_by_utf16_name(
+			result = libfsfat_directory_get_file_entry_by_utf16_name(
 			          directory,
 			          utf16_string_segment,
 			          utf16_string_segment_length,
@@ -2175,51 +2133,39 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 		{
 			break;
 		}
-		if( libfsfat_directory_entry_get_inode_number(
+		if( directory == internal_volume->root_directory )
+		{
+			directory = NULL;
+		}
+		if( libfsfat_directory_entry_get_data_start_cluster(
 		     directory_entry,
-		     &inode_number,
+		     &cluster_number,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve inode number from directory entry.",
+			 "%s: unable to retrieve data start cluster from directory entry.",
 			 function );
 
 			goto on_error;
 		}
-		if( libfsfat_inode_table_get_inode_by_number(
-		     internal_volume->inode_table,
-		     internal_volume->file_io_handle,
-		     inode_number,
-		     &inode,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve inode: %" PRIu32 ".",
-			 function,
-			 inode_number );
-
-			goto on_error;
-		}
 	}
-*/
-	/* libfsfat_file_entry_initialize takes over management of safe_inode and safe_directory_entry
-	 */
-/* TODO
+	if( directory != internal_volume->root_directory )
+	{
+		/* The file_entry takes over management of directory
+		 */
+		flags = 1;
+	}
 	if( libfsfat_file_entry_initialize(
 	     file_entry,
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
-	     internal_volume->inode_table,
-	     inode_number,
-	     safe_inode,
-	     safe_directory_entry,
-	     0,
+	     internal_volume->file_system,
+	     directory,
+	     directory_entry,
+	     flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -2231,10 +2177,16 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 
 		goto on_error;
 	}
-*/
 	return( result );
 
 on_error:
+	if( ( directory != NULL )
+	 && ( directory != internal_volume->root_directory ) )
+	{
+		libfsfat_directory_free(
+		 &directory,
+		 NULL );
+	}
 	return( -1 );
 }
 

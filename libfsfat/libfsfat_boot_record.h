@@ -64,13 +64,21 @@ struct libfsfat_boot_record
 	 */
 	size64_t allocation_table_size;
 
-	/* The first cluster offset
-	 */
-	off64_t first_cluster_offset;
-
 	/* The root directory cluster
 	 */
 	uint32_t root_directory_cluster;
+
+	/* The root directory offset
+	 */
+	off64_t root_directory_offset;
+
+	/* The root directory size
+	 */
+	size64_t root_directory_size;
+
+	/* The first cluster offset
+	 */
+	off64_t first_cluster_offset;
 };
 
 int libfsfat_boot_record_initialize(

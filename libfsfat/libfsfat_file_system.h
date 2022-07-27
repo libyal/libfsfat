@@ -31,6 +31,7 @@
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcthreads.h"
+#include "libfsfat_libfdata.h"
 #include "libfsfat_types.h"
 
 #if defined( __cplusplus )
@@ -77,6 +78,21 @@ int libfsfat_file_system_read_directory(
      libbfio_handle_t *file_io_handle,
      uint32_t cluster_number,
      libfsfat_directory_t **directory,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_read_directory_by_range(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     off64_t file_offset,
+     size64_t size,
+     libfsfat_directory_t **directory,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_data_stream(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     uint32_t cluster_number,
+     libfdata_stream_t **data_stream,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

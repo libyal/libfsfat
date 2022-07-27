@@ -7,7 +7,7 @@ EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
 
-LIBRARY_TESTS="allocation_table boot_record cluster_block directory_entry error file_entry io_handle notify";
+LIBRARY_TESTS="allocation_table boot_record directory_entry error file_entry io_handle notify";
 LIBRARY_TESTS_WITH_INPUT="support volume";
 OPTION_SETS="offset";
 

@@ -53,6 +53,10 @@ struct libfsfat_directory_entry
 	 */
 	size_t name_size;
 
+	/* Value to indicate if the name is in Unicode (UTF-16 little-endian)
+	 */
+	uint8_t is_unicode;
+
 	/* The VFAT sequence number
 	 */
 	uint8_t vfat_sequence_number;
@@ -61,21 +65,41 @@ struct libfsfat_directory_entry
 	 */
 	uint8_t file_attribute_flags;
 
-	/* The creation date and time
+	/* The creation date
 	 */
-	uint8_t creation_time[ 4 ];
+	uint16_t creation_date;
 
-	/* The access date and time
+	/* The creation time
 	 */
-	uint8_t access_time[ 4 ];
+	uint16_t creation_time;
 
-	/* The modification date and time
+	/* The creation time fraction of seconds
 	 */
-	uint8_t modification_time[ 4 ];
+	uint8_t creation_time_fraction;
+
+	/* The access date
+	 */
+	uint16_t access_date;
+
+	/* The modification date
+	 */
+	uint16_t modification_date;
+
+	/* The modification time
+	 */
+	uint16_t modification_time;
 
 	/* The (VFAT) long file name entries
 	 */
 	libcdata_array_t *long_file_name_entries_array;
+
+	/* The data start cluster
+	 */
+	uint16_t data_start_cluster;
+
+	/* The data size
+	 */
+	uint32_t data_size;
 };
 
 int libfsfat_directory_entry_initialize(
@@ -100,17 +124,17 @@ int libfsfat_directory_entry_read_file_io_handle(
 
 int libfsfat_directory_entry_get_access_time(
      libfsfat_directory_entry_t *directory_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error );
 
 int libfsfat_directory_entry_get_creation_time(
      libfsfat_directory_entry_t *directory_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error );
 
 int libfsfat_directory_entry_get_modification_time(
      libfsfat_directory_entry_t *directory_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error );
 
 int libfsfat_directory_entry_get_file_attribute_flags(
@@ -133,6 +157,12 @@ int libfsfat_directory_entry_get_utf8_name(
      size_t utf8_string_size,
      libcerror_error_t **error );
 
+int libfsfat_directory_entry_compare_with_utf8_string(
+     libfsfat_directory_entry_t *directory_entry,
+     const uint8_t *utf8_string,
+     size_t utf8_string_length,
+     libcerror_error_t **error );
+
 int libfsfat_directory_entry_get_utf16_name_size(
      libfsfat_directory_entry_t *directory_entry,
      size_t *utf16_string_size,
@@ -142,6 +172,22 @@ int libfsfat_directory_entry_get_utf16_name(
      libfsfat_directory_entry_t *directory_entry,
      uint16_t *utf16_string,
      size_t utf16_string_size,
+     libcerror_error_t **error );
+
+int libfsfat_directory_entry_compare_with_utf16_string(
+     libfsfat_directory_entry_t *directory_entry,
+     const uint16_t *utf16_string,
+     size_t utf16_string_length,
+     libcerror_error_t **error );
+
+int libfsfat_directory_entry_get_data_start_cluster(
+     libfsfat_directory_entry_t *directory_entry,
+     uint32_t *data_start_cluster,
+     libcerror_error_t **error );
+
+int libfsfat_directory_entry_get_data_size(
+     libfsfat_directory_entry_t *directory_entry,
+     uint32_t *data_size,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

@@ -63,6 +63,22 @@ struct libfsfat_internal_file_entry
 	 */
 	libfsfat_directory_entry_t *directory_entry;
 
+	/* The cluster number
+	 */
+	uint32_t cluster_number;
+
+	/* The file attribute flags
+	 */
+	uint8_t file_attribute_flags;
+
+	/* The cluster block stream
+	 */
+	libfdata_stream_t *cluster_block_stream;
+
+	/* The flags
+	 */
+	uint8_t flags;
+
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
 	 */
@@ -77,6 +93,7 @@ int libfsfat_file_entry_initialize(
      libfsfat_file_system_t *file_system,
      libfsfat_directory_t *directory,
      libfsfat_directory_entry_t *directory_entry,
+     uint8_t flags,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
@@ -87,19 +104,19 @@ int libfsfat_file_entry_free(
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_access_time(
      libfsfat_file_entry_t *file_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_creation_time(
      libfsfat_file_entry_t *file_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_modification_time(
      libfsfat_file_entry_t *file_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
@@ -140,10 +157,39 @@ int libfsfat_file_entry_get_number_of_sub_file_entries(
      int *number_of_sub_entries,
      libcerror_error_t **error );
 
+int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
+     libfsfat_internal_file_entry_t *internal_file_entry,
+     int sub_file_entry_index,
+     libfsfat_file_entry_t **sub_file_entry,
+     libcerror_error_t **error );
+
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_get_sub_file_entry_by_index(
      libfsfat_file_entry_t *file_entry,
      int sub_file_entry_index,
+     libfsfat_file_entry_t **sub_file_entry,
+     libcerror_error_t **error );
+
+int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
+     libfsfat_internal_file_entry_t *internal_file_entry,
+     const uint8_t *utf8_string,
+     size_t utf8_string_length,
+     libfsfat_file_entry_t **sub_file_entry,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_sub_file_entry_by_utf8_name(
+     libfsfat_file_entry_t *file_entry,
+     const uint8_t *utf8_string,
+     size_t utf8_string_length,
+     libfsfat_file_entry_t **sub_file_entry,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_sub_file_entry_by_utf16_name(
+     libfsfat_file_entry_t *file_entry,
+     const uint16_t *utf16_string,
+     size_t utf16_string_length,
      libfsfat_file_entry_t **sub_file_entry,
      libcerror_error_t **error );
 

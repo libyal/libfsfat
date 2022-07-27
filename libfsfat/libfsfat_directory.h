@@ -69,6 +69,42 @@ int libfsfat_directory_get_file_entry_by_index(
      libfsfat_directory_entry_t **directory_entry,
      libcerror_error_t **error );
 
+int libfsfat_directory_get_file_entry_by_utf8_name(
+     libfsfat_directory_t *directory,
+     const uint8_t *utf8_string,
+     size_t utf8_string_length,
+     libfsfat_directory_entry_t **directory_entry,
+     libcerror_error_t **error );
+
+int libfsfat_directory_get_file_entry_by_utf16_name(
+     libfsfat_directory_t *directory,
+     const uint16_t *utf16_string,
+     size_t utf16_string_length,
+     libfsfat_directory_entry_t **directory_entry,
+     libcerror_error_t **error );
+
+int libfsfat_directory_get_utf8_volume_label_size(
+     libfsfat_directory_t *directory,
+     size_t *utf8_string_size,
+     libcerror_error_t **error );
+
+int libfsfat_directory_get_utf8_volume_label(
+     libfsfat_directory_t *directory,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libcerror_error_t **error );
+
+int libfsfat_directory_get_utf16_volume_label_size(
+     libfsfat_directory_t *directory,
+     size_t *utf16_string_size,
+     libcerror_error_t **error );
+
+int libfsfat_directory_get_utf16_volume_label(
+     libfsfat_directory_t *directory,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
+     libcerror_error_t **error );
+
 #if defined( __cplusplus )
 }
 #endif

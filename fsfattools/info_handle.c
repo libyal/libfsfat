@@ -168,6 +168,51 @@ int info_handle_system_string_copy_from_64_bit_in_decimal(
 	return( 1 );
 }
 
+/* Prints the file attribute flags to the notify stream
+ */
+void info_handle_file_attribute_flags_fprint(
+      uint8_t file_attribute_flags,
+      FILE *notify_stream )
+{
+	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_READ_ONLY ) != 0 )
+	{
+		fprintf(
+		 notify_stream,
+		 "\t\tIs read-only (FILE_ATTRIBUTE_READ_ONLY)\n" );
+	}
+	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_HIDDEN ) != 0 )
+	{
+		fprintf(
+		 notify_stream,
+		 "\t\tIs hidden (FILE_ATTRIBUTE_HIDDEN)\n" );
+	}
+	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_SYSTEM ) != 0 )
+	{
+		fprintf(
+		 notify_stream,
+		 "\t\tIs system (FILE_ATTRIBUTE_SYSTEM)\n" );
+	}
+
+	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
+	{
+		fprintf(
+		 notify_stream,
+		 "\t\tIs directory (FILE_ATTRIBUTE_DIRECTORY)\n" );
+	}
+	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_ARCHIVE ) != 0 )
+	{
+		fprintf(
+		 notify_stream,
+		 "\t\tShould be archived (FILE_ATTRIBUTE_ARCHIVE)\n" );
+	}
+	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) != 0 )
+	{
+		fprintf(
+		 notify_stream,
+		 "\t\tIs device (FILE_ATTRIBUTE_DEVICE)\n" );
+	}
+}
+
 /* Creates an info handle
  * Make sure the value info_handle is referencing, is set to NULL
  * Returns 1 if successful or -1 on error
@@ -635,6 +680,128 @@ int info_handle_close_input(
 	return( 0 );
 }
 
+/* Prints a seconds FAT timestamp value
+ * Returns 1 if successful or -1 on error
+ */
+int info_handle_fat_timestamp_value_fprint(
+     info_handle_t *info_handle,
+     const char *value_name,
+     uint64_t value_64bit,
+     libcerror_error_t **error )
+{
+	system_character_t date_time_string[ 32 ];
+
+	libfdatetime_posix_time_t *posix_time = NULL;
+	static char *function                 = "info_handle_fat_timestamp_value_fprint";
+	int result                            = 0;
+
+	if( info_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid info handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( value_64bit == 0 )
+	{
+		fprintf(
+		 info_handle->notify_stream,
+		 "%s: Not set (0)\n",
+		 value_name );
+	}
+	else
+	{
+		if( libfdatetime_posix_time_initialize(
+		     &posix_time,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create POSIX time.",
+			 function );
+
+			goto on_error;
+		}
+		if( libfdatetime_posix_time_copy_from_32bit(
+		     posix_time,
+		     (uint32_t) ( ( value_64bit + 31553280000UL ) / 100 ),
+		     LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_32BIT_SIGNED,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+			 "%s: unable to copy POSIX time from 32-bit.",
+			 function );
+
+			goto on_error;
+		}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		result = libfdatetime_posix_time_copy_to_utf16_string(
+			  posix_time,
+			  (uint16_t *) date_time_string,
+			  32,
+			  LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			  error );
+#else
+		result = libfdatetime_posix_time_copy_to_utf8_string(
+			  posix_time,
+			  (uint8_t *) date_time_string,
+			  32,
+			  LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
+			  error );
+#endif
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+			 "%s: unable to copy POSIX time to string.",
+			 function );
+
+			goto on_error;
+		}
+		fprintf(
+		 info_handle->notify_stream,
+		 "%s: %" PRIs_SYSTEM ".%02" PRIu64 " UTC\n",
+		 value_name,
+		 date_time_string,
+		 value_64bit % 100 );
+
+		if( libfdatetime_posix_time_free(
+		     &posix_time,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free POSIX time.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	return( 1 );
+
+on_error:
+	if( posix_time != NULL )
+	{
+		libfdatetime_posix_time_free(
+		 &posix_time,
+		 NULL );
+	}
+	return( -1 );
+}
+
 /* Calculates the MD5 of the contents of a file entry
  * Returns 1 if successful or -1 on error
  */
@@ -665,7 +832,6 @@ int info_handle_file_entry_calculate_md5(
 
 		return( -1 );
 	}
-#ifdef TODO
 	if( libfsfat_file_entry_get_size(
 	     file_entry,
 	     &data_size,
@@ -795,7 +961,6 @@ int info_handle_file_entry_calculate_md5(
 
 		goto on_error;
 	}
-#endif
 	return( 1 );
 
 on_error:
@@ -1010,16 +1175,15 @@ int info_handle_file_entry_value_with_name_fprint(
 		'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
 		0 };
 
-	char file_mode_string[ 11 ]    = { '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 0 };
+	char file_mode_string[ 11 ]  = { '-', 'r', 'w', 'x', 'r', 'w', 'x', 'r', 'w', 'x', 0 };
 
-	static char *function          = "info_handle_file_entry_value_with_name_fprint";
-	size64_t size                  = 0;
-	int64_t access_time            = 0;
-	int64_t creation_time          = 0;
-	int64_t modification_time      = 0;
-	uint32_t file_entry_identifier = 0;
-	uint8_t file_attribute_flags   = 0;
-	int result                     = 0;
+	static char *function        = "info_handle_file_entry_value_with_name_fprint";
+	size64_t size                = 0;
+	uint64_t access_time         = 0;
+	uint64_t creation_time       = 0;
+	uint64_t modification_time   = 0;
+	uint8_t file_attribute_flags = 0;
+	int result                   = 0;
 
 	if( info_handle == NULL )
 	{
@@ -1032,27 +1196,12 @@ int info_handle_file_entry_value_with_name_fprint(
 
 		return( -1 );
 	}
-#ifdef TODO
-	if( libfsfat_file_entry_get_inode_number(
-	     file_entry,
-	     &file_entry_identifier,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve inode number.",
-		 function );
-
-		return( -1 );
-	}
-#endif /* TODO */
-#ifdef TODO
-	if( libfsfat_file_entry_get_modification_time(
-	     file_entry,
-	     &modification_time,
-	     error ) != 1 )
+	result = libfsfat_file_entry_get_modification_time(
+	          file_entry,
+	          &modification_time,
+	          error );
+       
+	if( result == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1063,10 +1212,12 @@ int info_handle_file_entry_value_with_name_fprint(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_access_time(
-	     file_entry,
-	     &access_time,
-	     error ) != 1 )
+	result = libfsfat_file_entry_get_access_time(
+	          file_entry,
+	          &access_time,
+	          error );
+       
+	if( result == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1077,10 +1228,12 @@ int info_handle_file_entry_value_with_name_fprint(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_creation_time(
-	     file_entry,
-	     &creation_time,
-	     error ) != 1 )
+	result = libfsfat_file_entry_get_creation_time(
+	          file_entry,
+	          &creation_time,
+	          error );
+       
+	if( result == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1091,12 +1244,10 @@ int info_handle_file_entry_value_with_name_fprint(
 
 		return( -1 );
 	}
-#endif /* TODO */
-#ifdef TODO
 	if( libfsfat_file_entry_get_file_attribute_flags(
 	     file_entry,
 	     &file_attribute_flags,
-	     error ) != 1 )
+	     error ) == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1106,72 +1257,6 @@ int info_handle_file_entry_value_with_name_fprint(
 		 function );
 
 		return( -1 );
-	}
-/* TODO move into function */
-	if( ( file_mode & 0x0001 ) != 0 )
-	{
-		file_mode_string[ 9 ] = 'x';
-	}
-	if( ( file_mode & 0x0002 ) != 0 )
-	{
-		file_mode_string[ 8 ] = 'w';
-	}
-	if( ( file_mode & 0x0004 ) != 0 )
-	{
-		file_mode_string[ 7 ] = 'r';
-	}
-	if( ( file_mode & 0x0008 ) != 0 )
-	{
-		file_mode_string[ 6 ] = 'x';
-	}
-	if( ( file_mode & 0x0010 ) != 0 )
-	{
-		file_mode_string[ 5 ] = 'w';
-	}
-	if( ( file_mode & 0x0020 ) != 0 )
-	{
-		file_mode_string[ 4 ] = 'r';
-	}
-	if( ( file_mode & 0x0040 ) != 0 )
-	{
-		file_mode_string[ 3 ] = 'x';
-	}
-	if( ( file_mode & 0x0080 ) != 0 )
-	{
-		file_mode_string[ 2 ] = 'w';
-	}
-	if( ( file_mode & 0x0100 ) != 0 )
-	{
-		file_mode_string[ 1 ] = 'r';
-	}
-	switch( file_mode & 0xf000 )
-	{
-		case 0x1000:
-			file_mode_string[ 0 ] = 'p';
-			break;
-
-		case 0x2000:
-			file_mode_string[ 0 ] = 'c';
-			break;
-
-		case 0x4000:
-			file_mode_string[ 0 ] = 'd';
-			break;
-
-		case 0x6000:
-			file_mode_string[ 0 ] = 'b';
-			break;
-
-		case 0xa000:
-			file_mode_string[ 0 ] = 'l';
-			break;
-
-		case 0xc000:
-			file_mode_string[ 0 ] = 's';
-			break;
-
-		default:
-			break;
 	}
 	if( libfsfat_file_entry_get_size(
 	     file_entry,
@@ -1187,16 +1272,15 @@ int info_handle_file_entry_value_with_name_fprint(
 
 		return( -1 );
 	}
-#endif /* TODO */
 	if( info_handle->bodyfile_stream != NULL )
 	{
 		if( info_handle->calculate_md5 == 0 )
 		{
 			md5_string[ 1 ] = 0;
 		}
-		else if( ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 )
-		      && ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
-		      && ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) != 0 ) )
+		else if( ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) == 0 )
+		      && ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) == 0 )
+		      && ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) == 0 ) )
 		{
 			if( info_handle_file_entry_calculate_md5(
 			     info_handle,
@@ -1214,6 +1298,17 @@ int info_handle_file_entry_value_with_name_fprint(
 
 				return( -1 );
 			}
+		}
+		if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
+		{
+			file_mode_string[ 0 ] = 'd';
+		}
+		if( ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_READ_ONLY ) != 0 )
+		 || ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_SYSTEM ) != 0 ) )
+		{
+			file_mode_string[ 2 ] = '-';
+			file_mode_string[ 5 ] = '-';
+			file_mode_string[ 8 ] = '-';
 		}
 		/* Colums in a Sleuthkit 3.x and later bodyfile
 		 * MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
@@ -1241,8 +1336,7 @@ int info_handle_file_entry_value_with_name_fprint(
 				return( -1 );
 			}
 		}
-		if( ( file_entry_name != NULL )
-		 && ( file_entry_identifier != 2 ) )
+		if( file_entry_name != NULL )
 		{
 			if( info_handle_name_value_fprint(
 			     info_handle,
@@ -1260,24 +1354,30 @@ int info_handle_file_entry_value_with_name_fprint(
 				return( -1 );
 			}
 		}
+		if( modification_time != 0 )
+		{
+			modification_time += 31553280000;
+		}
+		if( access_time != 0 )
+		{
+			access_time += 31553280000;
+		}
+		if( creation_time != 0 )
+		{
+			creation_time += 31553280000;
+		}
 		fprintf(
 		 info_handle->bodyfile_stream,
-		 "|%" PRIu32 "|%s|0|0|%" PRIu64 "|%" PRIi64 "|%" PRIi64 "|0|%" PRIi64 ".%09" PRIi64 "\n",
-		 file_entry_identifier,
+		 "||%s|0|0|%" PRIu64 "|%" PRIu64 "|%" PRIu64 "|0|%" PRIu64 ".%02" PRIu64 "\n",
 		 file_mode_string,
 		 size,
-		 access_time / 1000000000,
-		 modification_time / 1000000000,
-		 creation_time / 1000000000,
-		 0 );
+		 access_time / 100,
+		 modification_time / 100,
+		 creation_time / 100,
+		 creation_time % 100 );
 	}
 	else
 	{
-		fprintf(
-		 info_handle->notify_stream,
-		 "\tInode number\t\t: %" PRIu32 "\n",
-		 file_entry_identifier );
-
 		if( file_entry_name != NULL )
 		{
 			fprintf(
@@ -1302,8 +1402,7 @@ int info_handle_file_entry_value_with_name_fprint(
 					return( -1 );
 				}
 			}
-			if( ( file_entry_name != NULL )
-			 && ( file_entry_identifier != 2 ) )
+			if( file_entry_name != NULL )
 			{
 				if( info_handle_name_value_fprint(
 				     info_handle,
@@ -1330,11 +1429,10 @@ int info_handle_file_entry_value_with_name_fprint(
 		 "\tSize\t\t\t: %" PRIu64 "\n",
 		 size );
 
-#ifdef TODO
-		if( info_handle_posix_time_in_seconds_value_fprint(
+		if( info_handle_fat_timestamp_value_fprint(
 		     info_handle,
 		     "\tModification time\t",
-		     (int32_t) ( modification_time / 1000000000 ),
+		     modification_time,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1346,10 +1444,10 @@ int info_handle_file_entry_value_with_name_fprint(
 
 			return( -1 );
 		}
-		if( info_handle_posix_time_in_seconds_value_fprint(
+		if( info_handle_fat_timestamp_value_fprint(
 		     info_handle,
 		     "\tAccess time\t\t",
-		     (int32_t) ( access_time / 1000000000 ),
+		     access_time,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1361,7 +1459,7 @@ int info_handle_file_entry_value_with_name_fprint(
 
 			return( -1 );
 		}
-		if( info_handle_posix_time_in_seconds_value_fprint(
+		if( info_handle_fat_timestamp_value_fprint(
 		     info_handle,
 		     "\tCreation time\t\t",
 		     creation_time,
@@ -1376,11 +1474,13 @@ int info_handle_file_entry_value_with_name_fprint(
 
 			return( -1 );
 		}
-#endif /* TODO */
 		fprintf(
 		 info_handle->notify_stream,
-		 "\tFile attribute flags\t\t: %" PRIu8 "\n",
+		 "\tFile attribute flags\t: 0x%02" PRIx8 "\n",
 		 file_attribute_flags );
+		info_handle_file_attribute_flags_fprint(
+		 file_attribute_flags,
+		 info_handle->notify_stream );
 	}
 	return( 1 );
 }
@@ -1402,7 +1502,6 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
 	size_t file_entry_name_length         = 0;
 	size_t file_entry_name_size           = 0;
 	size_t sub_path_size                  = 0;
-	uint32_t file_entry_identifier        = 0;
 	int number_of_sub_file_entries        = 0;
 	int result                            = 0;
 	int sub_file_entry_index              = 0;
@@ -1440,22 +1539,6 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
 
 		return( -1 );
 	}
-#ifdef TODO
-	if( libfsfat_file_entry_get_inode_number(
-	     file_entry,
-	     &file_entry_identifier,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve inode number.",
-		 function );
-
-		goto on_error;
-	}
-#endif
 #if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libfsfat_file_entry_get_utf16_name_size(
 	          file_entry,
@@ -1559,8 +1642,7 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
 
 			goto on_error;
 		}
-		if( ( file_entry_name != NULL )
-		 && ( file_entry_identifier != 2 ) )
+		if( file_entry_name != NULL )
 		{
 			if( info_handle_name_value_fprint(
 			     info_handle,
@@ -2087,7 +2169,7 @@ int info_handle_file_system_hierarchy_fprint(
 		if( info_handle_file_system_hierarchy_fprint_file_entry(
 		     info_handle,
 		     file_entry,
-		     _SYSTEM_STRING( "/" ),
+		     _SYSTEM_STRING( "\\" ),
 		     1,
 		     error ) != 1 )
 		{
@@ -2139,7 +2221,10 @@ int info_handle_volume_fprint(
      info_handle_t *info_handle,
      libcerror_error_t **error )
 {
-	static char *function = "info_handle_volume_fprint";
+	system_character_t *value_string = NULL;
+	static char *function            = "info_handle_volume_fprint";
+	size_t value_string_size         = 0;
+	int result                       = 0;
 
 	if( info_handle == NULL )
 	{
@@ -2160,6 +2245,86 @@ int info_handle_volume_fprint(
 	 info_handle->notify_stream,
 	 "Volume information:\n" );
 
+	fprintf(
+	 info_handle->notify_stream,
+	 "\tLabel\t\t\t\t: " );
+
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+	result = libfsfat_volume_get_utf16_label_size(
+	          info_handle->input_volume,
+	          &value_string_size,
+	          error );
+#else
+	result = libfsfat_volume_get_utf8_label_size(
+	          info_handle->input_volume,
+	          &value_string_size,
+	          error );
+#endif
+	if( result != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve label size.",
+		 function );
+
+		goto on_error;
+	}
+	if( value_string_size > 0 )
+	{
+		value_string = system_string_allocate(
+		                value_string_size );
+
+		if( value_string == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create label string.",
+			 function );
+
+			goto on_error;
+		}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		result = libfsfat_volume_get_utf16_label(
+		          info_handle->input_volume,
+		          (uint16_t *) value_string,
+		          value_string_size,
+		          error );
+#else
+		result = libfsfat_volume_get_utf8_label(
+		          info_handle->input_volume,
+		          (uint8_t *) value_string,
+		          value_string_size,
+		          error );
+#endif
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve label.",
+			 function );
+
+			goto on_error;
+		}
+		fprintf(
+		 info_handle->notify_stream,
+		 "%" PRIs_SYSTEM "",
+		 value_string );
+
+		memory_free(
+		 value_string );
+
+		value_string = NULL;
+	}
+	fprintf(
+	 info_handle->notify_stream,
+	 "\n" );
+
 /* TODO print more info */
 
 	fprintf(
@@ -2167,5 +2332,13 @@ int info_handle_volume_fprint(
 	 "\n" );
 
 	return( 1 );
+
+on_error:
+	if( value_string != NULL )
+	{
+		memory_free(
+		 value_string );
+	}
+	return( -1 );
 }
 

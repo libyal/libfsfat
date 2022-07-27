@@ -24,6 +24,7 @@
 #include <types.h>
 
 #include "libfsfat_allocation_table.h"
+#include "libfsfat_cluster_block_data.h"
 #include "libfsfat_definitions.h"
 #include "libfsfat_directory.h"
 #include "libfsfat_directory_entry.h"
@@ -32,6 +33,7 @@
 #include "libfsfat_libcdata.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcthreads.h"
+#include "libfsfat_libfdata.h"
 #include "libfsfat_types.h"
 
 #include "fsfat_directory_entry.h"
@@ -361,14 +363,15 @@ int libfsfat_file_system_read_directory(
 
 		goto on_error;
 	}
-	while( ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT12 )
-	      && ( cluster_number < 0x00000ff8UL ) )
-	    || ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT16 )
-	      && ( cluster_number < 0x0000fff8UL ) )
-	    || ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT32 )
-	      && ( cluster_number < 0x0ffffff8UL ) ) )
+	while( ( cluster_number >= 2 )
+	    && ( ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT12 )
+	       &&  ( cluster_number < 0x00000ff8UL ) )
+	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT16 )
+	       &&  ( cluster_number < 0x0000fff8UL ) )
+	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT32 )
+	       &&  ( cluster_number < 0x0ffffff8UL ) ) ) )
 	{
-		cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) cluster_number * file_system->io_handle->cluster_block_size );
+		cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
 		cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
 
 		while( cluster_offset < cluster_end_offset )
@@ -419,6 +422,38 @@ int libfsfat_file_system_read_directory(
 					goto on_error;
 				}
 				break;
+			}
+			/* Ignore directory entries "." and ".."
+			 */
+			if( ( directory_entry->name_data[ 0 ] == '.' )
+			 && ( ( directory_entry->name_data[ 1 ] == '.' )
+			  ||  ( directory_entry->name_data[ 1 ] == ' ' ) )
+			 && ( directory_entry->name_data[ 2 ] == ' ' )
+			 && ( directory_entry->name_data[ 3 ] == ' ' )
+			 && ( directory_entry->name_data[ 4 ] == ' ' )
+			 && ( directory_entry->name_data[ 5 ] == ' ' )
+			 && ( directory_entry->name_data[ 6 ] == ' ' )
+			 && ( directory_entry->name_data[ 7 ] == ' ' )
+			 && ( directory_entry->name_data[ 8 ] == ' ' )
+			 && ( directory_entry->name_data[ 9 ] == ' ' )
+			 && ( directory_entry->name_data[ 10 ] == ' ' ) )
+			{
+				if( libfsfat_directory_entry_free(
+				     &directory_entry,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+					 "%s: unable to free directory entry.",
+					 function );
+
+					goto on_error;
+				}
+				cluster_offset += sizeof( fsfat_directory_entry_t );
+
+				continue;
 			}
 			if( libcdata_array_append_entry(
 			     safe_directory->entries_array,
@@ -559,7 +594,22 @@ int libfsfat_file_system_read_directory(
 		{
 			break;
 		}
-/* TODO lookup next cluster block */
+		if( libfsfat_allocation_table_get_cluster_identifier_by_index(
+		     file_system->allocation_table,
+		     (int) cluster_number,
+		     &cluster_number,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve cluster identifier: %" PRIu32 ".",
+			 function,
+			 cluster_number );
+
+			goto on_error;
+		}
 	}
 	if( long_file_name_entries_array != NULL )
 	{
@@ -600,6 +650,489 @@ on_error:
 	{
 		libfsfat_directory_free(
 		 &safe_directory,
+		 NULL );
+	}
+	return( -1 );
+}
+
+/* Reads a directory
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_file_system_read_directory_by_range(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     off64_t file_offset,
+     size64_t size,
+     libfsfat_directory_t **directory,
+     libcerror_error_t **error )
+{
+	libcdata_array_t *long_file_name_entries_array = NULL;
+	libfsfat_directory_t *safe_directory           = NULL;
+	libfsfat_directory_entry_t *directory_entry    = NULL;
+	static char *function                          = "libfsfat_file_system_read_directory_by_range";
+	off64_t file_end_offset                        = 0;
+	int entry_index                                = 0;
+	int result                                     = 0;
+	uint8_t last_vfat_sequence_number              = 0;
+	uint8_t vfat_sequence_number                   = 0;
+
+	if( file_system == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file system.",
+		 function );
+
+		return( -1 );
+	}
+	if( file_system->io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file system - missing IO handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory.",
+		 function );
+
+		return( -1 );
+	}
+	if( *directory != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid directory value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( libfsfat_directory_initialize(
+	     &safe_directory,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create directory.",
+		 function );
+
+		goto on_error;
+	}
+	file_end_offset = file_offset + size;
+
+	while( file_offset < file_end_offset )
+	{
+		if( libfsfat_directory_entry_initialize(
+		     &directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create directory entry.",
+			 function );
+
+			goto on_error;
+		}
+		result = libfsfat_directory_entry_read_file_io_handle(
+		          directory_entry,
+		          file_io_handle,
+		          file_offset,
+		          error );
+
+		if( result == -1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_READ_FAILED,
+			 "%s: unable to read directory entry.",
+			 function );
+
+			goto on_error;
+		}
+		else if( result == 0 )
+		{
+			if( libfsfat_directory_entry_free(
+			     &directory_entry,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to free directory entry.",
+				 function );
+
+				goto on_error;
+			}
+			break;
+		}
+		if( libcdata_array_append_entry(
+		     safe_directory->entries_array,
+		     &entry_index,
+		     (intptr_t *) directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+			 "%s: unable to append directory entry to array.",
+			 function );
+
+			goto on_error;
+		}
+		if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
+		{
+			directory_entry->long_file_name_entries_array = long_file_name_entries_array;
+			long_file_name_entries_array                  = NULL;
+
+			if( directory_entry->file_attribute_flags == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
+			{
+				if( safe_directory->volume_label_entry != NULL )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+					 "%s: invalid directory - volume label entry value already set.",
+					 function );
+
+					goto on_error;
+				}
+				safe_directory->volume_label_entry = directory_entry;
+			}
+			else
+			{
+				if( libcdata_array_append_entry(
+				     safe_directory->file_entries_array,
+				     &entry_index,
+				     (intptr_t *) directory_entry,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+					 "%s: unable to append directory entry to file entries array.",
+					 function );
+
+					directory_entry = NULL;
+
+					goto on_error;
+				}
+			}
+		}
+		else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
+		{
+			vfat_sequence_number = directory_entry->vfat_sequence_number & 0x1f;
+
+			if( ( directory_entry->vfat_sequence_number & 0x40 ) != 0 )
+			{
+				if( long_file_name_entries_array != NULL )
+				{
+					if( libcdata_array_free(
+					     &long_file_name_entries_array,
+					     NULL,
+					     error ) != 1 )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+						 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+						 "%s: unable to free long file name entries array.",
+						 function );
+
+						directory_entry = NULL;
+
+						goto on_error;
+					}
+				}
+				if( libcdata_array_initialize(
+				     &long_file_name_entries_array,
+				     0,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+					 "%s: unable to create long file name entries array.",
+					 function );
+
+					directory_entry = NULL;
+
+					goto on_error;
+				}
+			}
+			else
+			{
+				if( ( vfat_sequence_number + 1 ) != last_vfat_sequence_number )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+					 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+					 "%s: invalid VFAT sequence number value out of bounds.",
+					 function );
+
+					return( -1 );
+				}
+			}
+			if( libcdata_array_append_entry(
+			     long_file_name_entries_array,
+			     &entry_index,
+			     (intptr_t *) directory_entry,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+				 "%s: unable to append directory entry to long file name entries array.",
+				 function );
+
+				directory_entry = NULL;
+
+				goto on_error;
+			}
+			last_vfat_sequence_number = vfat_sequence_number;
+		}
+		directory_entry = NULL;
+
+		file_offset += sizeof( fsfat_directory_entry_t );
+	}
+	if( long_file_name_entries_array != NULL )
+	{
+		if( libcdata_array_free(
+		     &long_file_name_entries_array,
+		     NULL,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free long file name entries array.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	*directory = safe_directory;
+
+	return( 1 );
+
+on_error:
+	if( long_file_name_entries_array != NULL )
+	{
+		libcdata_array_free(
+		 &long_file_name_entries_array,
+		 NULL,
+		 NULL );
+	}
+	if( directory_entry != NULL )
+	{
+		libfsfat_directory_entry_free(
+		 &directory_entry,
+		 NULL );
+	}
+	if( safe_directory != NULL )
+	{
+		libfsfat_directory_free(
+		 &safe_directory,
+		 NULL );
+	}
+	return( -1 );
+}
+
+/* Retrieves a data stream
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_file_system_get_data_stream(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     uint32_t cluster_number,
+     libfdata_stream_t **data_stream,
+     libcerror_error_t **error )
+{
+	libfdata_stream_t *safe_data_stream = NULL;
+	static char *function               = "libfsfat_file_system_get_data_stream";
+	off64_t cluster_offset              = 0;
+	off64_t segment_end_offset          = 0;
+	off64_t segment_start_offset        = 0;
+	int result                          = 0;
+	int segment_index                   = 0;
+
+	if( file_system == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file system.",
+		 function );
+
+		return( -1 );
+	}
+	if( file_system->io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file system - missing IO handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( data_stream == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid data stream.",
+		 function );
+
+		return( -1 );
+	}
+	if( *data_stream != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid data stream value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( libfdata_stream_initialize(
+	     &safe_data_stream,
+	     NULL,
+	     NULL,
+	     NULL,
+	     NULL,
+	     (ssize_t (*)(intptr_t *, intptr_t *, int, int, uint8_t *, size_t, uint32_t, uint8_t, libcerror_error_t **)) &libfsfat_cluster_block_data_read_segment_data,
+	     NULL,
+	     (off64_t (*)(intptr_t *, intptr_t *, int, int, off64_t, libcerror_error_t **)) &libfsfat_cluster_block_data_seek_segment_offset,
+	     0,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create data stream.",
+		 function );
+
+		goto on_error;
+	}
+	while( ( cluster_number >= 2 )
+	    && ( ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT12 )
+	       &&  ( cluster_number < 0x00000ff8UL ) )
+	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT16 )
+	       &&  ( cluster_number < 0x0000fff8UL ) )
+	     ||  ( ( file_system->io_handle->file_system_type == LIBFSFAT_FILE_SYSTEM_TYPE_FAT32 )
+	       &&  ( cluster_number < 0x0ffffff8UL ) ) ) )
+	{
+		cluster_offset = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
+
+		if( ( segment_start_offset != 0 )
+		 && ( cluster_offset > segment_end_offset ) )
+		{
+			if( libfdata_stream_append_segment(
+			     safe_data_stream,
+			     &segment_index,
+			     0,
+			     segment_start_offset,
+			     segment_end_offset - segment_start_offset,
+			     0,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+				 "%s: unable to append stream segment.",
+				 function );
+
+				goto on_error;
+			}
+			segment_start_offset = 0;
+		}
+		if( segment_start_offset == 0 )
+		{
+			segment_start_offset = cluster_offset;
+			segment_end_offset   = cluster_offset;
+		}
+		segment_end_offset += file_system->io_handle->cluster_block_size;
+
+		if( libfsfat_allocation_table_get_cluster_identifier_by_index(
+		     file_system->allocation_table,
+		     (int) cluster_number,
+		     &cluster_number,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve cluster identifier: %" PRIu32 ".",
+			 function,
+			 cluster_number );
+
+			goto on_error;
+		}
+	}
+	if( segment_start_offset != 0 )
+	{
+		if( libfdata_stream_append_segment(
+		     safe_data_stream,
+		     &segment_index,
+		     0,
+		     segment_start_offset,
+		     segment_end_offset - segment_start_offset,
+		     0,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+			 "%s: unable to append stream segment.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	*data_stream = safe_data_stream;
+
+	return( 1 );
+
+on_error:
+	if( safe_data_stream != NULL )
+	{
+		libfdata_stream_free(
+		 &safe_data_stream,
 		 NULL );
 	}
 	return( -1 );

@@ -6,7 +6,7 @@ $ExitSuccess = 0
 $ExitFailure = 1
 $ExitIgnore = 77
 
-$LibraryTests = "allocation_table boot_record cluster_block directory_entry error file_entry io_handle notify"
+$LibraryTests = "allocation_table boot_record directory_entry error file_entry io_handle notify"
 $LibraryTestsWithInput = "support volume"
 $OptionSets = "offset"
 

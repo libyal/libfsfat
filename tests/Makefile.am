@@ -48,7 +48,6 @@ EXTRA_DIST = \
 check_PROGRAMS = \
 	fsfat_test_allocation_table \
 	fsfat_test_boot_record \
-	fsfat_test_cluster_block \
 	fsfat_test_directory_entry \
 	fsfat_test_error \
 	fsfat_test_file_entry \
@@ -83,28 +82,6 @@ fsfat_test_boot_record_SOURCES = \
 	fsfat_test_unused.h
 
 fsfat_test_boot_record_LDADD = \
-	@LIBBFIO_LIBADD@ \
-	@LIBCPATH_LIBADD@ \
-	@LIBCFILE_LIBADD@ \
-	@LIBUNA_LIBADD@ \
-	@LIBCSPLIT_LIBADD@ \
-	@LIBCNOTIFY_LIBADD@ \
-	@LIBCLOCALE_LIBADD@ \
-	@LIBCDATA_LIBADD@ \
-	../libfsfat/libfsfat.la \
-	@LIBCERROR_LIBADD@
-
-fsfat_test_cluster_block_SOURCES = \
-	fsfat_test_cluster_block.c \
-	fsfat_test_functions.c fsfat_test_functions.h \
-	fsfat_test_libbfio.h \
-	fsfat_test_libcerror.h \
-	fsfat_test_libfsfat.h \
-	fsfat_test_macros.h \
-	fsfat_test_memory.c fsfat_test_memory.h \
-	fsfat_test_unused.h
-
-fsfat_test_cluster_block_LDADD = \
 	@LIBBFIO_LIBADD@ \
 	@LIBCPATH_LIBADD@ \
 	@LIBCFILE_LIBADD@ \

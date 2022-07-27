@@ -73,6 +73,10 @@ int info_handle_system_string_copy_from_64_bit_in_decimal(
      uint64_t *value_64bit,
      libcerror_error_t **error );
 
+void info_handle_file_attribute_flags_fprint(
+      uint8_t file_attribute_flags,
+      FILE *notify_stream );
+
 int info_handle_initialize(
      info_handle_t **info_handle,
      uint8_t calculate_md5,
@@ -116,6 +120,12 @@ int info_handle_name_value_fprint(
      info_handle_t *info_handle,
      const system_character_t *value_string,
      size_t value_string_length,
+     libcerror_error_t **error );
+
+int info_handle_fat_timestamp_value_fprint(
+     info_handle_t *info_handle,
+     const char *value_name,
+     uint64_t value_64bit,
      libcerror_error_t **error );
 
 int info_handle_file_entry_value_with_name_fprint(

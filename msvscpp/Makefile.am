@@ -1,7 +1,6 @@
 MSVSCPP_FILES = \
 	fsfat_test_allocation_table/fsfat_test_allocation_table.vcproj \
 	fsfat_test_boot_record/fsfat_test_boot_record.vcproj \
-	fsfat_test_cluster_block/fsfat_test_cluster_block.vcproj \
 	fsfat_test_directory_entry/fsfat_test_directory_entry.vcproj \
 	fsfat_test_error/fsfat_test_error.vcproj \
 	fsfat_test_file_entry/fsfat_test_file_entry.vcproj \

@@ -1,5 +1,5 @@
 /*
- * Cluster block vector functions
+ * Cluster block data functions
  *
  * Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -19,13 +19,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _LIBFSFAT_CLUSTER_BLOCK_VECTOR_H )
-#define _LIBFSFAT_CLUSTER_BLOCK_VECTOR_H
+#if !defined( _LIBFSFAT_CLUSTER_BLOCK_DATA_H )
+#define _LIBFSFAT_CLUSTER_BLOCK_DATA_H
 
 #include <common.h>
 #include <types.h>
 
-#include "libfsfat_allocation_table.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
@@ -35,28 +34,28 @@
 extern "C" {
 #endif
 
-int libfsfat_cluster_block_vector_initialize(
-     libfdata_vector_t **cluster_block_vector,
-     libfsfat_io_handle_t *io_handle,
-     libfsfat_allocation_table_t *allocation_table,
-     libcerror_error_t **error );
+ssize_t libfsfat_cluster_block_data_read_segment_data(
+         intptr_t *data_handle,
+         libbfio_handle_t *file_io_handle,
+         int segment_index,
+         int segment_file_index,
+         uint8_t *segment_data,
+         size_t segment_data_size,
+         uint32_t segment_flags,
+         uint8_t read_flags,
+         libcerror_error_t **error );
 
-int libfsfat_cluster_block_vector_read_element_data(
-     intptr_t *data_handle,
-     libbfio_handle_t *file_io_handle,
-     libfdata_vector_t *vector,
-     libfdata_cache_t *cache,
-     int element_index,
-     int element_data_file_index,
-     off64_t cluster_block_offset,
-     size64_t cluster_block_size,
-     uint32_t range_flags,
-     uint8_t read_flags,
-     libcerror_error_t **error );
+off64_t libfsfat_cluster_block_data_seek_segment_offset(
+         intptr_t *data_handle,
+         libbfio_handle_t *file_io_handle,
+         int segment_index,
+         int segment_file_index,
+         off64_t segment_offset,
+         libcerror_error_t **error );
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif /* !defined( _LIBFSFAT_CLUSTER_BLOCK_VECTOR_H ) */
+#endif /* !defined( _LIBFSFAT_CLUSTER_BLOCK_DATA_H ) */
 

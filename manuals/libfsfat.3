@@ -1,4 +1,4 @@
-.Dd May  1, 2022
+.Dd July 26, 2022
 .Dt libfsfat 3
 .Os libfsfat
 .Sh NAME
@@ -61,6 +61,14 @@ Volume functions
 .Ft int
 .Fn libfsfat_volume_close "libfsfat_volume_t *volume" "libfsfat_error_t **error"
 .Ft int
+.Fn libfsfat_volume_get_utf8_label_size "libfsfat_volume_t *volume" "size_t *utf8_string_size" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_volume_get_utf8_label "libfsfat_volume_t *volume" "uint8_t *utf8_string" "size_t utf8_string_size" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_volume_get_utf16_label_size "libfsfat_volume_t *volume" "size_t *utf16_string_size" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_volume_get_utf16_label "libfsfat_volume_t *volume" "uint16_t *utf16_string" "size_t utf16_string_size" "libfsfat_error_t **error"
+.Ft int
 .Fn libfsfat_volume_get_root_directory "libfsfat_volume_t *volume" "libfsfat_file_entry_t **file_entry" "libfsfat_error_t **error"
 .Ft int
 .Fn libfsfat_volume_get_file_entry_by_utf8_path "libfsfat_volume_t *volume" "const uint8_t *utf8_string" "size_t utf8_string_length" "libfsfat_file_entry_t **file_entry" "libfsfat_error_t **error"
@@ -78,6 +86,24 @@ Available when compiled with libbfio support:
 File entry functions
 .Ft int
 .Fn libfsfat_file_entry_free "libfsfat_file_entry_t **file_entry" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_number_of_sub_file_entries "libfsfat_file_entry_t *file_entry" "int *number_of_sub_entries" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_sub_file_entry_by_index "libfsfat_file_entry_t *file_entry" "int sub_file_entry_index" "libfsfat_file_entry_t **sub_file_entry" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_sub_file_entry_by_utf8_name "libfsfat_file_entry_t *file_entry" "const uint8_t *utf8_string" "size_t utf8_string_length" "libfsfat_file_entry_t **sub_file_entry" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_sub_file_entry_by_utf16_name "libfsfat_file_entry_t *file_entry" "const uint16_t *utf16_string" "size_t utf16_string_length" "libfsfat_file_entry_t **sub_file_entry" "libfsfat_error_t **error"
+.Ft ssize_t
+.Fn libfsfat_file_entry_read_buffer "libfsfat_file_entry_t *file_entry" "void *buffer" "size_t buffer_size" "libfsfat_error_t **error"
+.Ft ssize_t
+.Fn libfsfat_file_entry_read_buffer_at_offset "libfsfat_file_entry_t *file_entry" "void *buffer" "size_t buffer_size" "off64_t offset" "libfsfat_error_t **error"
+.Ft off64_t
+.Fn libfsfat_file_entry_seek_offset "libfsfat_file_entry_t *file_entry" "off64_t offset" "int whence" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_offset "libfsfat_file_entry_t *file_entry" "off64_t *offset" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_size "libfsfat_file_entry_t *file_entry" "size64_t *size" "libfsfat_error_t **error"
 .Sh DESCRIPTION
 The
 .Fn libfsfat_get_version

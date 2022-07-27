@@ -185,7 +185,8 @@ int libfsfat_directory_entry_read_data(
 	static char *function = "libfsfat_directory_entry_read_data";
 
 #if defined( HAVE_DEBUG_OUTPUT )
-	uint32_t value_32bit  = 0;
+	uint8_t fat_date_time[ 4 ];
+
 	uint16_t value_16bit  = 0;
 #endif
 
@@ -333,20 +334,35 @@ int libfsfat_directory_entry_read_data(
 		}
 		directory_entry->file_attribute_flags = ( (fsfat_directory_entry_t *) data )->file_attribute_flags;
 
-		directory_entry->creation_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->creation_date[ 0 ];
-		directory_entry->creation_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->creation_date[ 1 ];
-		directory_entry->creation_time[ 2 ] = ( (fsfat_directory_entry_t *) data )->creation_time[ 0 ];
-		directory_entry->creation_time[ 3 ] = ( (fsfat_directory_entry_t *) data )->creation_time[ 1 ];
+		directory_entry->creation_time_fraction = ( (fsfat_directory_entry_t *) data )->creation_time_fraction;
 
-		directory_entry->access_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->access_date[ 0 ];
-		directory_entry->access_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->access_date[ 1 ];
-		directory_entry->access_time[ 2 ] = 0;
-		directory_entry->access_time[ 3 ] = 0;
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_t *) data )->creation_date,
+		 directory_entry->creation_date );
 
-		directory_entry->modification_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->modification_date[ 0 ];
-		directory_entry->modification_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->modification_date[ 1 ];
-		directory_entry->modification_time[ 2 ] = ( (fsfat_directory_entry_t *) data )->modification_time[ 0 ];
-		directory_entry->modification_time[ 3 ] = ( (fsfat_directory_entry_t *) data )->modification_time[ 1 ];
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_t *) data )->creation_time,
+		 directory_entry->creation_time );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_t *) data )->access_date,
+		 directory_entry->access_date );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_t *) data )->modification_date,
+		 directory_entry->modification_date );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_t *) data )->modification_time,
+		 directory_entry->modification_time );
+
+		byte_stream_copy_to_uint16_little_endian(
+		 ( (fsfat_directory_entry_t *) data )->data_start_cluster,
+		 directory_entry->data_start_cluster );
+
+		byte_stream_copy_to_uint32_little_endian(
+		 ( (fsfat_directory_entry_t *) data )->data_size,
+		 directory_entry->data_size );
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -442,9 +458,9 @@ int libfsfat_directory_entry_read_data(
 			 ( (fsfat_directory_entry_t *) data )->unknown1 );
 
 			libcnotify_printf(
-			 "%s: unknown2\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: creation time fraction\t\t: %" PRIu8 "\n",
 			 function,
-			 ( (fsfat_directory_entry_t *) data )->unknown2 );
+			 ( (fsfat_directory_entry_t *) data )->creation_time_fraction);
 
 			byte_stream_copy_to_uint16_little_endian(
 			 ( (fsfat_directory_entry_t *) data )->creation_time,
@@ -462,10 +478,15 @@ int libfsfat_directory_entry_read_data(
 			 function,
 			 value_16bit );
 
+			fat_date_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->creation_date[ 0 ];
+			fat_date_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->creation_date[ 1 ];
+			fat_date_time[ 2 ] = ( (fsfat_directory_entry_t *) data )->creation_time[ 0 ];
+			fat_date_time[ 3 ] = ( (fsfat_directory_entry_t *) data )->creation_time[ 1 ];
+
 			if( libfsfat_debug_print_fat_date_time_value(
 			     function,
 			     "creation date and time\t\t",
-			     directory_entry->creation_time,
+			     fat_date_time,
 			     4,
 			     LIBFDATETIME_ENDIAN_LITTLE,
 			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
@@ -488,10 +509,15 @@ int libfsfat_directory_entry_read_data(
 			 function,
 			 value_16bit );
 
+			fat_date_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->access_date[ 0 ];
+			fat_date_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->access_date[ 1 ];
+			fat_date_time[ 2 ] = 0;
+			fat_date_time[ 3 ] = 0;
+
 			if( libfsfat_debug_print_fat_date_time_value(
 			     function,
 			     "access date and time\t\t",
-			     directory_entry->access_time,
+			     fat_date_time,
 			     4,
 			     LIBFDATETIME_ENDIAN_LITTLE,
 			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
@@ -530,10 +556,15 @@ int libfsfat_directory_entry_read_data(
 			 function,
 			 value_16bit );
 
+			fat_date_time[ 0 ] = ( (fsfat_directory_entry_t *) data )->modification_date[ 0 ];
+			fat_date_time[ 1 ] = ( (fsfat_directory_entry_t *) data )->modification_date[ 1 ];
+			fat_date_time[ 2 ] = ( (fsfat_directory_entry_t *) data )->modification_time[ 0 ];
+			fat_date_time[ 3 ] = ( (fsfat_directory_entry_t *) data )->modification_time[ 1 ];
+
 			if( libfsfat_debug_print_fat_date_time_value(
 			     function,
 			     "modification date and time\t\t",
-			     directory_entry->modification_time,
+			     fat_date_time,
 			     4,
 			     LIBFDATETIME_ENDIAN_LITTLE,
 			     LIBFDATETIME_STRING_FORMAT_TYPE_CTIME | LIBFDATETIME_STRING_FORMAT_FLAG_DATE_TIME,
@@ -548,21 +579,15 @@ int libfsfat_directory_entry_read_data(
 
 				return( -1 );
 			}
-			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->data_start_cluster,
-			 value_16bit );
 			libcnotify_printf(
 			 "%s: data start cluster\t\t\t: %" PRIu16 "\n",
 			 function,
-			 value_16bit );
+			 directory_entry->data_start_cluster );
 
-			byte_stream_copy_to_uint32_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->data_size,
-			 value_32bit );
 			libcnotify_printf(
 			 "%s: data size\t\t\t\t: %" PRIu32 "\n",
 			 function,
-			 value_32bit );
+			 directory_entry->data_size );
 
 			libcnotify_printf(
 			 "\n" );
@@ -650,15 +675,19 @@ int libfsfat_directory_entry_read_file_io_handle(
 }
 
 /* Retrieves the access date and time
- * The timestamp is an unsigned 32-bit fat date and time value in number of seconds
+ * The timestamp is an unsigned 64-bit integer containing the 10 milli seconds intervals since January 1, 1980
  * Returns 1 if successful or -1 on error
  */
 int libfsfat_directory_entry_get_access_time(
      libfsfat_directory_entry_t *directory_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_directory_entry_get_access_time";
+	static char *function       = "libfsfat_directory_entry_get_access_time";
+	uint64_t safe_fat_timestamp = 0;
+	uint16_t year               = 0;
+	uint8_t day_of_month        = 0;
+	uint8_t month               = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -671,34 +700,114 @@ int libfsfat_directory_entry_get_access_time(
 
 		return( -1 );
 	}
-	if( fat_date_time == NULL )
+	if( fat_timestamp == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid FAT date time.",
+		 "%s: invalid FAT timestamp.",
 		 function );
 
 		return( -1 );
 	}
-	byte_stream_copy_to_uint32_little_endian(
-	 directory_entry->access_time,
-	 *fat_date_time );
+	/* The year value is stored in bits 9 - 15 of the date (7 bits)
+	 * A year value of 0 represents 1980
+	 */
+	year = (uint16_t) ( 1980 + ( ( directory_entry->access_date >> 9 ) & 0x7f ) );
+
+	/* The month value is stored in bits 5 - 8 of the date (4 bits)
+	 * A month value of 1 represents January
+	 */
+	month = (uint8_t) ( ( directory_entry->access_date >> 5 ) & 0x0f );
+
+	/* The day value is stored in bits 0 - 4 of the date (5 bits)
+	 */
+	day_of_month = (uint8_t) ( directory_entry->access_date & 0x1f );
+
+	safe_fat_timestamp = day_of_month;
+
+	while( month > 0 )
+	{
+		/* February (2)
+		 */
+		if( month == 2 )
+		{
+			if( ( ( ( year % 4 ) == 0 )
+			  &&  ( ( year % 100 ) != 0 ) )
+			 || ( ( year % 400 ) == 0 ) )
+			{
+				safe_fat_timestamp += 29;
+			}
+			else
+			{
+				safe_fat_timestamp += 28;
+			}
+		}
+		/* April (4), June (6), September (9), November (11)
+		 */
+		else if( ( month == 4 )
+		      || ( month == 6 )
+		      || ( month == 9 )
+		      || ( month == 11 ) )
+		{
+			safe_fat_timestamp += 30;
+		}
+		/* January (1), March (3), May (5), July (7), August (8), October (10), December (12)
+		 */
+		else if( ( month == 1 )
+		      || ( month == 3 )
+		      || ( month == 5 )
+		      || ( month == 7 )
+		      || ( month == 8 )
+		      || ( month == 10 )
+		      || ( month == 12 ) )
+		{
+			safe_fat_timestamp += 31;
+		}
+		month--;
+	}
+	while( year > 1980 )
+	{
+		if( ( ( ( year % 4 ) == 0 )
+		  &&  ( ( year % 100 ) != 0 ) )
+		 || ( ( year % 400 ) == 0 ) )
+		{
+			safe_fat_timestamp += 366;
+		}
+		else
+		{
+			safe_fat_timestamp += 365;
+		}
+		year--;
+	}
+	safe_fat_timestamp *= 24;
+	safe_fat_timestamp *= 60;
+	safe_fat_timestamp *= 60;
+	safe_fat_timestamp *= 100;
+
+	*fat_timestamp = safe_fat_timestamp;
 
 	return( 1 );
 }
 
 /* Retrieves the creation date and time
- * The timestamp is an unsigned 32-bit fat date and time value in number of seconds
+ * The timestamp is an unsigned 64-bit integer containing the 10 milli seconds intervals since January 1, 1980
  * Returns 1 if successful or -1 on error
  */
 int libfsfat_directory_entry_get_creation_time(
      libfsfat_directory_entry_t *directory_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_directory_entry_get_creation_time";
+	static char *function       = "libfsfat_directory_entry_get_creation_time";
+	uint64_t safe_fat_timestamp = 0;
+	uint16_t year               = 0;
+	uint8_t day_of_month        = 0;
+	uint8_t hours               = 0;
+	uint8_t month               = 0;
+	uint8_t minutes             = 0;
+	uint8_t seconds             = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -711,34 +820,131 @@ int libfsfat_directory_entry_get_creation_time(
 
 		return( -1 );
 	}
-	if( fat_date_time == NULL )
+	if( fat_timestamp == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid FAT date time.",
+		 "%s: invalid FAT timestamp.",
 		 function );
 
 		return( -1 );
 	}
-	byte_stream_copy_to_uint32_little_endian(
-	 directory_entry->creation_time,
-	 *fat_date_time );
+	/* The year value is stored in bits 9 - 15 of the date (7 bits)
+	 * A year value of 0 represents 1980
+	 */
+	year = (uint16_t) ( 1980 + ( ( directory_entry->creation_date >> 9 ) & 0x7f ) );
+
+	/* The month value is stored in bits 5 - 8 of the date (4 bits)
+	 * A month value of 1 represents January
+	 */
+	month = (uint8_t) ( ( directory_entry->creation_date >> 5 ) & 0x0f );
+
+	/* The day value is stored in bits 0 - 4 of the date (5 bits)
+	 */
+	day_of_month = (uint8_t) ( directory_entry->creation_date & 0x1f );
+
+	/* The hours value is stored in bits 11 - 15 of the time (5 bits)
+	 */
+	hours = (uint8_t) ( ( directory_entry->creation_time >> 11 ) & 0x1f );
+
+	/* The minutes value is stored in bits 5 - 10 of the time (6 bits)
+	 */
+	minutes = (uint8_t) ( ( directory_entry->creation_time >> 5 ) & 0x3f );
+
+	/* The seconds value is stored in bits 0 - 4 of the time (5 bits)
+	 * The seconds are stored as 2 second intervals
+	 */
+	seconds = (uint8_t) ( directory_entry->creation_time & 0x1f ) * 2;
+
+	safe_fat_timestamp = day_of_month;
+
+	while( month > 0 )
+	{
+		/* February (2)
+		 */
+		if( month == 2 )
+		{
+			if( ( ( ( year % 4 ) == 0 )
+			  &&  ( ( year % 100 ) != 0 ) )
+			 || ( ( year % 400 ) == 0 ) )
+			{
+				safe_fat_timestamp += 29;
+			}
+			else
+			{
+				safe_fat_timestamp += 28;
+			}
+		}
+		/* April (4), June (6), September (9), November (11)
+		 */
+		else if( ( month == 4 )
+		      || ( month == 6 )
+		      || ( month == 9 )
+		      || ( month == 11 ) )
+		{
+			safe_fat_timestamp += 30;
+		}
+		/* January (1), March (3), May (5), July (7), August (8), October (10), December (12)
+		 */
+		else if( ( month == 1 )
+		      || ( month == 3 )
+		      || ( month == 5 )
+		      || ( month == 7 )
+		      || ( month == 8 )
+		      || ( month == 10 )
+		      || ( month == 12 ) )
+		{
+			safe_fat_timestamp += 31;
+		}
+		month--;
+	}
+	while( year > 1980 )
+	{
+		if( ( ( ( year % 4 ) == 0 )
+		  &&  ( ( year % 100 ) != 0 ) )
+		 || ( ( year % 400 ) == 0 ) )
+		{
+			safe_fat_timestamp += 366;
+		}
+		else
+		{
+			safe_fat_timestamp += 365;
+		}
+		year--;
+	}
+	safe_fat_timestamp *= 24;
+	safe_fat_timestamp += hours;
+	safe_fat_timestamp *= 60;
+	safe_fat_timestamp += minutes;
+	safe_fat_timestamp *= 60;
+	safe_fat_timestamp += seconds;
+	safe_fat_timestamp *= 100;
+	safe_fat_timestamp += directory_entry->creation_time_fraction;
+
+	*fat_timestamp = safe_fat_timestamp;
 
 	return( 1 );
 }
 
 /* Retrieves the modification date and time
- * The timestamp is an unsigned 32-bit fat date and time value in number of seconds
+ * The timestamp is an unsigned 64-bit integer containing the 10 milli seconds intervals since January 1, 1980
  * Returns 1 if successful or -1 on error
  */
 int libfsfat_directory_entry_get_modification_time(
      libfsfat_directory_entry_t *directory_entry,
-     uint32_t *fat_date_time,
+     uint64_t *fat_timestamp,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_directory_entry_get_modification_time";
+	static char *function       = "libfsfat_directory_entry_get_modification_time";
+	uint64_t safe_fat_timestamp = 0;
+	uint16_t year               = 0;
+	uint8_t day_of_month        = 0;
+	uint8_t hours               = 0;
+	uint8_t month               = 0;
+	uint8_t minutes             = 0;
+	uint8_t seconds             = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -751,20 +957,109 @@ int libfsfat_directory_entry_get_modification_time(
 
 		return( -1 );
 	}
-	if( fat_date_time == NULL )
+	if( fat_timestamp == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid FAT date time.",
+		 "%s: invalid FAT timestamp.",
 		 function );
 
 		return( -1 );
 	}
-	byte_stream_copy_to_uint32_little_endian(
-	 directory_entry->modification_time,
-	 *fat_date_time );
+	/* The year value is stored in bits 9 - 15 of the date (7 bits)
+	 * A year value of 0 represents 1980
+	 */
+	year = (uint16_t) ( 1980 + ( ( directory_entry->modification_date >> 9 ) & 0x7f ) );
+
+	/* The month value is stored in bits 5 - 8 of the date (4 bits)
+	 * A month value of 1 represents January
+	 */
+	month = (uint8_t) ( ( directory_entry->modification_date >> 5 ) & 0x0f );
+
+	/* The day value is stored in bits 0 - 4 of the date (5 bits)
+	 */
+	day_of_month = (uint8_t) ( directory_entry->modification_date & 0x1f );
+
+	/* The hours value is stored in bits 11 - 15 of the time (5 bits)
+	 */
+	hours = (uint8_t) ( ( directory_entry->modification_time >> 11 ) & 0x1f );
+
+	/* The minutes value is stored in bits 5 - 10 of the time (6 bits)
+	 */
+	minutes = (uint8_t) ( ( directory_entry->modification_time >> 5 ) & 0x3f );
+
+	/* The seconds value is stored in bits 0 - 4 of the time (5 bits)
+	 * The seconds are stored as 2 second intervals
+	 */
+	seconds = (uint8_t) ( directory_entry->modification_time & 0x1f ) * 2;
+
+	safe_fat_timestamp = day_of_month;
+
+	while( month > 0 )
+	{
+		/* February (2)
+		 */
+		if( month == 2 )
+		{
+			if( ( ( ( year % 4 ) == 0 )
+			  &&  ( ( year % 100 ) != 0 ) )
+			 || ( ( year % 400 ) == 0 ) )
+			{
+				safe_fat_timestamp += 29;
+			}
+			else
+			{
+				safe_fat_timestamp += 28;
+			}
+		}
+		/* April (4), June (6), September (9), November (11)
+		 */
+		else if( ( month == 4 )
+		      || ( month == 6 )
+		      || ( month == 9 )
+		      || ( month == 11 ) )
+		{
+			safe_fat_timestamp += 30;
+		}
+		/* January (1), March (3), May (5), July (7), August (8), October (10), December (12)
+		 */
+		else if( ( month == 1 )
+		      || ( month == 3 )
+		      || ( month == 5 )
+		      || ( month == 7 )
+		      || ( month == 8 )
+		      || ( month == 10 )
+		      || ( month == 12 ) )
+		{
+			safe_fat_timestamp += 31;
+		}
+		month--;
+	}
+	while( year > 1980 )
+	{
+		if( ( ( ( year % 4 ) == 0 )
+		  &&  ( ( year % 100 ) != 0 ) )
+		 || ( ( year % 400 ) == 0 ) )
+		{
+			safe_fat_timestamp += 366;
+		}
+		else
+		{
+			safe_fat_timestamp += 365;
+		}
+		year--;
+	}
+	safe_fat_timestamp *= 24;
+	safe_fat_timestamp += hours;
+	safe_fat_timestamp *= 60;
+	safe_fat_timestamp += minutes;
+	safe_fat_timestamp *= 60;
+	safe_fat_timestamp += seconds;
+	safe_fat_timestamp *= 100;
+
+	*fat_timestamp = safe_fat_timestamp;
 
 	return( 1 );
 }
@@ -815,6 +1110,7 @@ int libfsfat_directory_entry_get_name(
 {
 	libfsfat_directory_entry_t *long_file_name_directory_entry = NULL;
 	static char *function                                      = "libfsfat_directory_entry_get_name";
+	size_t name_data_offset                                    = 0;
 	size_t name_offset                                         = 0;
 	size_t name_size                                           = 0;
 	int entry_index                                            = 0;
@@ -936,19 +1232,91 @@ int libfsfat_directory_entry_get_name(
 			name_offset += 10 + 12 + 4;
 		}
 /* TODO determine if name is UCS-2 or ASCII */
-/* TODO determine size of name */
+
+		for( name_offset = 0;
+		     ( name_offset + 1 ) < directory_entry->name_size;
+		     name_offset += 2 )
+		{
+			if( ( directory_entry->name[ name_offset ] == 0 )
+			 && ( directory_entry->name[ name_offset + 1 ] == 0 ) )
+			{
+				name_offset += 2;
+				break;
+			}
+		}
+		directory_entry->name_size  = name_offset;
+		directory_entry->is_unicode = 1;
 
 #if defined( HAVE_DEBUG_OUTPUT )
-	if( libcnotify_verbose != 0 )
-	{
-		libcnotify_printf(
-		 "%s: long name data:\n",
-		 function );
-		libcnotify_print_data(
-		 directory_entry->name,
-		 directory_entry->name_size,
-		 0 );
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: long name data:\n",
+			 function );
+			libcnotify_print_data(
+			 directory_entry->name,
+			 directory_entry->name_size,
+			 0 );
+		}
+#endif
 	}
+	else
+	{
+		name_size = 8 + 3 + 1;
+
+		directory_entry->name = (uint8_t *) memory_allocate(
+		                                     sizeof( uint8_t ) * name_size );
+
+		if( directory_entry->name == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create name.",
+			 function );
+
+			goto on_error;
+		}
+		directory_entry->name_size = name_size;
+
+		name_offset = 0;
+
+		for( name_data_offset = 0;
+		     name_data_offset < 8;
+		     name_data_offset++ )
+		{
+			if( directory_entry->name_data[ name_data_offset ] == ' ' )
+			{
+				break;
+			}
+			directory_entry->name[ name_offset++ ] = directory_entry->name_data[ name_data_offset ];
+		}
+		for( name_data_offset = 8;
+		     name_data_offset < 8 + 3;
+		     name_data_offset++ )
+		{
+			if( directory_entry->name_data[ name_offset ] == ' ' )
+			{
+				break;
+			}
+			directory_entry->name[ name_offset++ ] = directory_entry->name_data[ name_data_offset ];
+		}
+		directory_entry->name[ name_offset++ ] = 0;
+		directory_entry->name_size             = name_offset;
+		directory_entry->is_unicode            = 0;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: short name data:\n",
+			 function );
+			libcnotify_print_data(
+			 directory_entry->name,
+			 directory_entry->name_size,
+			 0 );
+		}
 #endif
 	}
 	return( 1 );
@@ -976,6 +1344,7 @@ int libfsfat_directory_entry_get_utf8_name_size(
      libcerror_error_t **error )
 {
 	static char *function = "libfsfat_directory_entry_get_utf8_name_size";
+	int result            = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -1004,12 +1373,26 @@ int libfsfat_directory_entry_get_utf8_name_size(
 			return( -1 );
 		}
 	}
-	if( libuna_utf8_string_size_from_utf16_stream(
-	     directory_entry->name,
-	     directory_entry->name_size,
-	     LIBUNA_ENDIAN_LITTLE,
-	     utf8_string_size,
-	     error ) != 1 )
+	if( directory_entry->is_unicode != 0 )
+	{
+		result = libuna_utf8_string_size_from_utf16_stream(
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_ENDIAN_LITTLE,
+		          utf8_string_size,
+		          error );
+	}
+	else
+	{
+/* TODO add codepage support */
+		result = libuna_utf8_string_size_from_byte_stream(
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_CODEPAGE_ASCII,
+		          utf8_string_size,
+		          error );
+	}
+	if( result != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1034,6 +1417,7 @@ int libfsfat_directory_entry_get_utf8_name(
      libcerror_error_t **error )
 {
 	static char *function = "libfsfat_directory_entry_get_utf8_name";
+	int result            = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -1062,13 +1446,28 @@ int libfsfat_directory_entry_get_utf8_name(
 			return( -1 );
 		}
 	}
-	if( libuna_utf8_string_copy_from_utf16_stream(
-	     utf8_string,
-	     utf8_string_size,
-	     directory_entry->name,
-	     directory_entry->name_size,
-	     LIBUNA_ENDIAN_LITTLE,
-	     error ) != 1 )
+	if( directory_entry->is_unicode != 0 )
+	{
+		result = libuna_utf8_string_copy_from_utf16_stream(
+		          utf8_string,
+		          utf8_string_size,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_ENDIAN_LITTLE,
+		          error );
+	}
+	else
+	{
+/* TODO add codepage support */
+		result = libuna_utf8_string_copy_from_byte_stream(
+		          utf8_string,
+		          utf8_string_size,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_CODEPAGE_ASCII,
+		          error );
+	}
+	if( result != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1082,16 +1481,17 @@ int libfsfat_directory_entry_get_utf8_name(
 	return( 1 );
 }
 
-/* Retrieves the size of the UTF-16 encoded name
- * The returned size includes the end of string character
- * Returns 1 if successful, 0 if not available or -1 on error
+/* Compares an UTF-8 string with the name of the directory entry
+ * Returns LIBUNA_COMPARE_LESS, LIBUNA_COMPARE_EQUAL, LIBUNA_COMPARE_GREATER if successful or -1 on error
  */
-int libfsfat_directory_entry_get_utf16_name_size(
+int libfsfat_directory_entry_compare_with_utf8_string(
      libfsfat_directory_entry_t *directory_entry,
-     size_t *utf16_string_size,
+     const uint8_t *utf8_string,
+     size_t utf8_string_length,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_directory_entry_get_utf16_name_size";
+	static char *function = "libfsfat_directory_entry_compare_with_utf8_string";
+	int result            = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -1120,12 +1520,101 @@ int libfsfat_directory_entry_get_utf16_name_size(
 			return( -1 );
 		}
 	}
-	if( libuna_utf16_string_size_from_utf16_stream(
-	     directory_entry->name,
-	     directory_entry->name_size,
-	     LIBUNA_ENDIAN_LITTLE,
-	     utf16_string_size,
-	     error ) != 1 )
+/* TODO add case less compare of both long and short name */
+	if( directory_entry->is_unicode != 0 )
+	{
+		result = libuna_utf8_string_compare_with_utf16_stream(
+		          utf8_string,
+		          utf8_string_length,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_ENDIAN_LITTLE,
+		          error );
+	}
+	else
+	{
+/* TODO add codepage support */
+		result = libuna_utf8_string_compare_with_byte_stream(
+		          utf8_string,
+		          utf8_string_length,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_CODEPAGE_ASCII,
+		          error );
+	}
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GENERIC,
+		 "%s: unable to compare UTF-8 string with directory entry name.",
+		 function );
+
+		return( -1 );
+	}
+	return( result );
+}
+
+/* Retrieves the size of the UTF-16 encoded name
+ * The returned size includes the end of string character
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+int libfsfat_directory_entry_get_utf16_name_size(
+     libfsfat_directory_entry_t *directory_entry,
+     size_t *utf16_string_size,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_entry_get_utf16_name_size";
+	int result            = 0;
+
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory_entry->name == NULL )
+	{
+		if( libfsfat_directory_entry_get_name(
+		     directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine name.",
+			 function );
+
+			return( -1 );
+		}
+	}
+	if( directory_entry->is_unicode != 0 )
+	{
+		result = libuna_utf16_string_size_from_utf16_stream(
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_ENDIAN_LITTLE,
+		          utf16_string_size,
+		          error );
+	}
+	else
+	{
+/* TODO add codepage support */
+		result = libuna_utf16_string_size_from_byte_stream(
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_CODEPAGE_ASCII,
+		          utf16_string_size,
+		          error );
+	}
+	if( result != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1150,6 +1639,7 @@ int libfsfat_directory_entry_get_utf16_name(
      libcerror_error_t **error )
 {
 	static char *function = "libfsfat_directory_entry_get_utf16_name";
+	int result            = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -1178,13 +1668,28 @@ int libfsfat_directory_entry_get_utf16_name(
 			return( -1 );
 		}
 	}
-	if( libuna_utf16_string_copy_from_utf16_stream(
-	     utf16_string,
-	     utf16_string_size,
-	     directory_entry->name,
-	     directory_entry->name_size,
-	     LIBUNA_ENDIAN_LITTLE,
-	     error ) != 1 )
+	if( directory_entry->is_unicode != 0 )
+	{
+		result = libuna_utf16_string_copy_from_utf16_stream(
+		          utf16_string,
+		          utf16_string_size,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_ENDIAN_LITTLE,
+		          error );
+	}
+	else
+	{
+/* TODO add codepage support */
+		result = libuna_utf16_string_copy_from_byte_stream(
+		          utf16_string,
+		          utf16_string_size,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_CODEPAGE_ASCII,
+		          error );
+	}
+	if( result != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1195,6 +1700,155 @@ int libfsfat_directory_entry_get_utf16_name(
 
 		return( -1 );
 	}
+	return( 1 );
+}
+
+/* Compares an UTF-16 string with the name of the directory entry
+ * Returns LIBUNA_COMPARE_LESS, LIBUNA_COMPARE_EQUAL, LIBUNA_COMPARE_GREATER if successful or -1 on error
+ */
+int libfsfat_directory_entry_compare_with_utf16_string(
+     libfsfat_directory_entry_t *directory_entry,
+     const uint16_t *utf16_string,
+     size_t utf16_string_length,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_entry_compare_with_utf16_string";
+	int result            = 0;
+
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory_entry->name == NULL )
+	{
+		if( libfsfat_directory_entry_get_name(
+		     directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine name.",
+			 function );
+
+			return( -1 );
+		}
+	}
+/* TODO add case less compare of both long and short name */
+	if( directory_entry->is_unicode != 0 )
+	{
+		result = libuna_utf16_string_compare_with_utf16_stream(
+		          utf16_string,
+		          utf16_string_length,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_ENDIAN_LITTLE,
+		          error );
+	}
+	else
+	{
+/* TODO add codepage support */
+		result = libuna_utf16_string_compare_with_byte_stream(
+		          utf16_string,
+		          utf16_string_length,
+		          directory_entry->name,
+		          directory_entry->name_size,
+		          LIBUNA_CODEPAGE_ASCII,
+		          error );
+	}
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GENERIC,
+		 "%s: unable to compare UTF-16 string with directory entry name.",
+		 function );
+
+		return( -1 );
+	}
+	return( result );
+}
+
+/* Retrieves the data start cluster
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_entry_get_data_start_cluster(
+     libfsfat_directory_entry_t *directory_entry,
+     uint32_t *data_start_cluster,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_entry_get_data_start_cluster";
+
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( data_start_cluster == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid data start cluster.",
+		 function );
+
+		return( -1 );
+	}
+	*data_start_cluster = directory_entry->data_start_cluster;
+
+	return( 1 );
+}
+
+/* Retrieves the data size
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_entry_get_data_size(
+     libfsfat_directory_entry_t *directory_entry,
+     uint32_t *data_size,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_entry_get_data_size";
+
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( data_size == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid data size.",
+		 function );
+
+		return( -1 );
+	}
+	*data_size = directory_entry->data_size;
+
 	return( 1 );
 }
 

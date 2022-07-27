@@ -496,9 +496,9 @@ int mount_file_entry_get_file_mode(
      uint16_t *file_mode,
      libcerror_error_t **error )
 {
-	static char *function         = "mount_file_entry_get_file_mode";
-	uint32_t file_attribute_flags = 0;
-	int result                    = 0;
+	static char *function        = "mount_file_entry_get_file_mode";
+	uint8_t file_attribute_flags = 0;
+	int result                   = 0;
 
 	if( file_entry == NULL )
 	{

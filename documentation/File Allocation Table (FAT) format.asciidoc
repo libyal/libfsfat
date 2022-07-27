@@ -47,6 +47,7 @@ in the section entitled "GNU Free Documentation License".
 | 0.0.1 | J.B. Metz | August 2021 | Initial version based on older notes about the format.
 | 0.0.2 | J.B. Metz | May 2022 | Additional information.
 | 0.0.3 | J.B. Metz | June 2022 | Additional information.
+| 0.0.4 | J.B. Metz | July 2022 | Additional information.
 |===
 
 :numbered:
@@ -394,8 +395,8 @@ Only the lower 28-bits are used
 
 A directory consists of:
 
-* self (".") directory entry
-* parent ("..") directory entry
+* self (".") directory entry (not used in root directory)
+* parent ("..") directory entry (not used in root directory)
 * Zero or more directory entries
 * Terminator directory entry
 
@@ -412,8 +413,8 @@ Contains an ASCII string where the first character can have a special meaning
 | 11 | 1 | | File attributes +
 See section: <<file_attributes,File attributes>>
 | 12 | 1 | | [yellow-background]*Unknown (Case for short file name and extension)*
-| 13 | 1 | | [yellow-background]*Unknown (Creation time milliseconds)* +
-Used for creation time fraction of 2-seconds in 10 ms intervals
+| 13 | 1 | | Creation time fraction of seconds +
+Contains fraction of 2-seconds in 10 ms intervals
 | 14 | 2 | | Creation time
 | 16 | 2 | | Creation date
 | 18 | 2 | | Last access date

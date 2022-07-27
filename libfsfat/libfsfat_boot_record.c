@@ -627,18 +627,20 @@ int libfsfat_boot_record_read_data(
 	{
 		boot_record->file_system_type = LIBFSFAT_FILE_SYSTEM_TYPE_FAT32;
 	}
+	boot_record->allocation_table_offset = (off64_t) number_of_reserved_sectors * boot_record->bytes_per_sector;
+	boot_record->allocation_table_size   = (size64_t) allocation_table_size * boot_record->bytes_per_sector;
+	boot_record->first_cluster_offset    = (off64_t) number_of_reserved_sectors + ( (off64_t) number_of_allocation_tables * allocation_table_size );
+	boot_record->first_cluster_offset   *= boot_record->bytes_per_sector;
+
 	if( ( number_of_root_directory_entries != 0 )
 	 || ( total_number_of_sectors_16bit != 0 )
 	 || ( allocation_table_size_16bit != 0 ) )
 	{
-		boot_record->allocation_table_offset = number_of_reserved_sectors;
-		boot_record->root_directory_cluster  = 0;
-		boot_record->first_cluster_offset    = boot_record->allocation_table_offset + ( (off64_t) number_of_allocation_tables * allocation_table_size );
-	}
-	boot_record->allocation_table_offset *= boot_record->bytes_per_sector;
-	boot_record->allocation_table_size    = (size64_t) allocation_table_size * boot_record->bytes_per_sector;
-	boot_record->first_cluster_offset    *= boot_record->bytes_per_sector;
+		boot_record->root_directory_offset = boot_record->first_cluster_offset;
+		boot_record->root_directory_size   = (size64_t) number_of_root_directory_entries * 32;
 
+		boot_record->first_cluster_offset += boot_record->root_directory_size;
+	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
@@ -681,6 +683,17 @@ int libfsfat_boot_record_read_data(
 		 "%s: allocation table size\t\t\t: %" PRIu64 "\n",
 		 function,
 		 boot_record->allocation_table_size );
+
+		libcnotify_printf(
+		 "%s: root directory offset\t\t\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
+		 function,
+		 boot_record->root_directory_offset,
+		 boot_record->root_directory_offset );
+
+		libcnotify_printf(
+		 "%s: root directory size\t\t\t: %" PRIu64 "\n",
+		 function,
+		 boot_record->root_directory_size );
 
 		libcnotify_printf(
 		 "%s: first cluster offset\t\t\t: %" PRIi64 " (0x%08" PRIx64 ")\n",
