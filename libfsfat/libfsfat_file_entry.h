@@ -75,6 +75,10 @@ struct libfsfat_internal_file_entry
 	 */
 	libfdata_stream_t *cluster_block_stream;
 
+	/* The data size
+	 */
+	size64_t data_size;
+
 	/* The directory
 	 */
 	libfsfat_directory_t *directory;

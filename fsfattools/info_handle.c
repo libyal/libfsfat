@@ -1891,9 +1891,13 @@ int info_handle_file_entry_fprint_by_identifier(
      uint64_t file_entry_identifier,
      libcerror_error_t **error )
 {
-	libfsfat_file_entry_t *file_entry = NULL;
-	static char *function             = "info_handle_file_entry_fprint_by_identifier";
-	uint8_t format_version            = 0;
+	libfsfat_file_entry_t *file_entry   = NULL;
+	system_character_t *file_entry_name = NULL;
+	static char *function               = "info_handle_file_entry_fprint_by_identifier";
+	size_t file_entry_name_length       = 0;
+	size_t file_entry_name_size         = 0;
+	uint8_t format_version              = 0;
+	int result                          = 0;
 
 	if( info_handle == NULL )
 	{
@@ -1950,13 +1954,78 @@ int info_handle_file_entry_fprint_by_identifier(
 /* TODO implement is empty */
 /* TODO implement is allocated */
 
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+	result = libfsfat_file_entry_get_utf16_name_size(
+	          file_entry,
+	          &file_entry_name_size,
+	          error );
+#else
+	result = libfsfat_file_entry_get_utf8_name_size(
+	          file_entry,
+	          &file_entry_name_size,
+	          error );
+#endif
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve file entry name string size.",
+		 function );
+
+		goto on_error;
+	}
+	if( ( result == 1 )
+	 && ( file_entry_name_size > 0 ) )
+	{
+		file_entry_name = system_string_allocate(
+		                   file_entry_name_size );
+
+		if( file_entry_name == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create file entry name string.",
+			 function );
+
+			goto on_error;
+		}
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
+		result = libfsfat_file_entry_get_utf16_name(
+		          file_entry,
+		          (uint16_t *) file_entry_name,
+		          file_entry_name_size,
+		          error );
+#else
+		result = libfsfat_file_entry_get_utf8_name(
+		          file_entry,
+		          (uint8_t *) file_entry_name,
+		          file_entry_name_size,
+		          error );
+#endif
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve file entry name string.",
+			 function );
+
+			goto on_error;
+		}
+		file_entry_name_length = file_entry_name_size - 1;
+	}
 	if( info_handle_file_entry_value_with_name_fprint(
 	     info_handle,
 	     file_entry,
 	     NULL,
 	     0,
-	     NULL,
-	     0,
+	     file_entry_name,
+	     file_entry_name_length,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1967,6 +2036,13 @@ int info_handle_file_entry_fprint_by_identifier(
 		 function );
 
 		goto on_error;
+	}
+	if( file_entry_name != NULL )
+	{
+		memory_free(
+		 file_entry_name );
+
+		file_entry_name = NULL;
 	}
 	if( libfsfat_file_entry_free(
 	     &file_entry,
@@ -1988,6 +2064,11 @@ int info_handle_file_entry_fprint_by_identifier(
 	return( 1 );
 
 on_error:
+	if( file_entry_name != NULL )
+	{
+		memory_free(
+		 file_entry_name );
+	}
 	if( file_entry != NULL )
 	{
 		libfsfat_file_entry_free(

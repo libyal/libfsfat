@@ -113,17 +113,9 @@ struct libfsfat_directory_entry
 	 */
 	uint8_t modification_time_utc_offset;
 
-	/* The (exFAT) data stream (directory) entry
-	 */
-	libfsfat_directory_entry_t *data_stream_entry;
-
 	/* The (exFAT file entry) name entries
 	 */
 	libcdata_array_t *name_entries_array;
-
-	/* The (VFAT) long file name entries
-	 */
-	libcdata_array_t *long_file_name_entries_array;
 
 	/* The data start cluster
 	 */
@@ -192,6 +184,16 @@ int libfsfat_directory_entry_get_file_attribute_flags(
 
 int libfsfat_directory_entry_get_name(
      libfsfat_directory_entry_t *directory_entry,
+     libcerror_error_t **error );
+
+int libfsfat_directory_entry_get_name_from_exfat_file_name_entries(
+     libfsfat_directory_entry_t *directory_entry,
+     libcdata_array_t *name_entries_array,
+     libcerror_error_t **error );
+
+int libfsfat_directory_entry_get_name_from_vfat_long_file_name_entries(
+     libfsfat_directory_entry_t *directory_entry,
+     libcdata_array_t *name_entries_array,
      libcerror_error_t **error );
 
 int libfsfat_directory_entry_get_utf8_name_size(

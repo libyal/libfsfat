@@ -51,6 +51,7 @@ int libfsfat_file_entry_initialize(
 {
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
 	static char *function                               = "libfsfat_file_entry_initialize";
+	size64_t data_size                                  = 0;
 	uint32_t cluster_number                             = 0;
 	uint16_t file_attribute_flags                       = 0;
 
@@ -117,6 +118,20 @@ int libfsfat_file_entry_initialize(
 
 			goto on_error;
 		}
+		if( libfsfat_directory_entry_get_data_size(
+		     directory_entry,
+		     &data_size,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve data size from directory entry.",
+			 function );
+
+			goto on_error;
+		}
 	}
 	internal_file_entry = memory_allocate_structure(
 	                       libfsfat_internal_file_entry_t );
@@ -171,6 +186,7 @@ int libfsfat_file_entry_initialize(
 	internal_file_entry->directory_entry      = directory_entry;
 	internal_file_entry->file_attribute_flags = file_attribute_flags;
 	internal_file_entry->cluster_number       = cluster_number;
+	internal_file_entry->data_size            = data_size;
 	internal_file_entry->directory            = directory;
 
 	*file_entry = (libfsfat_file_entry_t *) internal_file_entry;
@@ -1966,6 +1982,7 @@ ssize_t libfsfat_file_entry_read_buffer(
 		     internal_file_entry->file_system,
 		     internal_file_entry->file_io_handle,
 		     internal_file_entry->cluster_number,
+		     internal_file_entry->data_size,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2081,6 +2098,7 @@ ssize_t libfsfat_file_entry_read_buffer_at_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->file_io_handle,
 		     internal_file_entry->cluster_number,
+		     internal_file_entry->data_size,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2195,6 +2213,7 @@ off64_t libfsfat_file_entry_seek_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->file_io_handle,
 		     internal_file_entry->cluster_number,
+		     internal_file_entry->data_size,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2342,8 +2361,6 @@ int libfsfat_file_entry_get_size(
 {
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
 	static char *function                               = "libfsfat_file_entry_get_size";
-	uint64_t data_size                                  = 0;
-	int result                                          = 1;
 
 	if( file_entry == NULL )
 	{
@@ -2384,23 +2401,8 @@ int libfsfat_file_entry_get_size(
 		return( -1 );
 	}
 #endif
-	if( internal_file_entry->directory_entry != NULL )
-	{
-		if( libfsfat_directory_entry_get_data_size(
-		     internal_file_entry->directory_entry,
-		     &data_size,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve data size from directory entry.",
-			 function );
+	*size = internal_file_entry->data_size;
 
-			result = -1;
-		}
-	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_file_entry->read_write_lock,
@@ -2416,8 +2418,6 @@ int libfsfat_file_entry_get_size(
 		return( -1 );
 	}
 #endif
-	*size = (size64_t) data_size;
-
-	return( result );
+	return( 1 );
 }
 

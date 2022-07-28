@@ -161,23 +161,6 @@ int libfsfat_directory_entry_free(
 				result = -1;
 			}
 		}
-		if( ( *directory_entry )->long_file_name_entries_array != NULL )
-		{
-			if( libcdata_array_free(
-			     &( ( *directory_entry )->long_file_name_entries_array ),
-			     NULL,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-				 "%s: unable to free long file name entries array.",
-				 function );
-
-				result = -1;
-			}
-		}
 		if( ( *directory_entry )->name != NULL )
 		{
 			memory_free(
@@ -275,10 +258,8 @@ int libfsfat_directory_entry_clone(
 
 		goto on_error;
 	}
-	( *destination_directory_entry )->name                         = NULL;
-	( *destination_directory_entry )->data_stream_entry            = NULL;
-	( *destination_directory_entry )->name_entries_array           = NULL;
-	( *destination_directory_entry )->long_file_name_entries_array = NULL;
+	( *destination_directory_entry )->name               = NULL;
+	( *destination_directory_entry )->name_entries_array = NULL;
 
 	if( source_directory_entry->name != NULL )
 	{
@@ -310,12 +291,6 @@ int libfsfat_directory_entry_clone(
 
 			goto on_error;
 		}
-	}
-	if( source_directory_entry->data_stream_entry != NULL )
-	{
-		( *destination_directory_entry )->data_start_cluster = source_directory_entry->data_stream_entry->data_start_cluster;
-		( *destination_directory_entry )->data_size          = source_directory_entry->data_stream_entry->data_size;
-		( *destination_directory_entry )->valid_data_size    = source_directory_entry->data_stream_entry->valid_data_size;
 	}
 	return( 1 );
 
@@ -1408,19 +1383,16 @@ int libfsfat_directory_entry_get_file_attribute_flags(
 }
 
 /* Determines the name
- * Returns 1 if successful, 0 if not available or -1 on error
+ * Returns 1 if successful or -1 on error
  */
 int libfsfat_directory_entry_get_name(
      libfsfat_directory_entry_t *directory_entry,
      libcerror_error_t **error )
 {
-	libfsfat_directory_entry_t *name_directory_entry = NULL;
-	static char *function                            = "libfsfat_directory_entry_get_name";
-	size_t name_data_offset                          = 0;
-	size_t name_offset                               = 0;
-	size_t name_size                                 = 0;
-	int entry_index                                  = 0;
-	int number_of_entries                            = 0;
+	static char *function   = "libfsfat_directory_entry_get_name";
+	size_t name_data_offset = 0;
+	size_t name_offset      = 0;
+	size_t name_size        = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -1446,253 +1418,20 @@ int libfsfat_directory_entry_get_name(
 	}
 	if( directory_entry->name_entries_array != NULL )
 	{
-		if( libcdata_array_get_number_of_entries(
+		if( libfsfat_directory_entry_get_name_from_exfat_file_name_entries(
+		     directory_entry,
 		     directory_entry->name_entries_array,
-		     &number_of_entries,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve number of name entries.",
+			 "%s: unable to determine name from exFAT file name entries.",
 			 function );
 
 			goto on_error;
 		}
-		if( ( number_of_entries == 0 )
-		 || ( number_of_entries > 9 ) )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid number of name entries value out of bounds.",
-			 function );
-
-			goto on_error;
-		}
-		name_size = ( (size_t) 30 * number_of_entries ) + 2;
-
-		directory_entry->name = (uint8_t *) memory_allocate(
-		                                     sizeof( uint8_t ) * name_size );
-
-		if( directory_entry->name == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-			 "%s: unable to create name.",
-			 function );
-
-			goto on_error;
-		}
-		directory_entry->name_size = name_size;
-
-		for( entry_index = 0;
-		     entry_index < number_of_entries;
-		     entry_index++ )
-		{
-			if( libcdata_array_get_entry_by_index(
-			     directory_entry->name_entries_array,
-			     entry_index,
-			     (intptr_t **) &name_directory_entry,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to retrieve directory entry: %d from name entries array.",
-				 function,
-				 entry_index );
-
-				goto on_error;
-			}
-			if( name_directory_entry == NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-				 "%s: invalid name directory entry: %d.",
-				 function,
-				 entry_index );
-
-				goto on_error;
-			}
-			if( memory_copy(
-			     &( directory_entry->name[ name_offset ] ),
-			     name_directory_entry->name_data,
-			     30 ) == NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_MEMORY,
-				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-				 "%s: unable to copy name segment: %d.",
-				 function );
-
-				goto on_error;
-			}
-			name_offset += 30;
-		}
-		directory_entry->name[ name_offset++ ] = 0;
-		directory_entry->name[ name_offset++ ] = 0;
-
-		for( name_offset = 0;
-		     ( name_offset + 1 ) < directory_entry->name_size;
-		     name_offset += 2 )
-		{
-			if( ( directory_entry->name[ name_offset ] == 0 )
-			 && ( directory_entry->name[ name_offset + 1 ] == 0 ) )
-			{
-				name_offset += 2;
-				break;
-			}
-		}
-		directory_entry->name_size  = name_offset;
-		directory_entry->is_unicode = 1;
-
-#if defined( HAVE_DEBUG_OUTPUT )
-		if( libcnotify_verbose != 0 )
-		{
-			libcnotify_printf(
-			 "%s: name data:\n",
-			 function );
-			libcnotify_print_data(
-			 directory_entry->name,
-			 directory_entry->name_size,
-			 0 );
-		}
-#endif
-	}
-	else if( directory_entry->long_file_name_entries_array != NULL )
-	{
-		if( libcdata_array_get_number_of_entries(
-		     directory_entry->long_file_name_entries_array,
-		     &number_of_entries,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve number of long file name entries.",
-			 function );
-
-			goto on_error;
-		}
-		if( ( number_of_entries == 0 )
-		 || ( number_of_entries > 10 ) )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid number of long file name entries value out of bounds.",
-			 function );
-
-			goto on_error;
-		}
-		name_size = ( (size_t) ( 10 + 12 + 4 ) * number_of_entries ) + 2;
-
-		directory_entry->name = (uint8_t *) memory_allocate(
-		                                     sizeof( uint8_t ) * name_size );
-
-		if( directory_entry->name == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-			 "%s: unable to create name.",
-			 function );
-
-			goto on_error;
-		}
-		directory_entry->name_size = name_size;
-
-		for( entry_index = number_of_entries - 1;
-		     entry_index >= 0;
-		     entry_index-- )
-		{
-			if( libcdata_array_get_entry_by_index(
-			     directory_entry->long_file_name_entries_array,
-			     entry_index,
-			     (intptr_t **) &name_directory_entry,
-			     error ) != 1 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to retrieve directory entry: %d from long file name entries array.",
-				 function,
-				 entry_index );
-
-				goto on_error;
-			}
-			if( name_directory_entry == NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-				 "%s: invalid long file name directory entry: %d.",
-				 function,
-				 entry_index );
-
-				goto on_error;
-			}
-			if( memory_copy(
-			     &( directory_entry->name[ name_offset ] ),
-			     name_directory_entry->name_data,
-			     10 + 12 + 4 ) == NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_MEMORY,
-				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-				 "%s: unable to copy long file name segment: %d.",
-				 function );
-
-				goto on_error;
-			}
-			name_offset += 10 + 12 + 4;
-		}
-		directory_entry->name[ name_offset++ ] = 0;
-		directory_entry->name[ name_offset++ ] = 0;
-
-/* TODO determine if name is UCS-2 or ASCII */
-
-		for( name_offset = 0;
-		     ( name_offset + 1 ) < directory_entry->name_size;
-		     name_offset += 2 )
-		{
-			if( ( directory_entry->name[ name_offset ] == 0 )
-			 && ( directory_entry->name[ name_offset + 1 ] == 0 ) )
-			{
-				name_offset += 2;
-				break;
-			}
-		}
-		directory_entry->name_size  = name_offset;
-		directory_entry->is_unicode = 1;
-
-#if defined( HAVE_DEBUG_OUTPUT )
-		if( libcnotify_verbose != 0 )
-		{
-			libcnotify_printf(
-			 "%s: long name data:\n",
-			 function );
-			libcnotify_print_data(
-			 directory_entry->name,
-			 directory_entry->name_size,
-			 0 );
-		}
-#endif
 	}
 	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 	{
@@ -1795,6 +1534,354 @@ int libfsfat_directory_entry_get_name(
 		directory_entry->name_size               = name_size;
 		directory_entry->is_unicode              = 1;
 	}
+	return( 1 );
+
+on_error:
+	if( directory_entry->name != NULL )
+	{
+		memory_free(
+		 directory_entry->name );
+
+		directory_entry->name = NULL;
+	}
+	directory_entry->name_size = 0;
+
+	return( -1 );
+}
+
+/* Determines the name from exFAT file name entries
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_entry_get_name_from_exfat_file_name_entries(
+     libfsfat_directory_entry_t *directory_entry,
+     libcdata_array_t *name_entries_array,
+     libcerror_error_t **error )
+{
+	libfsfat_directory_entry_t *name_directory_entry = NULL;
+	static char *function                            = "libfsfat_directory_entry_get_name_from_exfat_file_name_entries";
+	size_t name_offset                               = 0;
+	size_t name_size                                 = 0;
+	int entry_index                                  = 0;
+	int number_of_entries                            = 0;
+
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory_entry->name != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid directory entry - name value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( libcdata_array_get_number_of_entries(
+	     name_entries_array,
+	     &number_of_entries,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve number of name entries.",
+		 function );
+
+		goto on_error;
+	}
+	if( ( number_of_entries == 0 )
+	 || ( number_of_entries > 9 ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid number of name entries value out of bounds.",
+		 function );
+
+		goto on_error;
+	}
+	name_size = ( (size_t) 30 * number_of_entries ) + 2;
+
+	directory_entry->name = (uint8_t *) memory_allocate(
+	                                     sizeof( uint8_t ) * name_size );
+
+	if( directory_entry->name == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+		 "%s: unable to create name.",
+		 function );
+
+		goto on_error;
+	}
+	directory_entry->name_size = name_size;
+
+	for( entry_index = 0;
+	     entry_index < number_of_entries;
+	     entry_index++ )
+	{
+		if( libcdata_array_get_entry_by_index(
+		     name_entries_array,
+		     entry_index,
+		     (intptr_t **) &name_directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve directory entry: %d from name entries array.",
+			 function,
+			 entry_index );
+
+			goto on_error;
+		}
+		if( name_directory_entry == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: invalid name directory entry: %d.",
+			 function,
+			 entry_index );
+
+			goto on_error;
+		}
+		if( memory_copy(
+		     &( directory_entry->name[ name_offset ] ),
+		     name_directory_entry->name_data,
+		     30 ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy name segment: %d.",
+			 function );
+
+			goto on_error;
+		}
+		name_offset += 30;
+	}
+	directory_entry->name[ name_offset++ ] = 0;
+	directory_entry->name[ name_offset++ ] = 0;
+
+	for( name_offset = 0;
+	     ( name_offset + 1 ) < directory_entry->name_size;
+	     name_offset += 2 )
+	{
+		if( ( directory_entry->name[ name_offset ] == 0 )
+		 && ( directory_entry->name[ name_offset + 1 ] == 0 ) )
+		{
+			name_offset += 2;
+			break;
+		}
+	}
+	directory_entry->name_size  = name_offset;
+	directory_entry->is_unicode = 1;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: name data:\n",
+		 function );
+		libcnotify_print_data(
+		 directory_entry->name,
+		 directory_entry->name_size,
+		 0 );
+	}
+#endif
+	return( 1 );
+
+on_error:
+	if( directory_entry->name != NULL )
+	{
+		memory_free(
+		 directory_entry->name );
+
+		directory_entry->name = NULL;
+	}
+	directory_entry->name_size = 0;
+
+	return( -1 );
+}
+
+/* Determines the name from VFAT long file name entries
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_entry_get_name_from_vfat_long_file_name_entries(
+     libfsfat_directory_entry_t *directory_entry,
+     libcdata_array_t *name_entries_array,
+     libcerror_error_t **error )
+{
+	libfsfat_directory_entry_t *name_directory_entry = NULL;
+	static char *function                            = "libfsfat_directory_entry_get_name_from_vfat_long_file_name_entries";
+	size_t name_offset                               = 0;
+	size_t name_size                                 = 0;
+	int entry_index                                  = 0;
+	int number_of_entries                            = 0;
+
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory_entry->name != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid directory entry - name value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( libcdata_array_get_number_of_entries(
+	     name_entries_array,
+	     &number_of_entries,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve number of long file name entries.",
+		 function );
+
+		goto on_error;
+	}
+	if( ( number_of_entries == 0 )
+	 || ( number_of_entries > 10 ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid number of long file name entries value out of bounds.",
+		 function );
+
+		goto on_error;
+	}
+	name_size = ( (size_t) ( 10 + 12 + 4 ) * number_of_entries ) + 2;
+
+	directory_entry->name = (uint8_t *) memory_allocate(
+	                                     sizeof( uint8_t ) * name_size );
+
+	if( directory_entry->name == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+		 "%s: unable to create name.",
+		 function );
+
+		goto on_error;
+	}
+	directory_entry->name_size = name_size;
+
+	for( entry_index = number_of_entries - 1;
+	     entry_index >= 0;
+	     entry_index-- )
+	{
+		if( libcdata_array_get_entry_by_index(
+		     name_entries_array,
+		     entry_index,
+		     (intptr_t **) &name_directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve directory entry: %d from long file name entries array.",
+			 function,
+			 entry_index );
+
+			goto on_error;
+		}
+		if( name_directory_entry == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: invalid long file name directory entry: %d.",
+			 function,
+			 entry_index );
+
+			goto on_error;
+		}
+		if( memory_copy(
+		     &( directory_entry->name[ name_offset ] ),
+		     name_directory_entry->name_data,
+		     10 + 12 + 4 ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy long file name segment: %d.",
+			 function );
+
+			goto on_error;
+		}
+		name_offset += 10 + 12 + 4;
+	}
+	directory_entry->name[ name_offset++ ] = 0;
+	directory_entry->name[ name_offset++ ] = 0;
+
+/* TODO determine if name is UCS-2 or ASCII */
+
+	for( name_offset = 0;
+	     ( name_offset + 1 ) < directory_entry->name_size;
+	     name_offset += 2 )
+	{
+		if( ( directory_entry->name[ name_offset ] == 0 )
+		 && ( directory_entry->name[ name_offset + 1 ] == 0 ) )
+		{
+			name_offset += 2;
+			break;
+		}
+	}
+	directory_entry->name_size  = name_offset;
+	directory_entry->is_unicode = 1;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+	if( libcnotify_verbose != 0 )
+	{
+		libcnotify_printf(
+		 "%s: name data:\n",
+		 function );
+		libcnotify_print_data(
+		 directory_entry->name,
+		 directory_entry->name_size,
+		 0 );
+	}
+#endif
 	return( 1 );
 
 on_error:
@@ -2286,14 +2373,8 @@ int libfsfat_directory_entry_get_data_start_cluster(
 
 		return( -1 );
 	}
-	if( directory_entry->data_stream_entry != NULL )
-	{
-		*data_start_cluster = directory_entry->data_stream_entry->data_start_cluster;
-	}
-	else
-	{
-		*data_start_cluster = directory_entry->data_start_cluster;
-	}
+	*data_start_cluster = directory_entry->data_start_cluster;
+
 	return( 1 );
 }
 
@@ -2329,14 +2410,8 @@ int libfsfat_directory_entry_get_data_size(
 
 		return( -1 );
 	}
-	if( directory_entry->data_stream_entry != NULL )
-	{
-		*data_size = directory_entry->data_stream_entry->data_size;
-	}
-	else
-	{
-		*data_size = directory_entry->data_size;
-	}
+	*data_size = directory_entry->data_size;
+
 	return( 1 );
 }
 
