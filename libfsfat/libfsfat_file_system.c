@@ -392,7 +392,7 @@ int libfsfat_file_system_read_directory(
 
 				goto on_error;
 			}
-			directory_entry->identifier = (uint64_t) ( ( cluster_offset - file_system->io_handle->root_directory_offset ) / 32 ) + 3;
+			directory_entry->identifier = (uint64_t) cluster_offset;
 
 			result = libfsfat_directory_entry_read_file_io_handle(
 			          directory_entry,
@@ -869,7 +869,7 @@ int libfsfat_file_system_read_directory_by_range(
 
 			goto on_error;
 		}
-		directory_entry->identifier = (uint64_t) ( ( file_offset - file_system->io_handle->root_directory_offset ) / 32 ) + 3;
+		directory_entry->identifier = (uint64_t) file_offset;
 
 		result = libfsfat_directory_entry_read_file_io_handle(
 		          directory_entry,
@@ -1080,6 +1080,114 @@ on_error:
 	{
 		libfsfat_directory_free(
 		 &safe_directory,
+		 NULL );
+	}
+	return( -1 );
+}
+
+/* Reads a directory entry for a specific identifier
+ * Returns 1 if successful, 0 if not available or -1 on error
+ */
+int libfsfat_file_system_read_directory_entry_by_identifier(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     uint64_t identifier,
+     libfsfat_directory_entry_t **directory_entry,
+     libcerror_error_t **error )
+{
+	libfsfat_directory_entry_t *safe_directory_entry = NULL;
+	static char *function                            = "libfsfat_file_system_read_directory_entry_by_identifier";
+	int result                                       = 0;
+
+	if( file_system == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file system.",
+		 function );
+
+		return( -1 );
+	}
+	if( file_system->io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file system - missing IO handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( libfsfat_directory_entry_initialize(
+	     &safe_directory_entry,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create directory entry.",
+		 function );
+
+		goto on_error;
+	}
+	result = libfsfat_directory_entry_read_file_io_handle(
+	          safe_directory_entry,
+	          file_io_handle,
+	          (off64_t) identifier,
+	          file_system->io_handle->file_system_format,
+	          error );
+
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_READ_FAILED,
+		 "%s: unable to read directory entry.",
+		 function );
+
+		goto on_error;
+	}
+	else if( result == 0 )
+	{
+		if( libfsfat_directory_entry_free(
+		     &safe_directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free directory entry.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	*directory_entry = safe_directory_entry;
+
+	return( result );
+
+on_error:
+	if( safe_directory_entry != NULL )
+	{
+		libfsfat_directory_entry_free(
+		 &safe_directory_entry,
 		 NULL );
 	}
 	return( -1 );

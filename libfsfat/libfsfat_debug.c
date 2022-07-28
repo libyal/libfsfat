@@ -66,6 +66,40 @@ const char *libfsfat_debug_print_exfat_cluster_type(
 	return( "Used" );
 }
 
+/* Prints the exFAT (known) directory entry types
+ */
+const char *libfsfat_debug_print_exfat_directory_entry_type(
+             uint8_t entry_type )
+{
+	switch( entry_type )
+	{
+		case 0:
+			return( "terminator" );
+
+		case 0x81:
+			return( "allocation bitmap" );
+
+		case 0x82:
+			return( "Up-Case table" );
+
+		case 0x83:
+			return( "volume label" );
+
+		case 0x85:
+			return( "file entry" );
+
+		case 0xc0:
+			return( "data stream" );
+
+		case 0xc1:
+			return( "file entry name" );
+
+		default:
+			break;
+	}
+	return( "UNKNOWN" );
+}
+
 /* Prints the FAT-12 cluster type
  */
 const char *libfsfat_debug_print_fat12_cluster_type(

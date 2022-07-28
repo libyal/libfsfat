@@ -41,6 +41,10 @@ struct libfsfat_directory_entry
 	 */
 	int entry_type;
 
+	/* The virtual identifier
+	 */
+	uint64_t identifier;
+
 	/* The name and extension or name segments data
 	 */
 	uint8_t name_data[ 10 + 12 + 4 ];
@@ -132,10 +136,6 @@ struct libfsfat_directory_entry
 	/* The valid data size
 	 */
 	uint64_t valid_data_size;
-
-	/* The virtual identifier
-	 */
-	uint64_t identifier;
 };
 
 int libfsfat_directory_entry_initialize(

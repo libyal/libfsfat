@@ -1,4 +1,4 @@
-.Dd July 27, 2022
+.Dd July 28, 2022
 .Dt fsfatinfo
 .Os libfsfat
 .Sh NAME
@@ -7,6 +7,7 @@
 .Sh SYNOPSIS
 .Nm fsfatinfo
 .Op Fl B Ar bodyfile
+.Op Fl E Ar identifier
 .Op Fl F Ar path
 .Op Fl o Ar offset
 .Op Fl dhHvV
@@ -31,6 +32,8 @@ The options are as follows:
 output file system information as a bodyfile
 .It Fl d
 calculate a MD5 hash of a file entry to include in the bodyfile
+.It Fl E Ar identifier
+show information about a specific file system entry
 .It Fl F Ar path
 show information about a specific file entry path
 .It Fl h

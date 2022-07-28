@@ -55,25 +55,29 @@ struct libfsfat_internal_file_entry
 	 */
 	libfsfat_file_system_t *file_system;
 
-	/* The directory
-	 */
-	libfsfat_directory_t *directory;
-
 	/* The directory entry
 	 */
 	libfsfat_directory_entry_t *directory_entry;
 
-	/* The cluster number
+	/* The identifier
 	 */
-	uint32_t cluster_number;
+	uint64_t identifier;
 
 	/* The file attribute flags
 	 */
 	uint16_t file_attribute_flags;
 
+	/* The cluster number
+	 */
+	uint32_t cluster_number;
+
 	/* The cluster block stream
 	 */
 	libfdata_stream_t *cluster_block_stream;
+
+	/* The directory
+	 */
+	libfsfat_directory_t *directory;
 
 	/* The flags
 	 */
@@ -91,6 +95,7 @@ int libfsfat_file_entry_initialize(
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
      libfsfat_file_system_t *file_system,
+     uint64_t identifier,
      libfsfat_directory_entry_t *directory_entry,
      libfsfat_directory_t *directory,
      libcerror_error_t **error );

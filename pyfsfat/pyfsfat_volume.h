@@ -85,6 +85,11 @@ PyObject *pyfsfat_volume_get_root_directory(
            pyfsfat_volume_t *pyfsfat_volume,
            PyObject *arguments );
 
+PyObject *pyfsfat_volume_get_file_entry_by_identifier(
+           pyfsfat_volume_t *pyfsfat_volume,
+           PyObject *arguments,
+           PyObject *keywords );
+
 PyObject *pyfsfat_volume_get_file_entry_by_path(
            pyfsfat_volume_t *pyfsfat_volume,
            PyObject *arguments,

@@ -160,6 +160,19 @@ int libfsfat_volume_get_root_directory(
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error );
 
+int libfsfat_internal_volume_get_file_entry_by_identifier(
+     libfsfat_internal_volume_t *internal_volume,
+     uint64_t identifier,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_volume_get_file_entry_by_identifier(
+     libfsfat_volume_t *volume,
+     uint64_t identifier,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
 int libfsfat_internal_volume_get_file_entry_by_utf8_path(
      libfsfat_internal_volume_t *internal_volume,
      const uint8_t *utf8_string,

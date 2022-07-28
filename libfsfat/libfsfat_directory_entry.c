@@ -752,9 +752,11 @@ int libfsfat_directory_entry_read_data(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 " (%s)\n",
 			 function,
-			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type );
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type,
+			 libfsfat_debug_print_exfat_directory_entry_type(
+			  ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type ) );
 
 			libcnotify_printf(
 			 "%s: bitmap flags\t\t\t: 0x%02" PRIx8 "\n",
@@ -810,9 +812,11 @@ int libfsfat_directory_entry_read_data(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 " (%s)\n",
 			 function,
-			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->entry_type );
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type,
+			 libfsfat_debug_print_exfat_directory_entry_type(
+			  ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type ) );
 
 			libcnotify_printf(
 			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
@@ -920,9 +924,11 @@ int libfsfat_directory_entry_read_data(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 " (%s)\n",
 			 function,
-			 ( (fsfat_directory_entry_exfat_file_entry_t *) data )->entry_type );
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type,
+			 libfsfat_debug_print_exfat_directory_entry_type(
+			  ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type ) );
 
 			libcnotify_printf(
 			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
@@ -1033,9 +1039,11 @@ int libfsfat_directory_entry_read_data(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 " (%s)\n",
 			 function,
-			 ( (fsfat_directory_entry_exfat_file_entry_name_t *) data )->entry_type );
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type,
+			 libfsfat_debug_print_exfat_directory_entry_type(
+			  ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type ) );
 
 			libcnotify_printf(
 			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
@@ -1074,9 +1082,11 @@ int libfsfat_directory_entry_read_data(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: entry type\t\t\t\t: 0x%02" PRIx8 " (%s)\n",
 			 function,
-			 ( (fsfat_directory_entry_exfat_volume_label_t *) data )->entry_type );
+			 ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type,
+			 libfsfat_debug_print_exfat_directory_entry_type(
+			  ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type ) );
 
 			libcnotify_printf(
 			 "%s: name size\t\t\t\t: %" PRIu16 " (%" PRIu8 " characters)\n",
@@ -1197,6 +1207,7 @@ int libfsfat_directory_entry_read_file_io_handle(
 }
 
 /* Retrieves the identifier
+ * The identifier is the offset of the short name directory entry
  * Returns 1 if successful or -1 on error
  */
 int libfsfat_directory_entry_get_identifier(
@@ -1527,6 +1538,9 @@ int libfsfat_directory_entry_get_name(
 			}
 			name_offset += 30;
 		}
+		directory_entry->name[ name_offset++ ] = 0;
+		directory_entry->name[ name_offset++ ] = 0;
+
 		for( name_offset = 0;
 		     ( name_offset + 1 ) < directory_entry->name_size;
 		     name_offset += 2 )
@@ -1648,6 +1662,9 @@ int libfsfat_directory_entry_get_name(
 			}
 			name_offset += 10 + 12 + 4;
 		}
+		directory_entry->name[ name_offset++ ] = 0;
+		directory_entry->name[ name_offset++ ] = 0;
+
 /* TODO determine if name is UCS-2 or ASCII */
 
 		for( name_offset = 0;
@@ -1679,7 +1696,7 @@ int libfsfat_directory_entry_get_name(
 	}
 	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 	{
-		name_size = 8 + 3 + 1;
+		name_size = 8 + 1 + 3 + 1;
 
 		directory_entry->name = (uint8_t *) memory_allocate(
 		                                     sizeof( uint8_t ) * name_size );
@@ -1716,6 +1733,10 @@ int libfsfat_directory_entry_get_name(
 			if( directory_entry->name_data[ name_offset ] == ' ' )
 			{
 				break;
+			}
+			if( name_data_offset == 8 )
+			{
+				directory_entry->name[ name_offset++ ] = '.';
 			}
 			directory_entry->name[ name_offset++ ] = directory_entry->name_data[ name_data_offset ];
 		}

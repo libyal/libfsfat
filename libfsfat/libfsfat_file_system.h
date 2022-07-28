@@ -88,6 +88,13 @@ int libfsfat_file_system_read_directory_by_range(
      libfsfat_directory_t **directory,
      libcerror_error_t **error );
 
+int libfsfat_file_system_read_directory_entry_by_identifier(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     uint64_t identifier,
+     libfsfat_directory_entry_t **directory_entry,
+     libcerror_error_t **error );
+
 int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
      libbfio_handle_t *file_io_handle,

@@ -320,6 +320,17 @@ int libfsfat_volume_get_root_directory(
      libfsfat_file_entry_t **file_entry,
      libfsfat_error_t **error );
 
+/* Retrieves the file entry of a specific (virtual) identifier
+ * The identifier is the offset of the short name directory entry
+ * Returns 1 if successful or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_volume_get_file_entry_by_identifier(
+     libfsfat_volume_t *volume,
+     uint64_t identifier,
+     libfsfat_file_entry_t **file_entry,
+     libfsfat_error_t **error );
+
 /* Retrieves the file entry for an UTF-8 encoded path
  * Returns 1 if successful, 0 if no such file entry or -1 on error
  */
@@ -355,9 +366,7 @@ int libfsfat_file_entry_free(
      libfsfat_error_t **error );
 
 /* Retrieves the (virtual) identifier
- * The identifier is calculated base on the volume offset of the short name directory entry
- * relative to the root directory offset on FAT-12 and FAT-16 or first data cluster offset on FAT-32
- * where 3 is the first identifier and 2 represents the root directory
+ * The identifier is the offset of the short name directory entry
  * Returns 1 if successful or -1 on error
  */
 LIBFSFAT_EXTERN \

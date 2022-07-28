@@ -1643,6 +1643,7 @@ int libfsfat_volume_get_root_directory(
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
 	     internal_volume->file_system,
+	     internal_volume->io_handle->root_directory_offset,
 	     NULL,
 	     internal_volume->root_directory,
 	     error ) != 1 )
@@ -1653,6 +1654,211 @@ int libfsfat_volume_get_root_directory(
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
 		 "%s: unable to create file entry.",
 		 function );
+
+		result = -1;
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_write(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for writing.",
+		 function );
+
+		libfsfat_file_entry_free(
+		 file_entry,
+		 NULL );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
+/* Retrieves the file entry of a specific (virtual) identifier
+ * The identifier is the offset of the short name directory entry
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_internal_volume_get_file_entry_by_identifier(
+     libfsfat_internal_volume_t *internal_volume,
+     uint64_t identifier,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error )
+{
+	libfsfat_directory_t *directory             = NULL;
+	libfsfat_directory_entry_t *directory_entry = NULL;
+	static char *function                       = "libfsfat_internal_volume_get_file_entry_by_identifier";
+
+	if( internal_volume == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid volume.",
+		 function );
+
+		return( -1 );
+	}
+	if( file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( *file_entry != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file entry value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( identifier == internal_volume->io_handle->root_directory_offset )
+	{
+		directory = internal_volume->root_directory;
+	}
+	else
+	{
+		if( libfsfat_file_system_read_directory_entry_by_identifier(
+		     internal_volume->file_system,
+		     internal_volume->file_io_handle,
+		     identifier,
+		     &directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_READ_FAILED,
+			 "%s: unable to read directory entry: %" PRIu64 ".",
+			 function,
+			 identifier );
+
+			goto on_error;
+		}
+	}
+	/* libfsfat_file_entry_initialize takes over management of safe_directory_entry and directory
+	 */
+	if( libfsfat_file_entry_initialize(
+	     file_entry,
+	     internal_volume->io_handle,
+	     internal_volume->file_io_handle,
+	     internal_volume->file_system,
+	     identifier,
+	     directory_entry,
+	     directory,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create file entry.",
+		 function );
+
+		goto on_error;
+	}
+	return( 1 );
+
+on_error:
+	if( directory_entry != NULL )
+	{
+		libfsfat_directory_entry_free(
+		 &directory_entry,
+		 NULL );
+	}
+	return( -1 );
+}
+
+/* Retrieves the file entry of a specific identifier
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_volume_get_file_entry_by_identifier(
+     libfsfat_volume_t *volume,
+     uint64_t identifier,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_volume_t *internal_volume = NULL;
+	static char *function                       = "libfsfat_volume_get_file_entry_by_identifier";
+	int result                                  = 1;
+
+	if( volume == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid volume.",
+		 function );
+
+		return( -1 );
+	}
+	internal_volume = (libfsfat_internal_volume_t *) volume;
+
+	if( file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( *file_entry != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file entry value already set.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_write(
+	     internal_volume->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for writing.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( libfsfat_internal_volume_get_file_entry_by_identifier(
+	     internal_volume,
+	     identifier,
+	     file_entry,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve identifier: %" PRIu64 ".",
+		 function,
+		 identifier );
 
 		result = -1;
 	}
@@ -1696,6 +1902,7 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 	libuna_unicode_character_t unicode_character     = 0;
 	size_t utf8_string_index                         = 0;
 	size_t utf8_string_segment_length                = 0;
+	uint64_t identifier                              = 0;
 	uint32_t cluster_number                          = 0;
 	int result                                       = 0;
 
@@ -1886,22 +2093,40 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 			goto on_error;
 		}
 	}
-	if( libfsfat_directory_entry_clone(
-	     &safe_directory_entry,
-	     directory_entry,
-	     error ) != 1 )
+	if( directory_entry == NULL )
 	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create directory entry.",
-		 function );
-
-		goto on_error;
+		identifier = internal_volume->io_handle->root_directory_offset;
 	}
-	if( directory != internal_volume->root_directory )
+	else
 	{
+		if( libfsfat_directory_entry_get_identifier(
+		     directory_entry,
+		     &identifier,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve identifier from directory entry.",
+			 function );
+
+			goto on_error;
+		}
+		if( libfsfat_directory_entry_clone(
+		     &safe_directory_entry,
+		     directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create directory entry.",
+			 function );
+
+			goto on_error;
+		}
 		if( libfsfat_directory_free(
 		     &directory,
 		     error ) != 1 )
@@ -1915,18 +2140,16 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 
 			goto on_error;
 		}
-	}
-	else if( safe_directory_entry != NULL )
-	{
 		directory = NULL;
 	}
-	/* libfsfat_file_entry_initialize takes over management of directory and safe_directory_entry
+	/* libfsfat_file_entry_initialize takes over management of safe_directory_entry and directory
 	 */
 	if( libfsfat_file_entry_initialize(
 	     file_entry,
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
 	     internal_volume->file_system,
+	     identifier,
 	     safe_directory_entry,
 	     directory,
 	     error ) != 1 )
@@ -2081,6 +2304,7 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 	libuna_unicode_character_t unicode_character     = 0;
 	size_t utf16_string_index                        = 0;
 	size_t utf16_string_segment_length               = 0;
+	uint64_t identifier                              = 0;
 	uint32_t cluster_number                          = 0;
 	int result                                       = 0;
 
@@ -2271,22 +2495,40 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 			goto on_error;
 		}
 	}
-	if( libfsfat_directory_entry_clone(
-	     &safe_directory_entry,
-	     directory_entry,
-	     error ) != 1 )
+	if( directory_entry == NULL )
 	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create directory entry.",
-		 function );
-
-		goto on_error;
+		identifier = internal_volume->io_handle->root_directory_offset;
 	}
-	if( directory != internal_volume->root_directory )
+	else
 	{
+		if( libfsfat_directory_entry_get_identifier(
+		     directory_entry,
+		     &identifier,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve identifier from directory entry.",
+			 function );
+
+			goto on_error;
+		}
+		if( libfsfat_directory_entry_clone(
+		     &safe_directory_entry,
+		     directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create directory entry.",
+			 function );
+
+			goto on_error;
+		}
 		if( libfsfat_directory_free(
 		     &directory,
 		     error ) != 1 )
@@ -2300,18 +2542,16 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 
 			goto on_error;
 		}
-	}
-	else if( safe_directory_entry != NULL )
-	{
 		directory = NULL;
 	}
-	/* libfsfat_file_entry_initialize takes over management of directory and safe_directory_entry
+	/* libfsfat_file_entry_initialize takes over management of safe_directory_entry and directory
 	 */
 	if( libfsfat_file_entry_initialize(
 	     file_entry,
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
 	     internal_volume->file_system,
+	     identifier,
 	     safe_directory_entry,
 	     directory,
 	     error ) != 1 )

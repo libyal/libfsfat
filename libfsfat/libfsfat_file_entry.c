@@ -44,6 +44,7 @@ int libfsfat_file_entry_initialize(
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
      libfsfat_file_system_t *file_system,
+     uint64_t identifier,
      libfsfat_directory_entry_t *directory_entry,
      libfsfat_directory_t *directory,
      libcerror_error_t **error )
@@ -166,10 +167,11 @@ int libfsfat_file_entry_initialize(
 	internal_file_entry->io_handle            = io_handle;
 	internal_file_entry->file_io_handle       = file_io_handle;
 	internal_file_entry->file_system          = file_system;
-	internal_file_entry->directory            = directory;
+	internal_file_entry->identifier           = identifier;
 	internal_file_entry->directory_entry      = directory_entry;
-	internal_file_entry->cluster_number       = cluster_number;
 	internal_file_entry->file_attribute_flags = file_attribute_flags;
+	internal_file_entry->cluster_number       = cluster_number;
+	internal_file_entry->directory            = directory;
 
 	*file_entry = (libfsfat_file_entry_t *) internal_file_entry;
 
@@ -363,9 +365,7 @@ on_error:
 }
 
 /* Retrieves the (virtual) identifier
- * The identifier is calculated base on the volume offset of the short name directory entry
- * relative to the root directory offset on FAT-12 and FAT-16 or first data cluster offset on FAT-32
- * where 3 is the first identifier and 2 represents the root directory
+ * The identifier is the offset of the short name directory entry
  * Returns 1 if successful or -1 on error
  */
 int libfsfat_file_entry_get_identifier(
@@ -375,8 +375,6 @@ int libfsfat_file_entry_get_identifier(
 {
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
 	static char *function                               = "libfsfat_file_entry_get_identifier";
-	uint64_t safe_identifier                            = 2;
-	int result                                          = 1;
 
 	if( file_entry == NULL )
 	{
@@ -417,23 +415,8 @@ int libfsfat_file_entry_get_identifier(
 		return( -1 );
 	}
 #endif
-	if( internal_file_entry->directory_entry != NULL )
-	{
-		if( libfsfat_directory_entry_get_identifier(
-		     internal_file_entry->directory_entry,
-		     &safe_identifier,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve identifier from directory entry.",
-			 function );
+	*identifier = internal_file_entry->identifier;
 
-			result = -1;
-		}
-	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
 	     internal_file_entry->read_write_lock,
@@ -449,9 +432,7 @@ int libfsfat_file_entry_get_identifier(
 		return( -1 );
 	}
 #endif
-	*identifier = safe_identifier;
-
-	return( result );
+	return( 1 );
 }
 
 /* Retrieves the access date and time
@@ -1206,6 +1187,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 	libfsfat_directory_entry_t *safe_directory_entry = NULL;
 	libfsfat_directory_entry_t *sub_directory_entry  = NULL;
 	static char *function                            = "libfsfat_internal_file_entry_get_sub_file_entry_by_index";
+	uint64_t identifier                              = 0;
 
 	if( internal_file_entry == NULL )
 	{
@@ -1272,6 +1254,21 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 
 		goto on_error;
 	}
+	if( libfsfat_directory_entry_get_identifier(
+	     sub_directory_entry,
+	     &identifier,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve identifier from sub directory entry: %d.",
+		 function,
+		 sub_file_entry_index );
+
+		goto on_error;
+	}
 	if( libfsfat_directory_entry_clone(
 	     &safe_directory_entry,
 	     sub_directory_entry,
@@ -1281,8 +1278,9 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create directory entry.",
-		 function );
+		 "%s: unable to create sub directory entry: %d.",
+		 function,
+		 sub_file_entry_index );
 
 		goto on_error;
 	}
@@ -1293,6 +1291,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 	     internal_file_entry->io_handle,
 	     internal_file_entry->file_io_handle,
 	     internal_file_entry->file_system,
+	     identifier,
 	     safe_directory_entry,
 	     NULL,
 	     error ) != 1 )
@@ -1428,6 +1427,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 	libfsfat_directory_entry_t *safe_directory_entry = NULL;
 	libfsfat_directory_entry_t *sub_directory_entry  = NULL;
 	static char *function                            = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name";
+	uint64_t identifier                              = 0;
 	int result                                       = 0;
 
 	if( internal_file_entry == NULL )
@@ -1501,6 +1501,20 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 	{
 		return( 0 );
 	}
+	if( libfsfat_directory_entry_get_identifier(
+	     sub_directory_entry,
+	     &identifier,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve identifier from sub directory entry.",
+		 function );
+
+		goto on_error;
+	}
 	if( libfsfat_directory_entry_clone(
 	     &safe_directory_entry,
 	     sub_directory_entry,
@@ -1510,7 +1524,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create directory entry.",
+		 "%s: unable to create sub directory entry.",
 		 function );
 
 		goto on_error;
@@ -1522,6 +1536,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 	     internal_file_entry->io_handle,
 	     internal_file_entry->file_io_handle,
 	     internal_file_entry->file_system,
+	     identifier,
 	     safe_directory_entry,
 	     NULL,
 	     error ) != 1 )
@@ -1658,6 +1673,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 	libfsfat_directory_entry_t *safe_directory_entry = NULL;
 	libfsfat_directory_entry_t *sub_directory_entry  = NULL;
 	static char *function                            = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name";
+	uint64_t identifier                              = 0;
 	int result                                       = 0;
 
 	if( internal_file_entry == NULL )
@@ -1731,6 +1747,20 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 	{
 		return( 0 );
 	}
+	if( libfsfat_directory_entry_get_identifier(
+	     sub_directory_entry,
+	     &identifier,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve identifier from sub directory entry.",
+		 function );
+
+		goto on_error;
+	}
 	if( libfsfat_directory_entry_clone(
 	     &safe_directory_entry,
 	     sub_directory_entry,
@@ -1740,7 +1770,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create directory entry.",
+		 "%s: unable to create sub directory entry.",
 		 function );
 
 		goto on_error;
@@ -1752,6 +1782,7 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 	     internal_file_entry->io_handle,
 	     internal_file_entry->file_io_handle,
 	     internal_file_entry->file_system,
+	     identifier,
 	     safe_directory_entry,
 	     NULL,
 	     error ) != 1 )

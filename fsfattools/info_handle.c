@@ -1379,6 +1379,18 @@ int info_handle_file_entry_value_with_name_fprint(
 				return( -1 );
 			}
 		}
+/* TODO add option to control conversion of identifier to TSK metadata address */
+		file_entry_identifier -= info_handle->root_directory_identifier;
+
+		if( file_entry_identifier == 0 )
+		{
+			file_entry_identifier = 2;
+		}
+		else
+		{
+			file_entry_identifier /= 32;
+			file_entry_identifier += 3;
+		}
 		if( modification_time != 0 )
 		{
 			modification_time += 31553280000;
@@ -1423,7 +1435,7 @@ int info_handle_file_entry_value_with_name_fprint(
 	{
 		fprintf(
 		 info_handle->notify_stream,
-		 "\tIdentifier\t\t: %" PRIu64 "\n",
+		 "\tIdentifier\t\t: 0x%08" PRIx64 "\n",
 		 file_entry_identifier );
 
 		if( file_entry_name != NULL )
@@ -1871,6 +1883,120 @@ on_error:
 	return( -1 );
 }
 
+/* Prints the file entry information for a specific identifier
+ * Returns 1 if successful, 0 if not or -1 on error
+ */
+int info_handle_file_entry_fprint_by_identifier(
+     info_handle_t *info_handle,
+     uint64_t file_entry_identifier,
+     libcerror_error_t **error )
+{
+	libfsfat_file_entry_t *file_entry = NULL;
+	static char *function             = "info_handle_file_entry_fprint_by_identifier";
+	uint8_t format_version            = 0;
+
+	if( info_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid info handle.",
+		 function );
+
+		return( -1 );
+	}
+	if( libfsfat_volume_get_format_version(
+	     info_handle->input_volume,
+	     &format_version,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve format version.",
+		 function );
+
+		goto on_error;
+	}
+	if( libfsfat_volume_get_file_entry_by_identifier(
+	     info_handle->input_volume,
+	     file_entry_identifier,
+	     &file_entry,
+	     error ) != 1 )
+	{
+		if( ( error != NULL )
+		 && ( *error != NULL ) )
+		{
+			libcnotify_print_error_backtrace(
+			 *error );
+		}
+		libcerror_error_free(
+		 error );
+
+		fprintf(
+		 info_handle->notify_stream,
+		 "Error reading file entry: %" PRIu64 "\n\n",
+		 file_entry_identifier );
+
+		return( 0 );
+	}
+	fprintf(
+	 info_handle->notify_stream,
+	 "File entry: %" PRIu64 " information:\n",
+	 file_entry_identifier );
+
+/* TODO implement is empty */
+/* TODO implement is allocated */
+
+	if( info_handle_file_entry_value_with_name_fprint(
+	     info_handle,
+	     file_entry,
+	     NULL,
+	     0,
+	     NULL,
+	     0,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_PRINT_FAILED,
+		 "%s: unable to print file entry.",
+		 function );
+
+		goto on_error;
+	}
+	if( libfsfat_file_entry_free(
+	     &file_entry,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+		 "%s: unable to free file entry.",
+		 function );
+
+		goto on_error;
+	}
+	fprintf(
+	 info_handle->notify_stream,
+	 "\n" );
+
+	return( 1 );
+
+on_error:
+	if( file_entry != NULL )
+	{
+		libfsfat_file_entry_free(
+		 &file_entry,
+		 NULL );
+	}
+	return( -1 );
+}
+
 /* Prints the file entry information for a specific path
  * Returns 1 if successful or -1 on error
  */
@@ -2091,6 +2217,23 @@ int info_handle_file_system_hierarchy_fprint(
 	}
 	else if( result != 0 )
 	{
+		if( info_handle->bodyfile_stream != NULL )
+		{
+			if( libfsfat_file_entry_get_identifier(
+			     file_entry,
+			     &( info_handle->root_directory_identifier ),
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+				 "%s: unable to retrieve identifier.",
+				 function );
+
+				goto on_error;
+			}
+		}
 		if( info_handle_file_system_hierarchy_fprint_file_entry(
 		     info_handle,
 		     file_entry,

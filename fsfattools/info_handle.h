@@ -54,6 +54,10 @@ struct info_handle
 	 */
 	uint8_t format_version;
 
+	/* The root directory identifier
+	 */
+	uint64_t root_directory_identifier;
+
 	/* Value to indicate if the MD5 hash should be calculated
 	 */
 	uint8_t calculate_md5;
@@ -146,6 +150,11 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
      libfsfat_file_entry_t *file_entry,
      const system_character_t *path,
      size_t path_length,
+     libcerror_error_t **error );
+
+int info_handle_file_entry_fprint_by_identifier(
+     info_handle_t *info_handle,
+     uint64_t file_entry_identifier,
      libcerror_error_t **error );
 
 int info_handle_file_entry_fprint_by_path(

@@ -93,6 +93,13 @@ PyMethodDef pyfsfat_volume_object_methods[] = {
 	  "\n"
 	  "Retrieves the root directory file entry." },
 
+	{ "get_file_entry_by_identifier",
+	  (PyCFunction) pyfsfat_volume_get_file_entry_by_identifier,
+	  METH_VARARGS | METH_KEYWORDS,
+	  "get_file_entry_by_identifier(identifier) -> Object or None\n"
+	  "\n"
+	  "Retrieves the file entry specified by the identifier." },
+
 	{ "get_file_entry_by_path",
 	  (PyCFunction) pyfsfat_volume_get_file_entry_by_path,
 	  METH_VARARGS | METH_KEYWORDS,
@@ -995,6 +1002,96 @@ on_error:
 	{
 		libfsfat_file_entry_free(
 		 &root_directory,
+		 NULL );
+	}
+	return( NULL );
+}
+
+/* Retrieves a specific of file entry by identifier
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyfsfat_volume_get_file_entry_by_identifier(
+           pyfsfat_volume_t *pyfsfat_volume,
+           PyObject *arguments,
+           PyObject *keywords )
+{
+	PyObject *file_entry_object              = NULL;
+	libcerror_error_t *error                 = NULL;
+	libfsfat_file_entry_t *file_entry        = NULL;
+	static char *function                    = "pyfsfat_volume_get_file_entry_by_identifier";
+	static char *keyword_list[]              = { "file_entry_identifier", NULL };
+	unsigned long long file_entry_identifier = 0;
+	int result                               = 0;
+
+	if( pyfsfat_volume == NULL )
+	{
+		PyErr_Format(
+		 PyExc_ValueError,
+		 "%s: invalid volume.",
+		 function );
+
+		return( NULL );
+	}
+	if( PyArg_ParseTupleAndKeywords(
+	     arguments,
+	     keywords,
+	     "K",
+	     keyword_list,
+	     &file_entry_identifier ) == 0 )
+	{
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libfsfat_volume_get_file_entry_by_identifier(
+	          ( (pyfsfat_volume_t *) pyfsfat_volume )->volume,
+	          file_entry_identifier,
+	          &file_entry,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result != 1 )
+	{
+		pyfsfat_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to retrieve of file entry: %jd.",
+		 function,
+		 file_entry_identifier );
+
+		libcerror_error_free(
+		 &error );
+
+		goto on_error;
+	}
+	else if( result == 0 )
+	{
+		Py_IncRef(
+		 Py_None );
+
+		return( Py_None );
+	}
+	file_entry_object = pyfsfat_file_entry_new(
+	                     file_entry,
+	                     (PyObject *) pyfsfat_volume );
+
+	if( file_entry_object == NULL )
+	{
+		PyErr_Format(
+		 PyExc_MemoryError,
+		 "%s: unable to create file entry object.",
+		 function );
+
+		goto on_error;
+	}
+	return( file_entry_object );
+
+on_error:
+	if( file_entry != NULL )
+	{
+		libfsfat_file_entry_free(
+		 &file_entry,
 		 NULL );
 	}
 	return( NULL );

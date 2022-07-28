@@ -1,10 +1,23 @@
 dnl Checks for required headers and functions
 dnl
-dnl Version: 20200713
+dnl Version: 20220728
 
 dnl Function to detect if libfsfat dependencies are available
 AC_DEFUN([AX_LIBFSFAT_CHECK_LOCAL],
-  [dnl Check for internationalization functions in libfsfat/libfsfat_i18n.c
+  [dnl Headers included in libfsfat/libfsfat_name.c
+  AC_CHECK_HEADERS([wctype.h])
+
+  dnl Functions used in libfsfat/libfsfat_name.c
+  AC_CHECK_FUNCS([towupper])
+
+  AS_IF(
+    [test "x$ac_cv_func_towupper" != xyes],
+    [AC_MSG_FAILURE(
+      [Missing function: towupper],
+      [1])
+  ])
+
+  dnl Check for internationalization functions in libfsfat/libfsfat_i18n.c
   AC_CHECK_FUNCS([bindtextdomain])
 ])
 

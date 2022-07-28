@@ -37,6 +37,9 @@ extern "C" {
 const char *libfsfat_debug_print_exfat_cluster_type(
              uint32_t cluster_type );
 
+const char *libfsfat_debug_print_exfat_directory_entry_type(
+             uint8_t entry_type );
+
 const char *libfsfat_debug_print_fat12_cluster_type(
              uint16_t cluster_type );
 

@@ -1,10 +1,9 @@
 TODO:
+* test get file entry by path on incorrect path
 * retrieve file entry by identifier functionality
   - backtrack for VFAT name
-  - look into Windows file ID
-  - parent directory cluster number (0 for root?) + directry entry index ?
+  - Windows file ID for FAT is the volume offset
 * add exFAT support
-  - debug print exFAT directory entry type
   - add valid data size support
 * add number of file entries support?
 * add docstring about timestamps in local time or UTC
@@ -13,8 +12,6 @@ TODO:
 * add support for case less comparision
 * add support for short and long file name comparison
 * add volume (label) last modification time API function
-* complete info tool
-  - to retrieve file entry by identifier
 * complete mount tool
   - check FILETIME calculations on Windows
 

@@ -51,6 +51,7 @@
 
 enum FSFATINFO_MODES
 {
+	FSFATINFO_MODE_FILE_ENTRY_BY_IDENTIFIER,
 	FSFATINFO_MODE_FILE_ENTRY_BY_PATH,
 	FSFATINFO_MODE_FILE_SYSTEM_HIERARCHY,
 	FSFATINFO_MODE_VOLUME
@@ -68,16 +69,18 @@ void usage_fprint(
 	{
 		return;
 	}
-	fprintf( stream, "Use fsfatinfo to determine information about a File Allocation\n"
-	                 "Table (FAT) file system volume.\n\n" );
+	fprintf( stream, "Use fsfatinfo to determine information about a File Allocation Table (FAT)\n"
+	                 "file system volume.\n\n" );
 
-	fprintf( stream, "Usage: fsfatinfo [ -B bodyfile ] [ -F file_entry ]\n"
+	fprintf( stream, "Usage: fsfatinfo [ -B bodyfile ] [ -E identifier ] [ -F file_entry ]\n"
 	                 "                 [ -o offset ] [ -dhHvV ] source\n\n" );
 
 	fprintf( stream, "\tsource: the source file or device\n\n" );
 
 	fprintf( stream, "\t-B:     output file system information as a bodyfile\n" );
-	fprintf( stream, "\t-d:     calculate a MD5 hash of a file entry to include in the bodyfile\n" );
+	fprintf( stream, "\t-d:     calculate a MD5 hash of a file entry to include in the\n"
+	                 "\t        bodyfile\n" );
+	fprintf( stream, "\t-E:     show information about a specific identifier.\n" );
 	fprintf( stream, "\t-F:     show information about a specific file entry path.\n" );
 	fprintf( stream, "\t-h:     shows this help\n" );
 	fprintf( stream, "\t-H:     shows the file system hierarchy\n" );
@@ -138,17 +141,19 @@ int wmain( int argc, wchar_t * const argv[] )
 int main( int argc, char * const argv[] )
 #endif
 {
-	libfsfat_error_t *error                    = NULL;
-	system_character_t *option_bodyfile        = NULL;
-	system_character_t *option_file_entry_path = NULL;
-	system_character_t *option_volume_offset   = NULL;
-	system_character_t *source                 = NULL;
-	char *program                              = "fsfatinfo";
-	system_integer_t option                    = 0;
-	size_t string_length                       = 0;
-	uint8_t calculate_md5                      = 0;
-	int option_mode                            = FSFATINFO_MODE_VOLUME;
-	int verbose                                = 0;
+	libfsfat_error_t *error                          = NULL;
+	system_character_t *option_bodyfile              = NULL;
+	system_character_t *option_file_entry_identifier = NULL;
+	system_character_t *option_file_entry_path       = NULL;
+	system_character_t *option_volume_offset         = NULL;
+	system_character_t *source                       = NULL;
+	char *program                                    = "fsfatinfo";
+	system_integer_t option                          = 0;
+	size_t string_length                             = 0;
+	uint64_t file_entry_identifier                   = 0;
+	uint8_t calculate_md5                            = 0;
+	int option_mode                                  = FSFATINFO_MODE_VOLUME;
+	int verbose                                      = 0;
 
 	libcnotify_stream_set(
 	 stderr,
@@ -183,7 +188,7 @@ int main( int argc, char * const argv[] )
 	while( ( option = fsfattools_getopt(
 	                   argc,
 	                   argv,
-	                   _SYSTEM_STRING( "B:dF:hHo:vV" ) ) ) != (system_integer_t) -1 )
+	                   _SYSTEM_STRING( "B:dE:F:hHo:vV" ) ) ) != (system_integer_t) -1 )
 	{
 		switch( option )
 		{
@@ -206,6 +211,12 @@ int main( int argc, char * const argv[] )
 
 			case (system_integer_t) 'd':
 				calculate_md5 = 1;
+
+				break;
+
+			case (system_integer_t) 'E':
+				option_mode                  = FSFATINFO_MODE_FILE_ENTRY_BY_IDENTIFIER;
+				option_file_entry_identifier = optarg;
 
 				break;
 
@@ -319,8 +330,57 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
+	if( option_mode == FSFATINFO_MODE_FILE_ENTRY_BY_IDENTIFIER )
+	{
+		if( option_file_entry_identifier == NULL )
+		{
+			fprintf(
+			 stderr,
+			 "Mising file entry identifier string.\n" );
+
+			goto on_error;
+		}
+		string_length = system_string_length(
+				 option_file_entry_identifier );
+
+		if( info_handle_system_string_copy_from_64_bit_in_decimal(
+		     option_file_entry_identifier,
+		     string_length + 1,
+		     &file_entry_identifier,
+		     &error ) != 1 )
+		{
+			fprintf(
+			 stderr,
+			 "Unable to copy file entry identifier string to 64-bit decimal.\n" );
+
+			goto on_error;
+		}
+		else if( file_entry_identifier > (uint64_t) UINT32_MAX )
+		{
+			fprintf(
+			 stderr,
+			 "Invalid file entry identifier value out of bounds." );
+
+			goto on_error;
+		}
+	}
 	switch( option_mode )
 	{
+		case FSFATINFO_MODE_FILE_ENTRY_BY_IDENTIFIER:
+			if( info_handle_file_entry_fprint_by_identifier(
+			     fsfatinfo_info_handle,
+			     (uint32_t) file_entry_identifier,
+			     &error ) != 1 )
+			{
+				fprintf(
+				 stderr,
+				 "Unable to print file entry: %" PRIu64 ".\n",
+				 file_entry_identifier );
+
+				goto on_error;
+			}
+			break;
+
 		case FSFATINFO_MODE_FILE_ENTRY_BY_PATH:
 			if( info_handle_file_entry_fprint_by_path(
 			     fsfatinfo_info_handle,

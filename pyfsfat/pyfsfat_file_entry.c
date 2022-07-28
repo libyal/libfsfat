@@ -91,7 +91,7 @@ PyMethodDef pyfsfat_file_entry_object_methods[] = {
 	{ "get_file_attribute_flags",
 	  (PyCFunction) pyfsfat_file_entry_get_file_attribute_flags,
 	  METH_NOARGS,
-	  "get_file_attribute_flags() -> Integer\n"
+	  "get_file_attribute_flags() -> Integer or None\n"
 	  "\n"
 	  "Retrieves the file attribute flags." },
 
@@ -930,18 +930,25 @@ PyObject *pyfsfat_file_entry_get_file_attribute_flags(
 
 	Py_END_ALLOW_THREADS
 
-	if( result != 1 )
+	if( result == -1 )
 	{
 		pyfsfat_error_raise(
 		 error,
 		 PyExc_IOError,
-		 "%s: unable to retrieve file mode.",
+		 "%s: unable to retrieve file attribute flags.",
 		 function );
 
 		libcerror_error_free(
 		 &error );
 
 		return( NULL );
+	}
+	else if( result == 0 )
+	{
+		Py_IncRef(
+		 Py_None );
+
+		return( Py_None );
 	}
 #if PY_MAJOR_VERSION >= 3
 	integer_object = PyLong_FromLong(
