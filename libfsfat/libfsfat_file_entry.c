@@ -44,9 +44,8 @@ int libfsfat_file_entry_initialize(
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
      libfsfat_file_system_t *file_system,
-     libfsfat_directory_t *directory,
      libfsfat_directory_entry_t *directory_entry,
-     uint8_t flags,
+     libfsfat_directory_t *directory,
      libcerror_error_t **error )
 {
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
@@ -171,7 +170,6 @@ int libfsfat_file_entry_initialize(
 	internal_file_entry->directory_entry      = directory_entry;
 	internal_file_entry->cluster_number       = cluster_number;
 	internal_file_entry->file_attribute_flags = file_attribute_flags;
-	internal_file_entry->flags                = flags;
 
 	*file_entry = (libfsfat_file_entry_t *) internal_file_entry;
 
@@ -228,8 +226,24 @@ int libfsfat_file_entry_free(
 			result = -1;
 		}
 #endif
+		if( internal_file_entry->directory_entry != NULL )
+		{
+			if( libfsfat_directory_entry_free(
+			     &( internal_file_entry->directory_entry ),
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to free directory entry.",
+				 function );
+
+				result = -1;
+			}
+		}
 		if( ( internal_file_entry->directory != NULL )
-		 && ( ( internal_file_entry->flags & 0x01 ) != 0 ) )
+		 && ( ( internal_file_entry->flags & LIBFSFAT_FILE_ENTRY_FLAG_MANAGE_DIRECTORY ) != 0 ) )
 		{
 			if( libfsfat_directory_free(
 			     &( internal_file_entry->directory ),
@@ -267,6 +281,85 @@ int libfsfat_file_entry_free(
 		 internal_file_entry );
 	}
 	return( result );
+}
+
+/* Determines the directory
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_internal_file_entry_get_directory(
+     libfsfat_internal_file_entry_t *internal_file_entry,
+     libcerror_error_t **error )
+{
+	static char *function   = "libfsfat_internal_file_entry_get_directory";
+	uint32_t cluster_number = 0;
+
+	if( internal_file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file_entry->directory != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid file entry - directory value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
+	{
+		if( libfsfat_directory_entry_get_data_start_cluster(
+		     internal_file_entry->directory_entry,
+		     &cluster_number,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve directory entry data start cluster.",
+			 function );
+
+			goto on_error;
+		}
+		if( libfsfat_file_system_read_directory(
+		     internal_file_entry->file_system,
+		     internal_file_entry->file_io_handle,
+		     cluster_number,
+		     &( internal_file_entry->directory ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_READ_FAILED,
+			 "%s: unable to read directory: %" PRIu32 ".",
+			 function,
+			 cluster_number );
+
+			goto on_error;
+		}
+		internal_file_entry->flags |= LIBFSFAT_FILE_ENTRY_FLAG_MANAGE_DIRECTORY;
+	}
+	return( 1 );
+
+on_error:
+	if( internal_file_entry->directory != NULL )
+	{
+		libfsfat_directory_free(
+		 &( internal_file_entry->directory ),
+		 NULL );
+	}
+	return( -1 );
 }
 
 /* Retrieves the (virtual) identifier
@@ -1048,6 +1141,22 @@ int libfsfat_file_entry_get_number_of_sub_file_entries(
 		return( -1 );
 	}
 #endif
+	if( internal_file_entry->directory == NULL )
+	{
+		if( libfsfat_internal_file_entry_get_directory(
+		     internal_file_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine directory.",
+			 function );
+
+			result = -1;
+		}
+	}
 	if( internal_file_entry->directory != NULL )
 	{
 		if( libfsfat_directory_get_number_of_file_entries(
@@ -1094,11 +1203,9 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
      libfsfat_file_entry_t **sub_file_entry,
      libcerror_error_t **error )
 {
-	libfsfat_directory_entry_t *sub_directory_entry = NULL;
-	libfsfat_directory_t *sub_directory             = NULL;
-	static char *function                           = "libfsfat_internal_file_entry_get_sub_file_entry_by_index";
-	uint32_t cluster_number                         = 0;
-	uint16_t file_attribute_flags                   = 0;
+	libfsfat_directory_entry_t *safe_directory_entry = NULL;
+	libfsfat_directory_entry_t *sub_directory_entry  = NULL;
+	static char *function                            = "libfsfat_internal_file_entry_get_sub_file_entry_by_index";
 
 	if( internal_file_entry == NULL )
 	{
@@ -1133,6 +1240,22 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 
 		return( -1 );
 	}
+	if( internal_file_entry->directory == NULL )
+	{
+		if( libfsfat_internal_file_entry_get_directory(
+		     internal_file_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine directory.",
+			 function );
+
+			goto on_error;
+		}
+	}
 	if( libfsfat_directory_get_file_entry_by_index(
 	     internal_file_entry->directory,
 	     sub_file_entry_index,
@@ -1149,65 +1272,29 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 
 		goto on_error;
 	}
-	if( libfsfat_directory_entry_get_file_attribute_flags(
+	if( libfsfat_directory_entry_clone(
+	     &safe_directory_entry,
 	     sub_directory_entry,
-	     &file_attribute_flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve file attribute flags from sub directory entry: %d.",
-		 function,
-		 sub_file_entry_index );
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create directory entry.",
+		 function );
 
 		goto on_error;
 	}
-	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
-	{
-		if( libfsfat_directory_entry_get_data_start_cluster(
-		     sub_directory_entry,
-		     &cluster_number,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve sub directory entry data start cluster.",
-			 function );
-
-			goto on_error;
-		}
-		if( libfsfat_file_system_read_directory(
-		     internal_file_entry->file_system,
-		     internal_file_entry->file_io_handle,
-		     cluster_number,
-		     &sub_directory,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: unable to read sub directory: %" PRIu32 ".",
-			 function,
-			 cluster_number );
-
-			goto on_error;
-		}
-	}
-	/* The file_entry takes over management of sub_directory
+	/* libfsfat_file_entry_initialize takes over management of safe_directory_entry
 	 */
 	if( libfsfat_file_entry_initialize(
 	     sub_file_entry,
 	     internal_file_entry->io_handle,
 	     internal_file_entry->file_io_handle,
 	     internal_file_entry->file_system,
-	     sub_directory,
-	     sub_directory_entry,
-	     1,
+	     safe_directory_entry,
+	     NULL,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1222,10 +1309,10 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_index(
 	return( 1 );
 
 on_error:
-	if( sub_directory != NULL )
+	if( safe_directory_entry != NULL )
 	{
-		libfsfat_directory_free(
-		 &sub_directory,
+		libfsfat_directory_entry_free(
+		 &safe_directory_entry,
 		 NULL );
 	}
 	return( -1 );
@@ -1338,12 +1425,10 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
      libfsfat_file_entry_t **sub_file_entry,
      libcerror_error_t **error )
 {
-	libfsfat_directory_entry_t *sub_directory_entry = NULL;
-	libfsfat_directory_t *sub_directory             = NULL;
-	static char *function                           = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name";
-	uint32_t cluster_number                         = 0;
-	uint16_t file_attribute_flags                   = 0;
-	int result                                      = 0;
+	libfsfat_directory_entry_t *safe_directory_entry = NULL;
+	libfsfat_directory_entry_t *sub_directory_entry  = NULL;
+	static char *function                            = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name";
+	int result                                       = 0;
 
 	if( internal_file_entry == NULL )
 	{
@@ -1378,6 +1463,22 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 
 		return( -1 );
 	}
+	if( internal_file_entry->directory == NULL )
+	{
+		if( libfsfat_internal_file_entry_get_directory(
+		     internal_file_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine directory.",
+			 function );
+
+			goto on_error;
+		}
+	}
 	result = libfsfat_directory_get_file_entry_by_utf8_name(
 	          internal_file_entry->directory,
 	          utf8_string,
@@ -1400,64 +1501,29 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 	{
 		return( 0 );
 	}
-	if( libfsfat_directory_entry_get_file_attribute_flags(
+	if( libfsfat_directory_entry_clone(
+	     &safe_directory_entry,
 	     sub_directory_entry,
-	     &file_attribute_flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve file attribute flags from sub directory entry.",
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create directory entry.",
 		 function );
 
 		goto on_error;
 	}
-	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
-	{
-		if( libfsfat_directory_entry_get_data_start_cluster(
-		     sub_directory_entry,
-		     &cluster_number,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve sub directory entry data start cluster.",
-			 function );
-
-			goto on_error;
-		}
-		if( libfsfat_file_system_read_directory(
-		     internal_file_entry->file_system,
-		     internal_file_entry->file_io_handle,
-		     cluster_number,
-		     &sub_directory,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: unable to read sub directory: %" PRIu32 ".",
-			 function,
-			 cluster_number );
-
-			goto on_error;
-		}
-	}
-	/* The file_entry takes over management of sub_directory
+	/* libfsfat_file_entry_initialize takes over management of safe_directory_entry
 	 */
 	if( libfsfat_file_entry_initialize(
 	     sub_file_entry,
 	     internal_file_entry->io_handle,
 	     internal_file_entry->file_io_handle,
 	     internal_file_entry->file_system,
-	     sub_directory,
-	     sub_directory_entry,
-	     1,
+	     safe_directory_entry,
+	     NULL,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1472,10 +1538,10 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf8_name(
 	return( 1 );
 
 on_error:
-	if( sub_directory != NULL )
+	if( safe_directory_entry != NULL )
 	{
-		libfsfat_directory_free(
-		 &sub_directory,
+		libfsfat_directory_entry_free(
+		 &safe_directory_entry,
 		 NULL );
 	}
 	return( -1 );
@@ -1589,12 +1655,10 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
      libfsfat_file_entry_t **sub_file_entry,
      libcerror_error_t **error )
 {
-	libfsfat_directory_entry_t *sub_directory_entry = NULL;
-	libfsfat_directory_t *sub_directory             = NULL;
-	static char *function                           = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name";
-	uint32_t cluster_number                         = 0;
-	uint16_t file_attribute_flags                   = 0;
-	int result                                      = 0;
+	libfsfat_directory_entry_t *safe_directory_entry = NULL;
+	libfsfat_directory_entry_t *sub_directory_entry  = NULL;
+	static char *function                            = "libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name";
+	int result                                       = 0;
 
 	if( internal_file_entry == NULL )
 	{
@@ -1629,6 +1693,22 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 
 		return( -1 );
 	}
+	if( internal_file_entry->directory == NULL )
+	{
+		if( libfsfat_internal_file_entry_get_directory(
+		     internal_file_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine directory.",
+			 function );
+
+			goto on_error;
+		}
+	}
 	result = libfsfat_directory_get_file_entry_by_utf16_name(
 	          internal_file_entry->directory,
 	          utf16_string,
@@ -1651,64 +1731,29 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 	{
 		return( 0 );
 	}
-	if( libfsfat_directory_entry_get_file_attribute_flags(
+	if( libfsfat_directory_entry_clone(
+	     &safe_directory_entry,
 	     sub_directory_entry,
-	     &file_attribute_flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve file attribute flags from sub directory entry.",
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create directory entry.",
 		 function );
 
 		goto on_error;
 	}
-	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
-	{
-		if( libfsfat_directory_entry_get_data_start_cluster(
-		     sub_directory_entry,
-		     &cluster_number,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve sub directory entry data start cluster.",
-			 function );
-
-			goto on_error;
-		}
-		if( libfsfat_file_system_read_directory(
-		     internal_file_entry->file_system,
-		     internal_file_entry->file_io_handle,
-		     cluster_number,
-		     &sub_directory,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: unable to read sub directory: %" PRIu32 ".",
-			 function,
-			 cluster_number );
-
-			goto on_error;
-		}
-	}
-	/* The file_entry takes over management of sub_directory
+	/* libfsfat_file_entry_initialize takes over management of safe_directory_entry
 	 */
 	if( libfsfat_file_entry_initialize(
 	     sub_file_entry,
 	     internal_file_entry->io_handle,
 	     internal_file_entry->file_io_handle,
 	     internal_file_entry->file_system,
-	     sub_directory,
-	     sub_directory_entry,
-	     1,
+	     safe_directory_entry,
+	     NULL,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1723,10 +1768,10 @@ int libfsfat_internal_file_entry_get_sub_file_entry_by_utf16_name(
 	return( 1 );
 
 on_error:
-	if( sub_directory != NULL )
+	if( safe_directory_entry != NULL )
 	{
-		libfsfat_directory_free(
-		 &sub_directory,
+		libfsfat_directory_entry_free(
+		 &safe_directory_entry,
 		 NULL );
 	}
 	return( -1 );

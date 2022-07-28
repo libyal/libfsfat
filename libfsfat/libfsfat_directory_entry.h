@@ -146,6 +146,11 @@ int libfsfat_directory_entry_free(
      libfsfat_directory_entry_t **directory_entry,
      libcerror_error_t **error );
 
+int libfsfat_directory_entry_clone(
+     libfsfat_directory_entry_t **destination_directory_entry,
+     libfsfat_directory_entry_t *source_directory_entry,
+     libcerror_error_t **error );
+
 int libfsfat_directory_entry_read_data(
      libfsfat_directory_entry_t *directory_entry,
      const uint8_t *data,

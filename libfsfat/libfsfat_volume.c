@@ -1643,9 +1643,8 @@ int libfsfat_volume_get_root_directory(
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
 	     internal_volume->file_system,
-	     internal_volume->root_directory,
 	     NULL,
-	     0,
+	     internal_volume->root_directory,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1689,16 +1688,16 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error )
 {
-	libfsfat_directory_t *directory              = NULL;
-	libfsfat_directory_entry_t *directory_entry  = NULL;
-	const uint8_t *utf8_string_segment           = NULL;
-	static char *function                        = "libfsfat_internal_volume_get_file_entry_by_utf8_path";
-	libuna_unicode_character_t unicode_character = 0;
-	size_t utf8_string_index                     = 0;
-	size_t utf8_string_segment_length            = 0;
-	uint32_t cluster_number                      = 0;
-	uint8_t flags                                = 0;
-	int result                                   = 0;
+	libfsfat_directory_t *directory                  = NULL;
+	libfsfat_directory_entry_t *directory_entry      = NULL;
+	libfsfat_directory_entry_t *safe_directory_entry = NULL;
+	const uint8_t *utf8_string_segment               = NULL;
+	static char *function                            = "libfsfat_internal_volume_get_file_entry_by_utf8_path";
+	libuna_unicode_character_t unicode_character     = 0;
+	size_t utf8_string_index                         = 0;
+	size_t utf8_string_segment_length                = 0;
+	uint32_t cluster_number                          = 0;
+	int result                                       = 0;
 
 	if( internal_volume == NULL )
 	{
@@ -1887,20 +1886,49 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 			goto on_error;
 		}
 	}
+	if( libfsfat_directory_entry_clone(
+	     &safe_directory_entry,
+	     directory_entry,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create directory entry.",
+		 function );
+
+		goto on_error;
+	}
 	if( directory != internal_volume->root_directory )
 	{
-		/* The file_entry takes over management of directory
-		 */
-		flags = 1;
+		if( libfsfat_directory_free(
+		     &directory,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free directory.",
+			 function );
+
+			goto on_error;
+		}
 	}
+	else if( safe_directory_entry != NULL )
+	{
+		directory = NULL;
+	}
+	/* libfsfat_file_entry_initialize takes over management of directory and safe_directory_entry
+	 */
 	if( libfsfat_file_entry_initialize(
 	     file_entry,
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
 	     internal_volume->file_system,
+	     safe_directory_entry,
 	     directory,
-	     directory_entry,
-	     flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1915,6 +1943,12 @@ int libfsfat_internal_volume_get_file_entry_by_utf8_path(
 	return( result );
 
 on_error:
+	if( safe_directory_entry != NULL )
+	{
+		libfsfat_directory_entry_free(
+		 &safe_directory_entry,
+		 NULL );
+	}
 	if( ( directory != NULL )
 	 && ( directory != internal_volume->root_directory ) )
 	{
@@ -2039,16 +2073,16 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error )
 {
-	libfsfat_directory_t *directory              = NULL;
-	libfsfat_directory_entry_t *directory_entry  = NULL;
-	const uint16_t *utf16_string_segment         = NULL;
-	static char *function                        = "libfsfat_internal_volume_get_file_entry_by_utf16_path";
-	libuna_unicode_character_t unicode_character = 0;
-	size_t utf16_string_index                    = 0;
-	size_t utf16_string_segment_length           = 0;
-	uint32_t cluster_number                      = 0;
-	uint8_t flags                                = 0;
-	int result                                   = 0;
+	libfsfat_directory_t *directory                  = NULL;
+	libfsfat_directory_entry_t *directory_entry      = NULL;
+	libfsfat_directory_entry_t *safe_directory_entry = NULL;
+	const uint16_t *utf16_string_segment             = NULL;
+	static char *function                            = "libfsfat_internal_volume_get_file_entry_by_utf16_path";
+	libuna_unicode_character_t unicode_character     = 0;
+	size_t utf16_string_index                        = 0;
+	size_t utf16_string_segment_length               = 0;
+	uint32_t cluster_number                          = 0;
+	int result                                       = 0;
 
 	if( internal_volume == NULL )
 	{
@@ -2237,20 +2271,49 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 			goto on_error;
 		}
 	}
+	if( libfsfat_directory_entry_clone(
+	     &safe_directory_entry,
+	     directory_entry,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create directory entry.",
+		 function );
+
+		goto on_error;
+	}
 	if( directory != internal_volume->root_directory )
 	{
-		/* The file_entry takes over management of directory
-		 */
-		flags = 1;
+		if( libfsfat_directory_free(
+		     &directory,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free directory.",
+			 function );
+
+			goto on_error;
+		}
 	}
+	else if( safe_directory_entry != NULL )
+	{
+		directory = NULL;
+	}
+	/* libfsfat_file_entry_initialize takes over management of directory and safe_directory_entry
+	 */
 	if( libfsfat_file_entry_initialize(
 	     file_entry,
 	     internal_volume->io_handle,
 	     internal_volume->file_io_handle,
 	     internal_volume->file_system,
+	     safe_directory_entry,
 	     directory,
-	     directory_entry,
-	     flags,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -2265,6 +2328,12 @@ int libfsfat_internal_volume_get_file_entry_by_utf16_path(
 	return( result );
 
 on_error:
+	if( safe_directory_entry != NULL )
+	{
+		libfsfat_directory_entry_free(
+		 &safe_directory_entry,
+		 NULL );
+	}
 	if( ( directory != NULL )
 	 && ( directory != internal_volume->root_directory ) )
 	{

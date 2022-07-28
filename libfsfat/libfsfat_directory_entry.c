@@ -191,6 +191,150 @@ int libfsfat_directory_entry_free(
 	return( result );
 }
 
+/* Clones a directory entry
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_entry_clone(
+     libfsfat_directory_entry_t **destination_directory_entry,
+     libfsfat_directory_entry_t *source_directory_entry,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_entry_clone";
+
+	if( destination_directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( *destination_directory_entry != NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+		 "%s: invalid destination directory entry value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( source_directory_entry == NULL )
+	{
+		*destination_directory_entry = source_directory_entry;
+
+		return( 1 );
+	}
+	if( source_directory_entry->name == NULL )
+	{
+		if( libfsfat_directory_entry_get_name(
+		     source_directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine name of source directory entry.",
+			 function );
+
+			return( -1 );
+		}
+	}
+	*destination_directory_entry = memory_allocate_structure(
+	                                libfsfat_directory_entry_t );
+
+	if( *destination_directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+		 "%s: unable to create destination directory entry.",
+		 function );
+
+		goto on_error;
+	}
+	if( memory_copy(
+	     *destination_directory_entry,
+	     source_directory_entry,
+	     sizeof( libfsfat_directory_entry_t ) ) == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+		 "%s: unable to copy directory entry.",
+		 function );
+
+		( *destination_directory_entry )->name = NULL;
+
+		goto on_error;
+	}
+	( *destination_directory_entry )->name                         = NULL;
+	( *destination_directory_entry )->data_stream_entry            = NULL;
+	( *destination_directory_entry )->name_entries_array           = NULL;
+	( *destination_directory_entry )->long_file_name_entries_array = NULL;
+
+	if( source_directory_entry->name != NULL )
+	{
+		( *destination_directory_entry )->name = (uint8_t *) memory_allocate(
+		                                                      sizeof( uint8_t ) * source_directory_entry->name_size );
+
+		if( ( *destination_directory_entry )->name == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+			 "%s: unable to create name.",
+			 function );
+
+			goto on_error;
+		}
+		if( memory_copy(
+		     ( *destination_directory_entry )->name,
+		     source_directory_entry->name,
+		     source_directory_entry->name_size ) == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_MEMORY,
+			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+			 "%s: unable to copy name.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	if( source_directory_entry->data_stream_entry != NULL )
+	{
+		( *destination_directory_entry )->data_start_cluster = source_directory_entry->data_stream_entry->data_start_cluster;
+		( *destination_directory_entry )->data_size          = source_directory_entry->data_stream_entry->data_size;
+		( *destination_directory_entry )->valid_data_size    = source_directory_entry->data_stream_entry->valid_data_size;
+	}
+	return( 1 );
+
+on_error:
+	if( *destination_directory_entry != NULL )
+	{
+		if( ( *destination_directory_entry )->name != NULL )
+		{
+			memory_free(
+			 ( *destination_directory_entry )->name );
+		}
+		memory_free(
+		 *destination_directory_entry );
+
+		*destination_directory_entry = NULL;
+	}
+	return( -1 );
+}
+
 /* Reads a directory entry
  * Returns 1 if successful, 0 if empty or -1 on error
  */

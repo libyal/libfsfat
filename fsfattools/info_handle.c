@@ -728,17 +728,17 @@ int info_handle_fat_timestamp_value_fprint(
 
 			goto on_error;
 		}
-		if( libfdatetime_posix_time_copy_from_32bit(
+		if( libfdatetime_posix_time_copy_from_64bit(
 		     posix_time,
-		     (uint32_t) ( ( value_64bit + 31553280000UL ) / 100 ),
-		     LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_32BIT_SIGNED,
+		     ( value_64bit + 31553280000UL ) * 10000,
+		     LIBFDATETIME_POSIX_TIME_VALUE_TYPE_MICRO_SECONDS_64BIT_UNSIGNED,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-			 "%s: unable to copy POSIX time from 32-bit.",
+			 "%s: unable to copy POSIX time from 64-bit.",
 			 function );
 
 			goto on_error;
@@ -771,10 +771,20 @@ int info_handle_fat_timestamp_value_fprint(
 		}
 		fprintf(
 		 info_handle->notify_stream,
-		 "%s: %" PRIs_SYSTEM ".%02" PRIu64 " UTC\n",
+		 "%s: %" PRIs_SYSTEM ".%02" PRIu64 "",
 		 value_name,
 		 date_time_string,
 		 value_64bit % 100 );
+
+		if( info_handle->format_version == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+		{
+			fprintf(
+			 info_handle->notify_stream,
+			 " UTC" );
+		}
+		fprintf(
+		 info_handle->notify_stream,
+		 "\n" );
 
 		if( libfdatetime_posix_time_free(
 		     &posix_time,
@@ -1168,7 +1178,6 @@ int info_handle_file_entry_value_with_name_fprint(
      size_t path_length,
      const system_character_t *file_entry_name,
      size_t file_entry_name_length,
-     uint8_t format_version,
      libcerror_error_t **error )
 {
 	char md5_string[ DIGEST_HASH_STRING_SIZE_MD5 ] = {
@@ -1382,7 +1391,7 @@ int info_handle_file_entry_value_with_name_fprint(
 		{
 			creation_time += 31553280000;
 		}
-		if( format_version == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+		if( info_handle->format_version == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
 		{
 			fprintf(
 			 info_handle->bodyfile_stream,
@@ -1532,7 +1541,6 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
      libfsfat_file_entry_t *file_entry,
      const system_character_t *path,
      size_t path_length,
-     uint8_t format_version,
      libcerror_error_t **error )
 {
 	libfsfat_file_entry_t *sub_file_entry = NULL;
@@ -1653,7 +1661,6 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
 		     path_length,
 		     file_entry_name,
 		     file_entry_name_length,
-		     format_version,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1800,7 +1807,6 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
 			     sub_file_entry,
 			     sub_path,
 			     sub_path_size - 1,
-			     format_version,
 			     error ) != 1 )
 			{
 				libcerror_error_set(
@@ -1876,7 +1882,6 @@ int info_handle_file_entry_fprint_by_path(
 	libfsfat_file_entry_t *file_entry = NULL;
 	static char *function             = "info_handle_file_entry_fprint_by_path";
 	size_t path_length                = 0;
-	uint8_t format_version            = 0;
 	int result                        = 0;
 
 	if( info_handle == NULL )
@@ -1932,7 +1937,7 @@ int info_handle_file_entry_fprint_by_path(
 	}
 	if( libfsfat_volume_get_format_version(
 	     info_handle->input_volume,
-	     &format_version,
+	     &( info_handle->format_version ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1982,7 +1987,6 @@ int info_handle_file_entry_fprint_by_path(
 	     path_length,
 	     NULL,
 	     0,
-	     format_version,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -2032,7 +2036,6 @@ int info_handle_file_system_hierarchy_fprint(
 {
 	libfsfat_file_entry_t *file_entry = NULL;
 	static char *function             = "info_handle_file_system_hierarchy_fprint";
-	uint8_t format_version            = 0;
 	int result                        = 0;
 
 	if( info_handle == NULL )
@@ -2058,7 +2061,7 @@ int info_handle_file_system_hierarchy_fprint(
 	}
 	if( libfsfat_volume_get_format_version(
 	     info_handle->input_volume,
-	     &format_version,
+	     &( info_handle->format_version ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -2093,7 +2096,6 @@ int info_handle_file_system_hierarchy_fprint(
 		     file_entry,
 		     _SYSTEM_STRING( "\\" ),
 		     1,
-		     format_version,
 		     error ) != 1 )
 		{
 			libcerror_error_set(

@@ -1,22 +1,25 @@
 TODO:
-* clone directory entry in file entry
+* retrieve file entry by identifier functionality
+  - backtrack for VFAT name
+  - look into Windows file ID
+  - parent directory cluster number (0 for root?) + directry entry index ?
 * add exFAT support
   - debug print exFAT directory entry type
   - add valid data size support
 * add number of file entries support?
 * add docstring about timestamps in local time or UTC
-* use milli / micro seconds POSIX timestamp instead of seconds
 * error on volume labels outside of root directory
 * add recursion depth checks
 * add support for case less comparision
 * add support for short and long file name comparison
 * add volume (label) last modification time API function
 * complete info tool
-  - add get by identifier functionality, backtrack to VFAT name?
+  - to retrieve file entry by identifier
 * complete mount tool
+  - check FILETIME calculations on Windows
 
 * add API functions
-  - to retrieve file entry by identifiers
+  - to retrieve file entry by identifier
   - to expose short file name
   - to expose self directory entry
   - to expose parent directory entry

@@ -91,14 +91,17 @@ int libfsfat_file_entry_initialize(
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
      libfsfat_file_system_t *file_system,
-     libfsfat_directory_t *directory,
      libfsfat_directory_entry_t *directory_entry,
-     uint8_t flags,
+     libfsfat_directory_t *directory,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
 int libfsfat_file_entry_free(
      libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
+int libfsfat_internal_file_entry_get_directory(
+     libfsfat_internal_file_entry_t *internal_file_entry,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \

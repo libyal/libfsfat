@@ -251,17 +251,17 @@ int libfsfat_debug_print_fat_date_time_value(
 
 		goto on_error;
 	}
-	if( libfdatetime_posix_time_copy_from_32bit(
+	if( libfdatetime_posix_time_copy_from_64bit(
 	     posix_time,
-	     (uint32_t) ( ( fat_timestamp + 31553280000UL ) / 100 ),
-	     LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_32BIT_SIGNED,
+	     ( fat_timestamp + 31553280000UL ) * 10000,
+	     LIBFDATETIME_POSIX_TIME_VALUE_TYPE_MICRO_SECONDS_64BIT_UNSIGNED,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
-		 "%s: unable to copy POSIX time from 32-bit.",
+		 "%s: unable to copy POSIX time from 64-bit.",
 		 function );
 
 		goto on_error;
@@ -282,8 +282,10 @@ int libfsfat_debug_print_fat_date_time_value(
 
 		goto on_error;
 	}
+/* TODO print UTC or local time indicator */
+
 	libcnotify_printf(
-	 "%s: %s: %s.%02" PRIu64 " UTC\n",
+	 "%s: %s: %s.%02" PRIu64 "\n",
 	 function_name,
 	 value_name,
 	 date_time_string,

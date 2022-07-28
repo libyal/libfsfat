@@ -50,6 +50,10 @@ struct info_handle
 	 */
 	libfsfat_volume_t *input_volume;
 
+	/* The file system format version
+	 */
+	uint8_t format_version;
+
 	/* Value to indicate if the MD5 hash should be calculated
 	 */
 	uint8_t calculate_md5;
@@ -135,7 +139,6 @@ int info_handle_file_entry_value_with_name_fprint(
      size_t path_length,
      const system_character_t *file_entry_name,
      size_t file_entry_name_length,
-     uint8_t format_version,
      libcerror_error_t **error );
 
 int info_handle_file_system_hierarchy_fprint_file_entry(
@@ -143,7 +146,6 @@ int info_handle_file_system_hierarchy_fprint_file_entry(
      libfsfat_file_entry_t *file_entry,
      const system_character_t *path,
      size_t path_length,
-     uint8_t format_version,
      libcerror_error_t **error );
 
 int info_handle_file_entry_fprint_by_path(
