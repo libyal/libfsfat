@@ -29,6 +29,7 @@
 
 #include "pyfsfat.h"
 #include "pyfsfat_error.h"
+#include "pyfsfat_file_attribute_flags.h"
 #include "pyfsfat_file_entries.h"
 #include "pyfsfat_file_entry.h"
 #include "pyfsfat_file_object_io_handle.h"
@@ -594,6 +595,28 @@ PyMODINIT_FUNC initpyfsfat(
 	PyEval_InitThreads();
 #endif
 	gil_state = PyGILState_Ensure();
+
+	/* Setup the file attribute flags type object
+	 */
+	pyfsfat_file_attribute_flags_type_object.tp_new = PyType_GenericNew;
+
+	if( pyfsfat_file_attribute_flags_init_type(
+	     &pyfsfat_file_attribute_flags_type_object ) != 1 )
+	{
+		goto on_error;
+	}
+	if( PyType_Ready(
+	     &pyfsfat_file_attribute_flags_type_object ) < 0 )
+	{
+		goto on_error;
+	}
+	Py_IncRef(
+	 (PyObject *) &pyfsfat_file_attribute_flags_type_object );
+
+	PyModule_AddObject(
+	 module,
+	 "file_attribute_flags",
+	 (PyObject *) &pyfsfat_file_attribute_flags_type_object );
 
 	/* Setup the file_entries type object
 	 */

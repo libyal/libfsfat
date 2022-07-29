@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="fsfatmount"
-	ProjectGUID="{FAEC78E8-7940-45D3-8C0F-C0121B722CF2}"
+	ProjectGUID="{57937028-72A0-438B-B80E-CD504959261B}"
 	RootNamespace="fsfatmount"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"

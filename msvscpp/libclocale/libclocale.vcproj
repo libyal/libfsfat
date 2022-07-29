@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="libclocale"
-	ProjectGUID="{32569DB5-6B76-4CAB-887C-F4D234BB3063}"
+	ProjectGUID="{61D70317-8A30-4D91-9A37-61B6AB1EF5EC}"
 	RootNamespace="libclocale"
 	TargetFrameworkVersion="131072"
 	>

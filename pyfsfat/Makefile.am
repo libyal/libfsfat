@@ -18,6 +18,7 @@ pyfsfat_la_SOURCES = \
 	pyfsfat.c pyfsfat.h \
 	pyfsfat_datetime.c pyfsfat_datetime.h \
 	pyfsfat_error.c pyfsfat_error.h \
+	pyfsfat_file_attribute_flags.c pyfsfat_file_attribute_flags.h \
 	pyfsfat_file_entries.c pyfsfat_file_entries.h \
 	pyfsfat_file_entry.c pyfsfat_file_entry.h \
 	pyfsfat_file_object_io_handle.c pyfsfat_file_object_io_handle.h \

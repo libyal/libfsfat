@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="libfsfat"
-	ProjectGUID="{89C4A184-95CA-4AC9-AF07-72A3FD4CA748}"
+	ProjectGUID="{DBCA2B20-F9FC-4FC5-AD1F-F5C9E38D4C5C}"
 	RootNamespace="libfsfat"
 	TargetFrameworkVersion="131072"
 	>

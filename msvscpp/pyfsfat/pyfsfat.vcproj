@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="pyfsfat"
-	ProjectGUID="{272E449E-8E2C-4037-BFA6-C4A4C665DEE7}"
+	ProjectGUID="{4CB7F928-1A2F-46CD-B339-523E3A6ADF45}"
 	RootNamespace="pyfsfat"
 	TargetFrameworkVersion="131072"
 	>
@@ -182,6 +182,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\pyfsfat\pyfsfat_file_attribute_flags.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\pyfsfat\pyfsfat_file_entries.c"
 				>
 			</File>
@@ -217,6 +221,10 @@
 			</File>
 			<File
 				RelativePath="..\..\pyfsfat\pyfsfat_error.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\pyfsfat\pyfsfat_file_attribute_flags.h"
 				>
 			</File>
 			<File

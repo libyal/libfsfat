@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="fsfat_test_directory_entry"
-	ProjectGUID="{5A7B35F9-BD4B-40DB-980E-69313C2D9E68}"
+	ProjectGUID="{BA130E31-0262-47A9-A617-ED6798AE59AF}"
 	RootNamespace="fsfat_test_directory_entry"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"

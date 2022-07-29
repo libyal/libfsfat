@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="libfcache"
-	ProjectGUID="{ED82E5EF-CFAE-4E74-83E0-04D4E4E44639}"
+	ProjectGUID="{7CB34D8E-5432-47DB-B756-EA7B562FBB4E}"
 	RootNamespace="libfcache"
 	TargetFrameworkVersion="131072"
 	>
