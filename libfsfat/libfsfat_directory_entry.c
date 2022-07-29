@@ -106,7 +106,7 @@ int libfsfat_directory_entry_initialize(
 
 		return( -1 );
 	}
-	( *directory_entry )->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME;
+	( *directory_entry )->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_TERMINATOR;
 
 	return( 1 );
 
@@ -1435,8 +1435,12 @@ int libfsfat_directory_entry_get_name(
 	}
 	else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 	{
-		name_size = 8 + 1 + 3 + 1;
+		name_size = 8 + 3 + 1;
 
+		if( ( directory_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) == 0 )
+		{
+			name_size += 1;
+		}
 		directory_entry->name = (uint8_t *) memory_allocate(
 		                                     sizeof( uint8_t ) * name_size );
 
@@ -1473,7 +1477,8 @@ int libfsfat_directory_entry_get_name(
 			{
 				break;
 			}
-			if( name_data_offset == 8 )
+			if( ( name_data_offset == 8 )
+			 && ( ( directory_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) == 0 ) )
 			{
 				directory_entry->name[ name_offset++ ] = '.';
 			}
@@ -1487,7 +1492,7 @@ int libfsfat_directory_entry_get_name(
 		if( libcnotify_verbose != 0 )
 		{
 			libcnotify_printf(
-			 "%s: short name data:\n",
+			 "%s: name data:\n",
 			 function );
 			libcnotify_print_data(
 			 directory_entry->name,
@@ -1533,6 +1538,19 @@ int libfsfat_directory_entry_get_name(
 		directory_entry->name[ name_offset + 1 ] = 0;
 		directory_entry->name_size               = name_size;
 		directory_entry->is_unicode              = 1;
+
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: name data:\n",
+			 function );
+			libcnotify_print_data(
+			 directory_entry->name,
+			 directory_entry->name_size,
+			 0 );
+		}
+#endif
 	}
 	return( 1 );
 

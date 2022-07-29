@@ -295,7 +295,7 @@ int libfsfat_file_system_read_directory(
      libfsfat_directory_t **directory,
      libcerror_error_t **error )
 {
-	libcdata_array_t *long_file_name_entries_array = NULL;
+	libcdata_array_t *name_entries_array           = NULL;
 	libfsfat_directory_t *safe_directory           = NULL;
 	libfsfat_directory_entry_t *current_file_entry = NULL;
 	libfsfat_directory_entry_t *data_stream_entry  = NULL;
@@ -367,13 +367,13 @@ int libfsfat_file_system_read_directory(
 	}
 	while( ( cluster_number >= 2 )
 	    && ( ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
-	       &&  ( cluster_number < 0x00000ff8UL ) )
+	       &&  ( cluster_number < 0x00000ff0UL ) )
 	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
-	       &&  ( cluster_number < 0x0000fff8UL ) )
+	       &&  ( cluster_number < 0x0000fff0UL ) )
 	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
-	       &&  ( cluster_number < 0x0ffffff8UL ) )
+	       &&  ( cluster_number < 0x0ffffff0UL ) )
 	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
-	       &&  ( cluster_number < 0xfffffff8UL ) ) ) )
+	       &&  ( cluster_number < 0xfffffff0UL ) ) ) )
 	{
 		cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
 		cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
@@ -393,8 +393,6 @@ int libfsfat_file_system_read_directory(
 
 				goto on_error;
 			}
-			directory_entry->identifier = (uint64_t) cluster_offset;
-
 			result = libfsfat_directory_entry_read_file_io_handle(
 			          directory_entry,
 			          file_io_handle,
@@ -499,11 +497,13 @@ int libfsfat_file_system_read_directory(
 				}
 				else
 				{
-					if( long_file_name_entries_array != NULL )
+					directory_entry->identifier = (uint64_t) cluster_offset;
+
+					if( name_entries_array != NULL )
 					{
 						if( libfsfat_directory_entry_get_name_from_vfat_long_file_name_entries(
 						     directory_entry,
-						     long_file_name_entries_array,
+						     name_entries_array,
 						     error ) != 1 )
 						{
 							libcerror_error_set(
@@ -516,7 +516,7 @@ int libfsfat_file_system_read_directory(
 							goto on_error;
 						}
 						if( libcdata_array_free(
-						     &long_file_name_entries_array,
+						     &name_entries_array,
 						     NULL,
 						     error ) != 1 )
 						{
@@ -553,10 +553,10 @@ int libfsfat_file_system_read_directory(
 
 				if( ( directory_entry->vfat_sequence_number & 0x40 ) != 0 )
 				{
-					if( long_file_name_entries_array != NULL )
+					if( name_entries_array != NULL )
 					{
 						if( libcdata_array_free(
-						     &long_file_name_entries_array,
+						     &name_entries_array,
 						     NULL,
 						     error ) != 1 )
 						{
@@ -571,7 +571,7 @@ int libfsfat_file_system_read_directory(
 						}
 					}
 					if( libcdata_array_initialize(
-					     &long_file_name_entries_array,
+					     &name_entries_array,
 					     0,
 					     error ) != 1 )
 					{
@@ -596,11 +596,11 @@ int libfsfat_file_system_read_directory(
 						 "%s: invalid VFAT sequence number value out of bounds.",
 						 function );
 
-						return( -1 );
+						goto on_error;
 					}
 				}
 				if( libcdata_array_append_entry(
-				     long_file_name_entries_array,
+				     name_entries_array,
 				     &entry_index,
 				     (intptr_t *) directory_entry,
 				     error ) != 1 )
@@ -648,6 +648,8 @@ int libfsfat_file_system_read_directory(
 			}
 			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
 			{
+				directory_entry->identifier = (uint64_t) cluster_offset;
+
 				if( libcdata_array_append_entry(
 				     safe_directory->file_entries_array,
 				     &entry_index,
@@ -764,10 +766,10 @@ int libfsfat_file_system_read_directory(
 			goto on_error;
 		}
 	}
-	if( long_file_name_entries_array != NULL )
+	if( name_entries_array != NULL )
 	{
 		if( libcdata_array_free(
-		     &long_file_name_entries_array,
+		     &name_entries_array,
 		     NULL,
 		     error ) != 1 )
 		{
@@ -775,7 +777,7 @@ int libfsfat_file_system_read_directory(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free VFAT long file name entries array.",
+			 "%s: unable to free name entries array.",
 			 function );
 
 			goto on_error;
@@ -786,10 +788,10 @@ int libfsfat_file_system_read_directory(
 	return( 1 );
 
 on_error:
-	if( long_file_name_entries_array != NULL )
+	if( name_entries_array != NULL )
 	{
 		libcdata_array_free(
-		 &long_file_name_entries_array,
+		 &name_entries_array,
 		 NULL,
 		 NULL );
 	}
@@ -819,15 +821,15 @@ int libfsfat_file_system_read_directory_by_range(
      libfsfat_directory_t **directory,
      libcerror_error_t **error )
 {
-	libcdata_array_t *long_file_name_entries_array = NULL;
-	libfsfat_directory_t *safe_directory           = NULL;
-	libfsfat_directory_entry_t *directory_entry    = NULL;
-	static char *function                          = "libfsfat_file_system_read_directory_by_range";
-	off64_t file_end_offset                        = 0;
-	int entry_index                                = 0;
-	int result                                     = 0;
-	uint8_t last_vfat_sequence_number              = 0;
-	uint8_t vfat_sequence_number                   = 0;
+	libcdata_array_t *name_entries_array        = NULL;
+	libfsfat_directory_t *safe_directory        = NULL;
+	libfsfat_directory_entry_t *directory_entry = NULL;
+	static char *function                       = "libfsfat_file_system_read_directory_by_range";
+	off64_t file_end_offset                     = 0;
+	int entry_index                             = 0;
+	int result                                  = 0;
+	uint8_t last_vfat_sequence_number           = 0;
+	uint8_t vfat_sequence_number                = 0;
 
 	if( file_system == NULL )
 	{
@@ -974,11 +976,13 @@ int libfsfat_file_system_read_directory_by_range(
 			}
 			else
 			{
-				if( long_file_name_entries_array != NULL )
+				directory_entry->identifier = (uint64_t) file_offset;
+
+				if( name_entries_array != NULL )
 				{
 					if( libfsfat_directory_entry_get_name_from_vfat_long_file_name_entries(
 					     directory_entry,
-					     long_file_name_entries_array,
+					     name_entries_array,
 					     error ) != 1 )
 					{
 						libcerror_error_set(
@@ -991,7 +995,7 @@ int libfsfat_file_system_read_directory_by_range(
 						goto on_error;
 					}
 					if( libcdata_array_free(
-					     &long_file_name_entries_array,
+					     &name_entries_array,
 					     NULL,
 					     error ) != 1 )
 					{
@@ -1030,10 +1034,10 @@ int libfsfat_file_system_read_directory_by_range(
 
 			if( ( directory_entry->vfat_sequence_number & 0x40 ) != 0 )
 			{
-				if( long_file_name_entries_array != NULL )
+				if( name_entries_array != NULL )
 				{
 					if( libcdata_array_free(
-					     &long_file_name_entries_array,
+					     &name_entries_array,
 					     NULL,
 					     error ) != 1 )
 					{
@@ -1050,7 +1054,7 @@ int libfsfat_file_system_read_directory_by_range(
 					}
 				}
 				if( libcdata_array_initialize(
-				     &long_file_name_entries_array,
+				     &name_entries_array,
 				     0,
 				     error ) != 1 )
 				{
@@ -1077,11 +1081,11 @@ int libfsfat_file_system_read_directory_by_range(
 					 "%s: invalid VFAT sequence number value out of bounds.",
 					 function );
 
-					return( -1 );
+					goto on_error;
 				}
 			}
 			if( libcdata_array_append_entry(
-			     long_file_name_entries_array,
+			     name_entries_array,
 			     &entry_index,
 			     (intptr_t *) directory_entry,
 			     error ) != 1 )
@@ -1103,10 +1107,10 @@ int libfsfat_file_system_read_directory_by_range(
 
 		file_offset += sizeof( fsfat_directory_entry_t );
 	}
-	if( long_file_name_entries_array != NULL )
+	if( name_entries_array != NULL )
 	{
 		if( libcdata_array_free(
-		     &long_file_name_entries_array,
+		     &name_entries_array,
 		     NULL,
 		     error ) != 1 )
 		{
@@ -1114,7 +1118,7 @@ int libfsfat_file_system_read_directory_by_range(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free VFAT long file name entries array.",
+			 "%s: unable to free name entries array.",
 			 function );
 
 			goto on_error;
@@ -1125,10 +1129,10 @@ int libfsfat_file_system_read_directory_by_range(
 	return( 1 );
 
 on_error:
-	if( long_file_name_entries_array != NULL )
+	if( name_entries_array != NULL )
 	{
 		libcdata_array_free(
-		 &long_file_name_entries_array,
+		 &name_entries_array,
 		 NULL,
 		 NULL );
 	}
@@ -1157,8 +1161,17 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
      libfsfat_directory_entry_t **directory_entry,
      libcerror_error_t **error )
 {
+	libcdata_array_t *name_entries_array             = NULL;
+	libfsfat_directory_entry_t *current_file_entry   = NULL;
+	libfsfat_directory_entry_t *data_stream_entry    = NULL;
 	libfsfat_directory_entry_t *safe_directory_entry = NULL;
 	static char *function                            = "libfsfat_file_system_read_directory_entry_by_identifier";
+	off64_t cluster_end_offset                       = 0;
+	off64_t cluster_offset                           = 0;
+	uint32_t cluster_number                          = 0;
+	uint8_t last_vfat_sequence_number                = 0;
+	uint8_t vfat_sequence_number                     = 0;
+	int entry_index                                  = 0;
 	int result                                       = 0;
 
 	if( file_system == NULL )
@@ -1195,7 +1208,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 		return( -1 );
 	}
 	if( libfsfat_directory_entry_initialize(
-	     &safe_directory_entry,
+	     &current_file_entry,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -1208,7 +1221,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 		goto on_error;
 	}
 	result = libfsfat_directory_entry_read_file_io_handle(
-	          safe_directory_entry,
+	          current_file_entry,
 	          file_io_handle,
 	          (off64_t) identifier,
 	          file_system->io_handle->file_system_format,
@@ -1228,7 +1241,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 	else if( result == 0 )
 	{
 		if( libfsfat_directory_entry_free(
-		     &safe_directory_entry,
+		     &current_file_entry,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1240,16 +1253,342 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 			goto on_error;
 		}
+		return( 0 );
 	}
-	*directory_entry = safe_directory_entry;
+	if( ( current_file_entry->entry_type != LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
+	 && ( current_file_entry->entry_type != LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+		 "%s: unsupported directory entry type.",
+		 function );
 
-	return( result );
+		goto on_error;
+	}
+	current_file_entry->identifier = identifier;
+
+	cluster_number     = ( ( identifier - file_system->io_handle->first_cluster_offset ) / file_system->io_handle->cluster_block_size ) + 2;
+	cluster_offset     = ( identifier / file_system->io_handle->cluster_block_size ) * file_system->io_handle->cluster_block_size;
+	cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
+
+	if( libcdata_array_initialize(
+	     &name_entries_array,
+	     0,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create name entries array.",
+		 function );
+
+		goto on_error;
+	}
+	if( current_file_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
+	{
+		cluster_offset = identifier - sizeof( fsfat_directory_entry_t );
+
+/* TODO traverse cluster blocks backwards */
+		{
+			while( cluster_offset <= cluster_end_offset )
+			{
+				if( libfsfat_directory_entry_initialize(
+				     &safe_directory_entry,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+					 "%s: unable to create directory entry.",
+					 function );
+
+					goto on_error;
+				}
+				result = libfsfat_directory_entry_read_file_io_handle(
+				          safe_directory_entry,
+				          file_io_handle,
+				          cluster_offset,
+				          file_system->io_handle->file_system_format,
+				          error );
+
+				if( result == -1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_IO,
+					 LIBCERROR_IO_ERROR_READ_FAILED,
+					 "%s: unable to read directory entry.",
+					 function );
+
+					goto on_error;
+				}
+				if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
+				{
+					result = 0;
+				}
+				else if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
+				{
+					vfat_sequence_number = safe_directory_entry->vfat_sequence_number & 0x1f;
+
+					if( ( safe_directory_entry->vfat_sequence_number & 0x40 ) != 0 )
+					{
+						result = 0;
+					}
+					if( ( last_vfat_sequence_number != 0 )
+					 && ( ( last_vfat_sequence_number + 1 ) != vfat_sequence_number ) )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+						 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+						 "%s: invalid VFAT sequence number value out of bounds.",
+						 function );
+
+						goto on_error;
+					}
+					if( libcdata_array_prepend_entry(
+					     name_entries_array,
+					     (intptr_t *) safe_directory_entry,
+					     error ) != 1 )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+						 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+						 "%s: unable to prepend directory entry to VFAT long file name entries array.",
+						 function );
+
+						goto on_error;
+					}
+					safe_directory_entry = NULL;
+
+					last_vfat_sequence_number = vfat_sequence_number;
+				}
+				if( safe_directory_entry != NULL )
+				{
+					if( libfsfat_directory_entry_free(
+					     &safe_directory_entry,
+					     error ) != 1 )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+						 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+						 "%s: unable to free directory entry.",
+						 function );
+
+						goto on_error;
+					}
+				}
+				if( result == 0 )
+				{
+					break;
+				}
+				cluster_offset -= sizeof( fsfat_directory_entry_t );
+			}
+		}
+		if( last_vfat_sequence_number != 0 )
+		{
+			if( libfsfat_directory_entry_get_name_from_vfat_long_file_name_entries(
+			     current_file_entry,
+			     name_entries_array,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+				 "%s: unable to determine name from VFAT long file name entries.",
+				 function );
+
+				goto on_error;
+			}
+		}
+	}
+	else if( current_file_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
+	{
+		cluster_offset = identifier + sizeof( fsfat_directory_entry_t );
+
+		do
+		{
+			while( cluster_offset < cluster_end_offset )
+			{
+				if( libfsfat_directory_entry_initialize(
+				     &safe_directory_entry,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+					 "%s: unable to create directory entry.",
+					 function );
+
+					goto on_error;
+				}
+				result = libfsfat_directory_entry_read_file_io_handle(
+				          safe_directory_entry,
+				          file_io_handle,
+				          cluster_offset,
+				          file_system->io_handle->file_system_format,
+				          error );
+
+				if( result == -1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_IO,
+					 LIBCERROR_IO_ERROR_READ_FAILED,
+					 "%s: unable to read directory entry.",
+					 function );
+
+					goto on_error;
+				}
+				if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_DATA_STREAM )
+				{
+					if( data_stream_entry != NULL )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+						 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
+						 "%s: invalid current file entry - data stream entry value already set.",
+						 function );
+
+						goto on_error;
+					}
+					data_stream_entry = safe_directory_entry;
+
+					current_file_entry->data_start_cluster = safe_directory_entry->data_start_cluster;
+					current_file_entry->data_size          = safe_directory_entry->data_size;
+					current_file_entry->valid_data_size    = safe_directory_entry->valid_data_size;
+				}
+				else if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
+				{
+					result = 0;
+				}
+				else if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY_NAME )
+				{
+					if( libcdata_array_append_entry(
+					     name_entries_array,
+					     &entry_index,
+					     (intptr_t *) safe_directory_entry,
+					     error ) != 1 )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+						 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+						 "%s: unable to append directory entry to name entries array.",
+						 function );
+
+						goto on_error;
+					}
+					safe_directory_entry = NULL;
+				}
+				if( safe_directory_entry != NULL )
+				{
+					if( libfsfat_directory_entry_free(
+					     &safe_directory_entry,
+					     error ) != 1 )
+					{
+						libcerror_error_set(
+						 error,
+						 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+						 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+						 "%s: unable to free directory entry.",
+						 function );
+
+						goto on_error;
+					}
+				}
+				if( result == 0 )
+				{
+					break;
+				}
+				cluster_offset += sizeof( fsfat_directory_entry_t );
+			}
+			if( result == 0 )
+			{
+				break;
+			}
+			if( libfsfat_allocation_table_get_cluster_identifier_by_index(
+			     file_system->allocation_table,
+			     (int) cluster_number,
+			     &cluster_number,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+				 "%s: unable to retrieve cluster identifier: %" PRIu32 ".",
+				 function,
+				 cluster_number );
+
+				goto on_error;
+			}
+			cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
+			cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
+		}
+		while( ( cluster_number >= 2 )
+		    && ( cluster_number < 0xfffffff0UL ) );
+
+		if( libfsfat_directory_entry_get_name_from_exfat_file_name_entries(
+		     current_file_entry,
+		     name_entries_array,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to determine name from exFAT file name entries.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	if( libcdata_array_free(
+	     &name_entries_array,
+	     (int (*)(intptr_t **, libcerror_error_t **)) &libfsfat_directory_entry_free,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+		 "%s: unable to free name entries array.",
+		 function );
+
+		goto on_error;
+	}
+	*directory_entry = current_file_entry;
+
+	return( 1 );
 
 on_error:
+	if( name_entries_array != NULL )
+	{
+		libcdata_array_free(
+		 &name_entries_array,
+		 (int (*)(intptr_t **, libcerror_error_t **)) &libfsfat_directory_entry_free,
+		 NULL );
+	}
 	if( safe_directory_entry != NULL )
 	{
 		libfsfat_directory_entry_free(
 		 &safe_directory_entry,
+		 NULL );
+	}
+	if( current_file_entry != NULL )
+	{
+		libfsfat_directory_entry_free(
+		 &current_file_entry,
 		 NULL );
 	}
 	return( -1 );
@@ -1341,13 +1680,13 @@ int libfsfat_file_system_get_data_stream(
 	}
 	while( ( cluster_number >= 2 )
 	    && ( ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
-	       &&  ( cluster_number < 0x00000ff8UL ) )
+	       &&  ( cluster_number < 0x00000ff0UL ) )
 	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
-	       &&  ( cluster_number < 0x0000fff8UL ) )
+	       &&  ( cluster_number < 0x0000fff0UL ) )
 	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
-	       &&  ( cluster_number < 0x0ffffff8UL ) )
+	       &&  ( cluster_number < 0x0ffffff0UL ) )
 	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
-	       &&  ( cluster_number < 0xfffffff8UL ) ) ) )
+	       &&  ( cluster_number < 0xfffffff0UL ) ) ) )
 	{
 		if( size == 0 )
 		{
