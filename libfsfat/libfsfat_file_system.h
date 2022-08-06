@@ -97,7 +97,6 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
-     libbfio_handle_t *file_io_handle,
      uint32_t cluster_number,
      size64_t size,
      libfdata_stream_t **data_stream,

@@ -1240,10 +1240,9 @@ on_error:
 int fsfat_test_volume_get_utf8_label_size(
      libfsfat_volume_t *volume )
 {
-	libcerror_error_t *error   = NULL;
-	size_t utf8_label_size     = 0;
-	int result                 = 0;
-	int utf8_label_size_is_set = 0;
+	libcerror_error_t *error = NULL;
+	size_t utf8_label_size   = 0;
+	int result               = 0;
 
 	/* Test regular cases
 	 */
@@ -1260,8 +1259,6 @@ int fsfat_test_volume_get_utf8_label_size(
 	FSFAT_TEST_ASSERT_IS_NULL(
 	 "error",
 	 error );
-
-	utf8_label_size_is_set = result;
 
 	/* Test error cases
 	 */
@@ -1282,25 +1279,23 @@ int fsfat_test_volume_get_utf8_label_size(
 	libcerror_error_free(
 	 &error );
 
-	if( utf8_label_size_is_set != 0 )
-	{
-		result = libfsfat_volume_get_utf8_label_size(
-		          volume,
-		          NULL,
-		          &error );
+	result = libfsfat_volume_get_utf8_label_size(
+	          volume,
+	          NULL,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
-	}
+	libcerror_error_free(
+	 &error );
+
 	return( 1 );
 
 on_error:
@@ -1322,7 +1317,6 @@ int fsfat_test_volume_get_utf8_label(
 
 	libcerror_error_t *error = NULL;
 	int result               = 0;
-	int utf8_label_is_set    = 0;
 
 	/* Test regular cases
 	 */
@@ -1340,8 +1334,6 @@ int fsfat_test_volume_get_utf8_label(
 	FSFAT_TEST_ASSERT_IS_NULL(
 	 "error",
 	 error );
-
-	utf8_label_is_set = result;
 
 	/* Test error cases
 	 */
@@ -1363,62 +1355,60 @@ int fsfat_test_volume_get_utf8_label(
 	libcerror_error_free(
 	 &error );
 
-	if( utf8_label_is_set != 0 )
-	{
-		result = libfsfat_volume_get_utf8_label(
-		          volume,
-		          NULL,
-		          512,
-		          &error );
+	result = libfsfat_volume_get_utf8_label(
+	          volume,
+	          NULL,
+	          512,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
+	libcerror_error_free(
+	 &error );
 
-		result = libfsfat_volume_get_utf8_label(
-		          volume,
-		          utf8_label,
-		          0,
-		          &error );
+	result = libfsfat_volume_get_utf8_label(
+	          volume,
+	          utf8_label,
+	          0,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
+	libcerror_error_free(
+	 &error );
 
-		result = libfsfat_volume_get_utf8_label(
-		          volume,
-		          utf8_label,
-		          (size_t) SSIZE_MAX + 1,
-		          &error );
+	result = libfsfat_volume_get_utf8_label(
+	          volume,
+	          utf8_label,
+	          (size_t) SSIZE_MAX + 1,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
-	}
+	libcerror_error_free(
+	 &error );
+
 	return( 1 );
 
 on_error:
@@ -1436,10 +1426,9 @@ on_error:
 int fsfat_test_volume_get_utf16_label_size(
      libfsfat_volume_t *volume )
 {
-	libcerror_error_t *error    = NULL;
-	size_t utf16_label_size     = 0;
-	int result                  = 0;
-	int utf16_label_size_is_set = 0;
+	libcerror_error_t *error = NULL;
+	size_t utf16_label_size  = 0;
+	int result               = 0;
 
 	/* Test regular cases
 	 */
@@ -1456,8 +1445,6 @@ int fsfat_test_volume_get_utf16_label_size(
 	FSFAT_TEST_ASSERT_IS_NULL(
 	 "error",
 	 error );
-
-	utf16_label_size_is_set = result;
 
 	/* Test error cases
 	 */
@@ -1478,25 +1465,23 @@ int fsfat_test_volume_get_utf16_label_size(
 	libcerror_error_free(
 	 &error );
 
-	if( utf16_label_size_is_set != 0 )
-	{
-		result = libfsfat_volume_get_utf16_label_size(
-		          volume,
-		          NULL,
-		          &error );
+	result = libfsfat_volume_get_utf16_label_size(
+	          volume,
+	          NULL,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
-	}
+	libcerror_error_free(
+	 &error );
+
 	return( 1 );
 
 on_error:
@@ -1518,7 +1503,6 @@ int fsfat_test_volume_get_utf16_label(
 
 	libcerror_error_t *error = NULL;
 	int result               = 0;
-	int utf16_label_is_set   = 0;
 
 	/* Test regular cases
 	 */
@@ -1536,8 +1520,6 @@ int fsfat_test_volume_get_utf16_label(
 	FSFAT_TEST_ASSERT_IS_NULL(
 	 "error",
 	 error );
-
-	utf16_label_is_set = result;
 
 	/* Test error cases
 	 */
@@ -1559,62 +1541,60 @@ int fsfat_test_volume_get_utf16_label(
 	libcerror_error_free(
 	 &error );
 
-	if( utf16_label_is_set != 0 )
-	{
-		result = libfsfat_volume_get_utf16_label(
-		          volume,
-		          NULL,
-		          512,
-		          &error );
+	result = libfsfat_volume_get_utf16_label(
+	          volume,
+	          NULL,
+	          512,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
+	libcerror_error_free(
+	 &error );
 
-		result = libfsfat_volume_get_utf16_label(
-		          volume,
-		          utf16_label,
-		          0,
-		          &error );
+	result = libfsfat_volume_get_utf16_label(
+	          volume,
+	          utf16_label,
+	          0,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
+	libcerror_error_free(
+	 &error );
 
-		result = libfsfat_volume_get_utf16_label(
-		          volume,
-		          utf16_label,
-		          (size_t) SSIZE_MAX + 1,
-		          &error );
+	result = libfsfat_volume_get_utf16_label(
+	          volume,
+	          utf16_label,
+	          (size_t) SSIZE_MAX + 1,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
-	}
+	libcerror_error_free(
+	 &error );
+
 	return( 1 );
 
 on_error:
@@ -1635,7 +1615,6 @@ int fsfat_test_volume_get_root_directory(
 	libcerror_error_t *error              = NULL;
 	libfsfat_file_entry_t *root_directory = 0;
 	int result                            = 0;
-	int root_directory_is_set             = 0;
 
 	/* Test regular cases
 	 */
@@ -1653,27 +1632,23 @@ int fsfat_test_volume_get_root_directory(
 	 "error",
 	 error );
 
-	root_directory_is_set = result;
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "root_directory",
+	 root_directory );
 
-	if( root_directory_is_set != 0 )
-	{
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "root_directory",
-		 root_directory );
+	result = libfsfat_file_entry_free(
+	          &root_directory,
+	          &error );
 
-		result = libfsfat_file_entry_free(
-		          &root_directory,
-		          &error );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 1 );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 1 );
+	FSFAT_TEST_ASSERT_IS_NULL(
+	 "error",
+	 error );
 
-		FSFAT_TEST_ASSERT_IS_NULL(
-		 "error",
-		 error );
-	}
 	/* Test error cases
 	 */
 	result = libfsfat_volume_get_root_directory(
@@ -1697,29 +1672,27 @@ int fsfat_test_volume_get_root_directory(
 	libcerror_error_free(
 	 &error );
 
-	if( root_directory_is_set != 0 )
-	{
-		result = libfsfat_volume_get_root_directory(
-		          volume,
-		          NULL,
-		          &error );
+	result = libfsfat_volume_get_root_directory(
+	          volume,
+	          NULL,
+	          &error );
 
-		FSFAT_TEST_ASSERT_EQUAL_INT(
-		 "result",
-		 result,
-		 -1 );
+	FSFAT_TEST_ASSERT_EQUAL_INT(
+	 "result",
+	 result,
+	 -1 );
 
-		FSFAT_TEST_ASSERT_IS_NULL(
-		 "root_directory",
-		 root_directory );
+	FSFAT_TEST_ASSERT_IS_NULL(
+	 "root_directory",
+	 root_directory );
 
-		FSFAT_TEST_ASSERT_IS_NOT_NULL(
-		 "error",
-		 error );
+	FSFAT_TEST_ASSERT_IS_NOT_NULL(
+	 "error",
+	 error );
 
-		libcerror_error_free(
-		 &error );
-	}
+	libcerror_error_free(
+	 &error );
+
 	return( 1 );
 
 on_error:

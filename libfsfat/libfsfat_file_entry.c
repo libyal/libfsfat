@@ -1980,7 +1980,6 @@ ssize_t libfsfat_file_entry_read_buffer(
 	{
 		if( libfsfat_file_system_get_data_stream(
 		     internal_file_entry->file_system,
-		     internal_file_entry->file_io_handle,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
 		     &( internal_file_entry->cluster_block_stream ),
@@ -2096,7 +2095,6 @@ ssize_t libfsfat_file_entry_read_buffer_at_offset(
 	{
 		if( libfsfat_file_system_get_data_stream(
 		     internal_file_entry->file_system,
-		     internal_file_entry->file_io_handle,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
 		     &( internal_file_entry->cluster_block_stream ),
@@ -2211,7 +2209,6 @@ off64_t libfsfat_file_entry_seek_offset(
 	{
 		if( libfsfat_file_system_get_data_stream(
 		     internal_file_entry->file_system,
-		     internal_file_entry->file_io_handle,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
 		     &( internal_file_entry->cluster_block_stream ),

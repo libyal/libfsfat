@@ -58,8 +58,7 @@ const char *libfsfat_debug_print_exfat_cluster_type(
 	{
 		return( "Bad" );
 	}
-	if( ( cluster_type >= 0xfffffff8UL )
-	 && ( cluster_type <= 0xffffffffUL ) )
+	if( cluster_type >= 0xfffffff8UL )
 	{
 		return( "End of chain" );
 	}
@@ -152,8 +151,7 @@ const char *libfsfat_debug_print_fat16_cluster_type(
 	{
 		return( "Bad" );
 	}
-	if( ( cluster_type >= 0xfff8 )
-	 && ( cluster_type <= 0xffff ) )
+	if( cluster_type >= 0xfff8 )
 	{
 		return( "End of chain" );
 	}

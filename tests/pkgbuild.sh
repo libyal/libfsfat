@@ -6,9 +6,9 @@
 set -e
 
 make install DESTDIR=${PWD}/osx-pkg
-mkdir -p ${PWD}/osx-pkg/usr/share/doc/libfsext
-cp AUTHORS COPYING COPYING.LESSER NEWS README ${PWD}/osx-pkg/usr/share/doc/libfsext
+mkdir -p ${PWD}/osx-pkg/usr/share/doc/libfsfat
+cp AUTHORS COPYING COPYING.LESSER NEWS README ${PWD}/osx-pkg/usr/share/doc/libfsfat
 
 VERSION=`sed '5!d; s/^ \[//;s/\],$//' configure.ac`
-pkgbuild --root osx-pkg --identifier com.github.libyal.libfsext --version ${VERSION} --ownership recommended ../libfsext-${VERSION}.pkg
+pkgbuild --root osx-pkg --identifier com.github.libyal.libfsfat --version ${VERSION} --ownership recommended ../libfsfat-${VERSION}.pkg
 

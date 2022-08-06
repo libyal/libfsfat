@@ -1,9 +1,9 @@
-.Dd July 28, 2022
+.Dd August  5, 2022
 .Dt libfsfat 3
 .Os libfsfat
 .Sh NAME
 .Nm libfsfat.h
-.Nd Library to support the File Allocation Table (FAT) format
+.Nd Library to support the File Allocation Table (FAT) file system format
 .Sh SYNOPSIS
 .In libfsfat.h
 .Pp
@@ -93,7 +93,21 @@ File entry functions
 .Ft int
 .Fn libfsfat_file_entry_get_identifier "libfsfat_file_entry_t *file_entry" "uint64_t *identifier" "libfsfat_error_t **error"
 .Ft int
+.Fn libfsfat_file_entry_get_access_time "libfsfat_file_entry_t *file_entry" "uint64_t *fat_timestamp" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_creation_time "libfsfat_file_entry_t *file_entry" "uint64_t *fat_timestamp" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_modification_time "libfsfat_file_entry_t *file_entry" "uint64_t *fat_timestamp" "libfsfat_error_t **error"
+.Ft int
 .Fn libfsfat_file_entry_get_file_attribute_flags "libfsfat_file_entry_t *file_entry" "uint16_t *file_attribute_flags" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_utf8_name_size "libfsfat_file_entry_t *file_entry" "size_t *utf8_string_size" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_utf8_name "libfsfat_file_entry_t *file_entry" "uint8_t *utf8_string" "size_t utf8_string_size" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_utf16_name_size "libfsfat_file_entry_t *file_entry" "size_t *utf16_string_size" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_utf16_name "libfsfat_file_entry_t *file_entry" "uint16_t *utf16_string" "size_t utf16_string_size" "libfsfat_error_t **error"
 .Ft int
 .Fn libfsfat_file_entry_get_number_of_sub_file_entries "libfsfat_file_entry_t *file_entry" "int *number_of_sub_entries" "libfsfat_error_t **error"
 .Ft int

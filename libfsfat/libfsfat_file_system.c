@@ -942,21 +942,6 @@ int libfsfat_file_system_read_directory_by_range(
 			}
 			break;
 		}
-		if( libcdata_array_append_entry(
-		     safe_directory->entries_array,
-		     &entry_index,
-		     (intptr_t *) directory_entry,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-			 "%s: unable to append directory entry to array.",
-			 function );
-
-			goto on_error;
-		}
 		if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 		{
 			if( directory_entry->file_attribute_flags == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
@@ -1022,8 +1007,6 @@ int libfsfat_file_system_read_directory_by_range(
 					 "%s: unable to append directory entry to file entries array.",
 					 function );
 
-					directory_entry = NULL;
-
 					goto on_error;
 				}
 			}
@@ -1048,8 +1031,6 @@ int libfsfat_file_system_read_directory_by_range(
 						 "%s: unable to free VFAT long file name entries array.",
 						 function );
 
-						directory_entry = NULL;
-
 						goto on_error;
 					}
 				}
@@ -1064,8 +1045,6 @@ int libfsfat_file_system_read_directory_by_range(
 					 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
 					 "%s: unable to create VFAT long file name entries array.",
 					 function );
-
-					directory_entry = NULL;
 
 					goto on_error;
 				}
@@ -1097,11 +1076,24 @@ int libfsfat_file_system_read_directory_by_range(
 				 "%s: unable to append directory entry to VFAT long file name entries array.",
 				 function );
 
-				directory_entry = NULL;
-
 				goto on_error;
 			}
 			last_vfat_sequence_number = vfat_sequence_number;
+		}
+		if( libcdata_array_append_entry(
+		     safe_directory->entries_array,
+		     &entry_index,
+		     (intptr_t *) directory_entry,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+			 "%s: unable to append directory entry to array.",
+			 function );
+
+			goto on_error;
 		}
 		directory_entry = NULL;
 
@@ -1599,7 +1591,6 @@ on_error:
  */
 int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
-     libbfio_handle_t *file_io_handle,
      uint32_t cluster_number,
      size64_t size,
      libfdata_stream_t **data_stream,

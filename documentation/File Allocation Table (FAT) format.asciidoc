@@ -48,6 +48,7 @@ in the section entitled "GNU Free Documentation License".
 | 0.0.2 | J.B. Metz | May 2022 | Additional information.
 | 0.0.3 | J.B. Metz | June 2022 | Additional information.
 | 0.0.4 | J.B. Metz | July 2022 | Additional information.
+| 0.0.5 | J.B. Metz | August 2022 | Additional information.
 |===
 
 :numbered:
@@ -155,7 +156,8 @@ If set to 0x29 the following 3 values are considered to be set
 | 39 | 4 | | Volume serial number
 | 43 | 11 | | Volume label +
 Contains an ASCII string or "NO\x20NAME\x20\x20\x20\x20" if not set
-| 54 | 8 | | File system hint +
+| 54 | 8 | "FAT12\x20\x20\x20" +
+"FAT16\x20\x20\x20" | File system hint +
 Contains an ASCII string with a hint about the file system +
 Note that this value is purely informational and not enforced by the format
 4+| _If extended boot signature != 0x29_

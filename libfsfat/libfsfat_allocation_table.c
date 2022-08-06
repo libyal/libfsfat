@@ -161,14 +161,15 @@ int libfsfat_allocation_table_read_file_io_handle(
      size64_t size,
      libcerror_error_t **error )
 {
-	uint8_t *table_data      = NULL;
-	static char *function    = "libfsfat_allocation_table_read_file_io_handle";
-	size_t table_data_offset = 0;
-	size_t table_offset      = 0;
-	size_t read_size         = 0;
-	ssize_t read_count       = 0;
-	uint32_t cluster_number  = 0;
-	int table_index          = 0;
+	uint8_t *table_data                  = NULL;
+	static char *function                = "libfsfat_allocation_table_read_file_io_handle";
+	size_t cluster_identifiers_data_size = 0;
+	size_t read_size                     = 0;
+	size_t table_data_offset             = 0;
+	size_t table_offset                  = 0;
+	ssize_t read_count                   = 0;
+	uint32_t cluster_number              = 0;
+	int table_index                      = 0;
 
 	if( allocation_table == NULL )
 	{
@@ -226,8 +227,10 @@ int libfsfat_allocation_table_read_file_io_handle(
 
 		return( -1 );
 	}
+	cluster_identifiers_data_size = sizeof( uint32_t ) * io_handle->total_number_of_clusters;
+
 	allocation_table->cluster_identifiers = (uint32_t *) memory_allocate(
-	                                                      sizeof( uint32_t ) * io_handle->total_number_of_clusters );
+	                                                      cluster_identifiers_data_size );
 
 	if( allocation_table->cluster_identifiers == NULL )
 	{
@@ -245,7 +248,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 	if( memory_set(
 	     allocation_table->cluster_identifiers,
 	     0,
-	     (size_t) size ) == NULL )
+	     cluster_identifiers_data_size ) == NULL )
 	{
 		libcerror_error_set(
 		 error,

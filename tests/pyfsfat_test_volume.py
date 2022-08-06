@@ -273,69 +273,6 @@ class VolumeTypeTests(unittest.TestCase):
 
       fsfat_volume.close()
 
-  def test_get_last_mount_time(self):
-    """Tests the get_last_mount_time function and last_mount_time property."""
-    test_source = unittest.source
-    if not test_source:
-      raise unittest.SkipTest("missing source")
-
-    fsfat_volume = pyfsfat.volume()
-
-    with DataRangeFileObject(
-        test_source, unittest.offset or 0, None) as file_object:
-
-      fsfat_volume = pyfsfat.volume()
-      fsfat_volume.open_file_object(file_object)
-
-      last_mount_time = fsfat_volume.get_last_mount_time()
-      self.assertIsNotNone(last_mount_time)
-
-      self.assertIsNotNone(fsfat_volume.last_mount_time)
-
-      fsfat_volume.close()
-
-  def test_get_last_written_time(self):
-    """Tests the get_last_written_time function and last_written_time property."""
-    test_source = unittest.source
-    if not test_source:
-      raise unittest.SkipTest("missing source")
-
-    fsfat_volume = pyfsfat.volume()
-
-    with DataRangeFileObject(
-        test_source, unittest.offset or 0, None) as file_object:
-
-      fsfat_volume = pyfsfat.volume()
-      fsfat_volume.open_file_object(file_object)
-
-      last_written_time = fsfat_volume.get_last_written_time()
-      self.assertIsNotNone(last_written_time)
-
-      self.assertIsNotNone(fsfat_volume.last_written_time)
-
-      fsfat_volume.close()
-
-  def test_get_number_of_file_entries(self):
-    """Tests the get_number_of_file_entries function and number_of_file_entries property."""
-    test_source = unittest.source
-    if not test_source:
-      raise unittest.SkipTest("missing source")
-
-    fsfat_volume = pyfsfat.volume()
-
-    with DataRangeFileObject(
-        test_source, unittest.offset or 0, None) as file_object:
-
-      fsfat_volume = pyfsfat.volume()
-      fsfat_volume.open_file_object(file_object)
-
-      number_of_file_entries = fsfat_volume.get_number_of_file_entries()
-      self.assertIsNotNone(number_of_file_entries)
-
-      self.assertIsNotNone(fsfat_volume.number_of_file_entries)
-
-      fsfat_volume.close()
-
   def test_get_root_directory(self):
     """Tests the get_root_directory function and root_directory property."""
     test_source = unittest.source

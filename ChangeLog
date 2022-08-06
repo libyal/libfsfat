@@ -11,7 +11,6 @@ TODO:
 * add recursion depth checks
 * add support for case less comparision
 * add support for short and long file name comparison
-* add volume (label) last modification time API function
 * complete mount tool
   - check FILETIME calculations on Windows
 
@@ -20,9 +19,13 @@ TODO:
   - to expose self directory entry
   - to expose parent directory entry
   - to expose extents
+  - to expose volume label last modification time
+  - to expose volume identifier
 
 * implement Python bindings
   - to expose extents
+  - to expose volume label last modification time
+  - to expose volume identifier
 
 20210928
 * see `git log' for more recent change log

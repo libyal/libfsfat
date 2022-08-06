@@ -514,6 +514,10 @@ int libfsfat_directory_get_utf8_volume_label_size(
 			return( -1 );
 		}
 	}
+	if( safe_utf8_string_size < 1 )
+	{
+		safe_utf8_string_size = 1;
+	}
 	*utf8_string_size = safe_utf8_string_size;
 
 	return( 1 );
@@ -542,11 +546,48 @@ int libfsfat_directory_get_utf8_volume_label(
 
 		return( -1 );
 	}
-	if( libfsfat_directory_entry_get_utf8_name(
-	     directory->volume_label_entry,
-	     utf8_string,
-	     utf8_string_size,
-	     error ) != 1 )
+	if( utf8_string == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid UTF-8 string.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf8_string_size == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_SMALL,
+		 "%s: invalid UTF-8 string size value too small.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf8_string_size > (size_t) SSIZE_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid UTF-8 string size value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory->volume_label_entry == NULL )
+	{
+		utf8_string[ 0 ] = 0;
+	}
+	else if( libfsfat_directory_entry_get_utf8_name(
+	          directory->volume_label_entry,
+	          utf8_string,
+	          utf8_string_size,
+	          error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -611,6 +652,10 @@ int libfsfat_directory_get_utf16_volume_label_size(
 			return( -1 );
 		}
 	}
+	if( safe_utf16_string_size < 1 )
+	{
+		safe_utf16_string_size = 1;
+	}
 	*utf16_string_size = safe_utf16_string_size;
 
 	return( 1 );
@@ -639,11 +684,48 @@ int libfsfat_directory_get_utf16_volume_label(
 
 		return( -1 );
 	}
-	if( libfsfat_directory_entry_get_utf16_name(
-	     directory->volume_label_entry,
-	     utf16_string,
-	     utf16_string_size,
-	     error ) != 1 )
+	if( utf16_string == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid UTF-16 string.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf16_string_size == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_TOO_SMALL,
+		 "%s: invalid UTF-16 string size value too small.",
+		 function );
+
+		return( -1 );
+	}
+	if( utf16_string_size > (size_t) SSIZE_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid UTF-16 string size value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
+	if( directory->volume_label_entry == NULL )
+	{
+		utf16_string[ 0 ] = 0;
+	}
+	else if( libfsfat_directory_entry_get_utf16_name(
+	          directory->volume_label_entry,
+	          utf16_string,
+	          utf16_string_size,
+	          error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,

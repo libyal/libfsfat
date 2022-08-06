@@ -911,6 +911,22 @@ int libfsfat_volume_close(
 			result = -1;
 		}
 	}
+	if( internal_volume->root_directory != NULL )
+	{
+		if( libfsfat_directory_free(
+		     &( internal_volume->root_directory ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free root directory.",
+			 function );
+
+			result = -1;
+		}
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_write(
 	     internal_volume->read_write_lock,
@@ -1726,7 +1742,7 @@ int libfsfat_internal_volume_get_file_entry_by_identifier(
 
 		return( -1 );
 	}
-	if( identifier == internal_volume->io_handle->root_directory_offset )
+	if( (off64_t) identifier == internal_volume->io_handle->root_directory_offset )
 	{
 		directory = internal_volume->root_directory;
 	}

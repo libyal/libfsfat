@@ -1,7 +1,7 @@
 /*
- * OSS-Fuzz target for libfsext file_entry type
+ * OSS-Fuzz target for libfsfat file_entry type
  *
- * Copyright (C) 2010-2022, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -27,30 +27,30 @@
 extern "C" {
 
 #include "ossfuzz_libbfio.h"
-#include "ossfuzz_libfsext.h"
+#include "ossfuzz_libfsfat.h"
 
-#if !defined( LIBFSEXT_HAVE_BFIO )
+#if !defined( LIBFSFAT_HAVE_BFIO )
 
 /* Opens a volume using a Basic File IO (bfio) handle
  * Returns 1 if successful or -1 on error
  */
-LIBFSEXT_EXTERN \
-int libfsext_volume_open_file_io_handle(
-     libfsext_volume_t *volume,
+LIBFSFAT_EXTERN \
+int libfsfat_volume_open_file_io_handle(
+     libfsfat_volume_t *volume,
      libbfio_handle_t *file_io_handle,
      int access_flags,
-     libfsext_error_t **error );
+     libfsfat_error_t **error );
 
-#endif /* !defined( LIBFSEXT_HAVE_BFIO ) */
+#endif /* !defined( LIBFSFAT_HAVE_BFIO ) */
 
 int LLVMFuzzerTestOneInput(
      const uint8_t *data,
      size_t size )
 {
 	libbfio_handle_t *file_io_handle      = NULL;
-	libfsext_file_entry_t *root_directory = NULL;
-	libfsext_file_entry_t *sub_file_entry = NULL;
-	libfsext_volume_t *volume             = NULL;
+	libfsfat_file_entry_t *root_directory = NULL;
+	libfsfat_file_entry_t *sub_file_entry = NULL;
+	libfsfat_volume_t *volume             = NULL;
 	int number_of_sub_file_entries        = 0;
 
 	if( libbfio_memory_range_initialize(
@@ -67,57 +67,57 @@ int LLVMFuzzerTestOneInput(
 	{
 		goto on_error_libbfio;
 	}
-	if( libfsext_volume_initialize(
+	if( libfsfat_volume_initialize(
 	     &volume,
 	     NULL ) != 1 )
 	{
 		goto on_error_libbfio;
 	}
-	if( libfsext_volume_open_file_io_handle(
+	if( libfsfat_volume_open_file_io_handle(
 	     volume,
 	     file_io_handle,
-	     LIBFSEXT_OPEN_READ,
+	     LIBFSFAT_OPEN_READ,
 	     NULL ) != 1 )
 	{
-		goto on_error_libfsext_volume;
+		goto on_error_libfsfat_volume;
 	}
-	if( libfsext_volume_get_root_directory(
+	if( libfsfat_volume_get_root_directory(
 	     volume,
 	     &root_directory,
 	     NULL ) == 1 )
 	{
-		if( libfsext_file_entry_get_number_of_sub_file_entries(
+		if( libfsfat_file_entry_get_number_of_sub_file_entries(
 		     root_directory,
 		     &number_of_sub_file_entries,
 		     NULL ) != 1 )
 		{
-			goto on_error_libfsext_root_directory;
+			goto on_error_libfsfat_root_directory;
 		}
 		if( number_of_sub_file_entries > 0 )
 		{
-			if( libfsext_file_entry_get_sub_file_entry_by_index(
+			if( libfsfat_file_entry_get_sub_file_entry_by_index(
 			     root_directory,
 			     0,
 			     &sub_file_entry,
 			     NULL ) != 1 )
 			{
-				goto on_error_libfsext_root_directory;
+				goto on_error_libfsfat_root_directory;
 			}
-			libfsext_file_entry_free(
+			libfsfat_file_entry_free(
 			 &sub_file_entry,
 			 NULL );
 		}
-on_error_libfsext_root_directory:
-		libfsext_file_entry_free(
+on_error_libfsfat_root_directory:
+		libfsfat_file_entry_free(
 		 &root_directory,
 		 NULL );
 	}
-	libfsext_volume_close(
+	libfsfat_volume_close(
 	 volume,
 	 NULL );
 
-on_error_libfsext_volume:
-	libfsext_volume_free(
+on_error_libfsfat_volume:
+	libfsfat_volume_free(
 	 &volume,
 	 NULL );
 
