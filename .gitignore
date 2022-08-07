@@ -134,6 +134,7 @@ stamp-h[1-9]
 /tests/fsfat_test_error
 /tests/fsfat_test_file_entry
 /tests/fsfat_test_io_handle
+/tests/fsfat_test_name
 /tests/fsfat_test_notify
 /tests/fsfat_test_support
 /tests/fsfat_test_tools_info_handle

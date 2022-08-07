@@ -240,6 +240,11 @@ int libfsfat_directory_entry_get_data_size(
      uint64_t *data_size,
      libcerror_error_t **error );
 
+int libfsfat_directory_entry_get_valid_data_size(
+     libfsfat_directory_entry_t *directory_entry,
+     uint64_t *valid_data_size,
+     libcerror_error_t **error );
+
 #if defined( __cplusplus )
 }
 #endif

@@ -34,6 +34,7 @@
 #include "libfsfat_libcnotify.h"
 #include "libfsfat_libfdatetime.h"
 #include "libfsfat_libuna.h"
+#include "libfsfat_name.h"
 
 #include "fsfat_directory_entry.h"
 
@@ -2101,28 +2102,17 @@ int libfsfat_directory_entry_compare_with_utf8_string(
 			return( -1 );
 		}
 	}
-/* TODO add case less compare of both long and short name */
-	if( directory_entry->is_unicode != 0 )
-	{
-		result = libuna_utf8_string_compare_with_utf16_stream(
-		          utf8_string,
-		          utf8_string_length,
-		          directory_entry->name,
-		          directory_entry->name_size,
-		          LIBUNA_ENDIAN_LITTLE,
-		          error );
-	}
-	else
-	{
+/* TODO add compare of both long and short name */
 /* TODO add codepage support */
-		result = libuna_utf8_string_compare_with_byte_stream(
-		          utf8_string,
-		          utf8_string_length,
-		          directory_entry->name,
-		          directory_entry->name_size,
-		          LIBUNA_CODEPAGE_ASCII,
-		          error );
-	}
+	result = libfsfat_name_compare_with_utf8_string(
+	          directory_entry->name,
+	          directory_entry->name_size,
+	          directory_entry->is_unicode,
+	          utf8_string,
+	          utf8_string_length,
+	          1,
+	          error );
+
 	if( result == -1 )
 	{
 		libcerror_error_set(
@@ -2323,28 +2313,17 @@ int libfsfat_directory_entry_compare_with_utf16_string(
 			return( -1 );
 		}
 	}
-/* TODO add case less compare of both long and short name */
-	if( directory_entry->is_unicode != 0 )
-	{
-		result = libuna_utf16_string_compare_with_utf16_stream(
-		          utf16_string,
-		          utf16_string_length,
-		          directory_entry->name,
-		          directory_entry->name_size,
-		          LIBUNA_ENDIAN_LITTLE,
-		          error );
-	}
-	else
-	{
+/* TODO add compare of both long and short name */
 /* TODO add codepage support */
-		result = libuna_utf16_string_compare_with_byte_stream(
-		          utf16_string,
-		          utf16_string_length,
-		          directory_entry->name,
-		          directory_entry->name_size,
-		          LIBUNA_CODEPAGE_ASCII,
-		          error );
-	}
+	result = libfsfat_name_compare_with_utf16_string(
+	          directory_entry->name,
+	          directory_entry->name_size,
+	          directory_entry->is_unicode,
+	          utf16_string,
+	          utf16_string_length,
+	          1,
+	          error );
+
 	if( result == -1 )
 	{
 		libcerror_error_set(
@@ -2429,6 +2408,43 @@ int libfsfat_directory_entry_get_data_size(
 		return( -1 );
 	}
 	*data_size = directory_entry->data_size;
+
+	return( 1 );
+}
+
+/* Retrieves the valid data size
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_directory_entry_get_valid_data_size(
+     libfsfat_directory_entry_t *directory_entry,
+     uint64_t *valid_data_size,
+     libcerror_error_t **error )
+{
+	static char *function = "libfsfat_directory_entry_get_valid_data_size";
+
+	if( directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid directory entry.",
+		 function );
+
+		return( -1 );
+	}
+	if( valid_data_size == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid valid data size.",
+		 function );
+
+		return( -1 );
+	}
+	*valid_data_size = directory_entry->valid_data_size;
 
 	return( 1 );
 }

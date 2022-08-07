@@ -1,15 +1,11 @@
 TODO:
-* test get file entry by path on incorrect path
+* grow sorted_cluster_numbers on demand
 * retrieve file entry by identifier functionality
   - backtrack cluster block for VFAT name
   - Windows file ID for FAT is the volume offset
-* add exFAT support
-  - add valid data size support
 * add number of file entries support?
 * add docstring about timestamps in local time or UTC
 * error on volume labels outside of root directory
-* add recursion depth checks
-* add support for case less comparision
 * add support for short and long file name comparison
 * complete mount tool
   - check FILETIME calculations on Windows

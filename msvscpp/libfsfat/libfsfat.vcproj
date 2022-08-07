@@ -218,6 +218,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libfsfat\libfsfat_name.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libfsfat\libfsfat_notify.c"
 				>
 			</File>
@@ -337,6 +341,10 @@
 			</File>
 			<File
 				RelativePath="..\..\libfsfat\libfsfat_libuna.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_name.h"
 				>
 			</File>
 			<File

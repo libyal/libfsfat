@@ -48,6 +48,7 @@ libfsfat_la_SOURCES = \
 	libfsfat_libfdatetime.h \
 	libfsfat_libfguid.h \
 	libfsfat_libuna.h \
+	libfsfat_name.c libfsfat_name.h \
 	libfsfat_notify.c libfsfat_notify.h \
 	libfsfat_support.c libfsfat_support.h \
 	libfsfat_types.h \

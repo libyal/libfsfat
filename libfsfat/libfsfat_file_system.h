@@ -31,6 +31,7 @@
 #include "libfsfat_libbfio.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcthreads.h"
+#include "libfsfat_libfcache.h"
 #include "libfsfat_libfdata.h"
 #include "libfsfat_types.h"
 
@@ -49,6 +50,18 @@ struct libfsfat_file_system
 	/* The allocation table
 	 */
 	libfsfat_allocation_table_t *allocation_table;
+
+	/* The cache timestamp
+	 */
+	int64_t cache_timestamp;
+
+	/* The directory cache
+	 */
+	libfcache_cache_t *directory_cache;
+
+	/* The root directory
+	 */
+	libfsfat_directory_t *root_directory;
 
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
@@ -95,11 +108,77 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
      libfsfat_directory_entry_t **directory_entry,
      libcerror_error_t **error );
 
+int libfsfat_file_system_read_root_directory(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     off64_t file_offset,
+     size64_t size,
+     uint32_t cluster_number,
+     libcerror_error_t **error );
+
 int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
      uint32_t cluster_number,
      size64_t size,
      libfdata_stream_t **data_stream,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_directory(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     uint32_t cluster_number,
+     libfsfat_directory_t **directory,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_root_directory(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_file_entry_by_identifier(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     uint64_t identifier,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_file_entry_by_utf8_path(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     const uint8_t *utf8_string,
+     size_t utf8_string_length,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_file_entry_by_utf16_path(
+     libfsfat_file_system_t *file_system,
+     libbfio_handle_t *file_io_handle,
+     const uint16_t *utf16_string,
+     size_t utf16_string_length,
+     libfsfat_file_entry_t **file_entry,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_utf8_volume_label_size(
+     libfsfat_file_system_t *file_system,
+     size_t *utf8_string_size,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_utf8_volume_label(
+     libfsfat_file_system_t *file_system,
+     uint8_t *utf8_string,
+     size_t utf8_string_size,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_utf16_volume_label_size(
+     libfsfat_file_system_t *file_system,
+     size_t *utf16_string_size,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_get_utf16_volume_label(
+     libfsfat_file_system_t *file_system,
+     uint16_t *utf16_string,
+     size_t utf16_string_size,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )

@@ -52,6 +52,7 @@ check_PROGRAMS = \
 	fsfat_test_error \
 	fsfat_test_file_entry \
 	fsfat_test_io_handle \
+	fsfat_test_name \
 	fsfat_test_notify \
 	fsfat_test_support \
 	fsfat_test_tools_info_handle \
@@ -145,6 +146,18 @@ fsfat_test_io_handle_SOURCES = \
 	fsfat_test_unused.h
 
 fsfat_test_io_handle_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_name_SOURCES = \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_libuna.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_name.c \
+	fsfat_test_unused.h
+
+fsfat_test_name_LDADD = \
 	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@
 

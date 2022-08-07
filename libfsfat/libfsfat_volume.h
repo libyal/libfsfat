@@ -61,10 +61,6 @@ struct libfsfat_internal_volume
 	 */
 	libfsfat_file_system_t *file_system;
 
-	/* The root directory
-	 */
-	libfsfat_directory_t *root_directory;
-
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	/* The read/write lock
 	 */
@@ -160,23 +156,10 @@ int libfsfat_volume_get_root_directory(
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error );
 
-int libfsfat_internal_volume_get_file_entry_by_identifier(
-     libfsfat_internal_volume_t *internal_volume,
-     uint64_t identifier,
-     libfsfat_file_entry_t **file_entry,
-     libcerror_error_t **error );
-
 LIBFSFAT_EXTERN \
 int libfsfat_volume_get_file_entry_by_identifier(
      libfsfat_volume_t *volume,
      uint64_t identifier,
-     libfsfat_file_entry_t **file_entry,
-     libcerror_error_t **error );
-
-int libfsfat_internal_volume_get_file_entry_by_utf8_path(
-     libfsfat_internal_volume_t *internal_volume,
-     const uint8_t *utf8_string,
-     size_t utf8_string_length,
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error );
 
@@ -185,13 +168,6 @@ int libfsfat_volume_get_file_entry_by_utf8_path(
      libfsfat_volume_t *volume,
      const uint8_t *utf8_string,
      size_t utf8_string_length,
-     libfsfat_file_entry_t **file_entry,
-     libcerror_error_t **error );
-
-int libfsfat_internal_volume_get_file_entry_by_utf16_path(
-     libfsfat_internal_volume_t *internal_volume,
-     const uint16_t *utf16_string,
-     size_t utf16_string_length,
      libfsfat_file_entry_t **file_entry,
      libcerror_error_t **error );
 
