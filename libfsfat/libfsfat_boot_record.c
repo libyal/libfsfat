@@ -221,7 +221,7 @@ int libfsfat_boot_record_read_data(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
-		 "%s: invalid sector signature: 0x%02" PRIx8 " 0x%02", PRIx8 ".",
+		 "%s: invalid sector signature: 0x%02" PRIx8 " 0x%02" PRIx8 ".",
 		 function,
 		 ( (fsfat_boot_record_fat12_t *) data )->sector_signature[ 0 ],
 		 ( (fsfat_boot_record_fat12_t *) data )->sector_signature[ 1 ] );

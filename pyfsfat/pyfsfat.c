@@ -64,14 +64,14 @@ PyMethodDef pyfsfat_module_methods[] = {
 	  METH_VARARGS | METH_KEYWORDS,
 	  "check_volume_signature(filename) -> Boolean\n"
 	  "\n"
-	  "Checks if a volume has an Extended File System (ext) volume signature." },
+	  "Checks if a volume has a File Allocation Table (FAT) file system volume signature." },
 
 	{ "check_volume_signature_file_object",
 	  (PyCFunction) pyfsfat_check_volume_signature_file_object,
 	  METH_VARARGS | METH_KEYWORDS,
 	  "check_volume_signature_file_object(file_object) -> Boolean\n"
 	  "\n"
-	  "Checks if a volume has an Extended File System (ext) volume signature using a file-like object." },
+	  "Checks if a volume has a File Allocation Table (FAT) file system volume signature using a file-like object." },
 
 	{ "open",
 	  (PyCFunction) pyfsfat_open_new_volume,
@@ -124,7 +124,7 @@ PyObject *pyfsfat_get_version(
 	         errors ) );
 }
 
-/* Checks if a volume has an Extended File System (ext) volume signature
+/* Checks if a volume has a File Allocation Table (FAT) file system volume signature
  * Returns a Python object if successful or NULL on error
  */
 PyObject *pyfsfat_check_volume_signature(
@@ -320,7 +320,7 @@ PyObject *pyfsfat_check_volume_signature(
 	return( NULL );
 }
 
-/* Checks if a volume has an Extended File System (ext) volume signature using a file-like object
+/* Checks if a volume has a File Allocation Table (FAT) file system volume signature using a file-like object
  * Returns a Python object if successful or NULL on error
  */
 PyObject *pyfsfat_check_volume_signature_file_object(

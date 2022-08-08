@@ -47,6 +47,9 @@ EXTRA_DIST = \
 
 check_PROGRAMS = \
 	fsfat_test_allocation_table \
+	fsfat_test_block_descriptor \
+	fsfat_test_block_tree \
+	fsfat_test_block_tree_node \
 	fsfat_test_boot_record \
 	fsfat_test_directory_entry \
 	fsfat_test_error \
@@ -69,6 +72,42 @@ fsfat_test_allocation_table_SOURCES = \
 	fsfat_test_unused.h
 
 fsfat_test_allocation_table_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_block_descriptor_SOURCES = \
+	fsfat_test_block_descriptor.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_block_descriptor_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_block_tree_SOURCES = \
+	fsfat_test_block_tree.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_block_tree_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_block_tree_node_SOURCES = \
+	fsfat_test_block_tree_node.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_block_tree_node_LDADD = \
 	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@
 

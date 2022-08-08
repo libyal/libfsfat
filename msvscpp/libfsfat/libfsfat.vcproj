@@ -178,6 +178,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libfsfat\libfsfat_block_descriptor.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_block_tree.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_block_tree_node.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libfsfat\libfsfat_boot_record.c"
 				>
 			</File>
@@ -249,6 +261,18 @@
 			</File>
 			<File
 				RelativePath="..\..\libfsfat\libfsfat_allocation_table.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_block_descriptor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_block_tree.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_block_tree_node.h"
 				>
 			</File>
 			<File
