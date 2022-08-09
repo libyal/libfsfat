@@ -255,6 +255,22 @@ int libfsfat_file_system_free(
 				result = -1;
 			}
 		}
+		if( ( *file_system )->reversed_allocation_table != NULL )
+		{
+			if( libfsfat_allocation_table_free(
+			     &( ( *file_system )->reversed_allocation_table ),
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to free reversed allocation table.",
+				 function );
+
+				result = -1;
+			}
+		}
 		if( libfcache_cache_free(
 		     &( ( *file_system )->directory_cache ),
 		     error ) != 1 )
@@ -288,7 +304,9 @@ int libfsfat_file_system_read_allocation_table(
      size64_t size,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_file_system_read_allocation_table";
+	static char *function   = "libfsfat_file_system_read_allocation_table";
+	uint32_t cluster_number = 0;
+	int entry_index         = 0;
 
 	if( file_system == NULL )
 	{
@@ -297,6 +315,17 @@ int libfsfat_file_system_read_allocation_table(
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
 		 "%s: invalid file system.",
+		 function );
+
+		return( -1 );
+	}
+	if( file_system->io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file system - missing IO handle.",
 		 function );
 
 		return( -1 );
@@ -314,6 +343,7 @@ int libfsfat_file_system_read_allocation_table(
 	}
 	if( libfsfat_allocation_table_initialize(
 	     &( file_system->allocation_table ),
+	     file_system->io_handle->total_number_of_clusters,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -342,9 +372,40 @@ int libfsfat_file_system_read_allocation_table(
 
 		goto on_error;
 	}
+	if( libfsfat_allocation_table_initialize(
+	     &( file_system->reversed_allocation_table ),
+	     file_system->io_handle->total_number_of_clusters,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create reversed allocation table.",
+		 function );
+
+		goto on_error;
+	}
+	for( entry_index = 0;
+	     entry_index < file_system->allocation_table->number_of_cluster_numbers;
+	     entry_index++ )
+	{
+		cluster_number = file_system->allocation_table->cluster_numbers[ entry_index ];
+
+		if( cluster_number < (uint32_t) file_system->allocation_table->number_of_cluster_numbers )
+		{
+			file_system->reversed_allocation_table->cluster_numbers[ cluster_number ] = entry_index;
+		}
+	}
 	return( 1 );
 
 on_error:
+	if( file_system->reversed_allocation_table != NULL )
+	{
+		libfsfat_allocation_table_free(
+		 &( file_system->reversed_allocation_table ),
+		 NULL );
+	}
 	if( file_system->allocation_table != NULL )
 	{
 		libfsfat_allocation_table_free(
@@ -887,7 +948,7 @@ int libfsfat_file_system_read_directory(
 		{
 			break;
 		}
-		if( libfsfat_allocation_table_get_cluster_identifier_by_index(
+		if( libfsfat_allocation_table_get_cluster_number_by_index(
 		     file_system->allocation_table,
 		     (int) cluster_number,
 		     &cluster_number,
@@ -897,7 +958,7 @@ int libfsfat_file_system_read_directory(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve cluster identifier: %" PRIu32 ".",
+			 "%s: unable to retrieve cluster number: %" PRIu32 ".",
 			 function,
 			 cluster_number );
 
@@ -1426,9 +1487,10 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 	}
 	current_file_entry->identifier = identifier;
 
-	cluster_number     = ( ( identifier - file_system->io_handle->first_cluster_offset ) / file_system->io_handle->cluster_block_size ) + 2;
-	cluster_offset     = ( identifier / file_system->io_handle->cluster_block_size ) * file_system->io_handle->cluster_block_size;
+	cluster_number     = ( identifier / file_system->io_handle->cluster_block_size );
+	cluster_offset     = (off64_t) cluster_number * file_system->io_handle->cluster_block_size;
 	cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
+	cluster_number    += 2;
 
 	if( libcdata_array_initialize(
 	     &name_entries_array,
@@ -1448,7 +1510,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 	{
 		cluster_offset = identifier - sizeof( fsfat_directory_entry_t );
 
-/* TODO traverse cluster blocks backwards */
+		while( cluster_number > 2 )
 		{
 			while( cluster_offset <= cluster_end_offset )
 			{
@@ -1547,6 +1609,24 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 				}
 				cluster_offset -= sizeof( fsfat_directory_entry_t );
 			}
+			if( libfsfat_allocation_table_get_cluster_number_by_index(
+			     file_system->reversed_allocation_table,
+			     (int) cluster_number,
+			     &cluster_number,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+				 "%s: unable to retrieve cluster number: %" PRIu32 ".",
+				 function,
+				 cluster_number );
+
+				goto on_error;
+			}
+			cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
+			cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
 		}
 		if( last_vfat_sequence_number != 0 )
 		{
@@ -1673,7 +1753,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 			{
 				break;
 			}
-			if( libfsfat_allocation_table_get_cluster_identifier_by_index(
+			if( libfsfat_allocation_table_get_cluster_number_by_index(
 			     file_system->allocation_table,
 			     (int) cluster_number,
 			     &cluster_number,
@@ -1683,7 +1763,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-				 "%s: unable to retrieve cluster identifier: %" PRIu32 ".",
+				 "%s: unable to retrieve cluster number: %" PRIu32 ".",
 				 function,
 				 cluster_number );
 
@@ -2058,7 +2138,7 @@ int libfsfat_file_system_get_data_stream(
 		}
 		segment_end_offset += file_system->io_handle->cluster_block_size;
 
-		if( libfsfat_allocation_table_get_cluster_identifier_by_index(
+		if( libfsfat_allocation_table_get_cluster_number_by_index(
 		     file_system->allocation_table,
 		     (int) cluster_number,
 		     &cluster_number,
@@ -2068,7 +2148,7 @@ int libfsfat_file_system_get_data_stream(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve cluster identifier: %" PRIu32 ".",
+			 "%s: unable to retrieve cluster number: %" PRIu32 ".",
 			 function,
 			 cluster_number );
 

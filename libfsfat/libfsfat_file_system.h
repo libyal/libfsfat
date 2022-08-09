@@ -51,6 +51,10 @@ struct libfsfat_file_system
 	 */
 	libfsfat_allocation_table_t *allocation_table;
 
+	/* The reversed allocation table
+	 */
+	libfsfat_allocation_table_t *reversed_allocation_table;
+
 	/* The cache timestamp
 	 */
 	int64_t cache_timestamp;

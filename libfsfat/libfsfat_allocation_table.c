@@ -38,9 +38,11 @@
  */
 int libfsfat_allocation_table_initialize(
      libfsfat_allocation_table_t **allocation_table,
+     uint32_t total_number_of_clusters,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_allocation_table_initialize";
+	static char *function            = "libfsfat_allocation_table_initialize";
+	size_t cluster_numbers_data_size = 0;
 
 	if( allocation_table == NULL )
 	{
@@ -60,6 +62,18 @@ int libfsfat_allocation_table_initialize(
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
 		 "%s: invalid allocation table value already set.",
+		 function );
+
+		return( -1 );
+	}
+	if( ( total_number_of_clusters == 0 )
+	 || ( total_number_of_clusters > (uint32_t) LIBFSFAT_MAXIMUM_NUMBER_OF_CLUSTERS_IN_FAT ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid total number of clusters value out of bounds.",
 		 function );
 
 		return( -1 );
@@ -97,15 +111,47 @@ int libfsfat_allocation_table_initialize(
 
 		return( -1 );
 	}
+	cluster_numbers_data_size = sizeof( uint32_t ) * total_number_of_clusters;
+
+	( *allocation_table )->cluster_numbers = (uint32_t *) memory_allocate(
+	                                                       cluster_numbers_data_size );
+
+	if( ( *allocation_table )->cluster_numbers == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+		 "%s: unable to create cluster numbers.",
+		 function );
+
+		goto on_error;
+	}
+	( *allocation_table )->number_of_cluster_numbers = total_number_of_clusters;
+
+	if( memory_set(
+	     ( *allocation_table )->cluster_numbers,
+	     0,
+	     cluster_numbers_data_size ) == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_SET_FAILED,
+		 "%s: unable to clear cluster numbers.",
+		 function );
+
+		goto on_error;
+	}
 	return( 1 );
 
 on_error:
 	if( *allocation_table != NULL )
 	{
-		if( ( *allocation_table )->cluster_identifiers != NULL )
+		if( ( *allocation_table )->cluster_numbers != NULL )
 		{
 			memory_free(
-			 ( *allocation_table )->cluster_identifiers );
+			 ( *allocation_table )->cluster_numbers );
 		}
 		memory_free(
 		 *allocation_table );
@@ -137,10 +183,10 @@ int libfsfat_allocation_table_free(
 	}
 	if( *allocation_table != NULL )
 	{
-		if( ( *allocation_table )->cluster_identifiers != NULL )
+		if( ( *allocation_table )->cluster_numbers != NULL )
 		{
 			memory_free(
-			 ( *allocation_table )->cluster_identifiers );
+			 ( *allocation_table )->cluster_numbers );
 		}
 		memory_free(
 		 *allocation_table );
@@ -161,15 +207,14 @@ int libfsfat_allocation_table_read_file_io_handle(
      size64_t size,
      libcerror_error_t **error )
 {
-	uint8_t *table_data                  = NULL;
-	static char *function                = "libfsfat_allocation_table_read_file_io_handle";
-	size_t cluster_identifiers_data_size = 0;
-	size_t read_size                     = 0;
-	size_t table_data_offset             = 0;
-	size_t table_offset                  = 0;
-	ssize_t read_count                   = 0;
-	uint32_t cluster_number              = 0;
-	int table_index                      = 0;
+	uint8_t *table_data      = NULL;
+	static char *function    = "libfsfat_allocation_table_read_file_io_handle";
+	size_t read_size         = 0;
+	size_t table_data_offset = 0;
+	size_t table_offset      = 0;
+	ssize_t read_count       = 0;
+	uint32_t cluster_number  = 0;
+	int table_index          = 0;
 
 	if( allocation_table == NULL )
 	{
@@ -178,17 +223,6 @@ int libfsfat_allocation_table_read_file_io_handle(
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
 		 "%s: invalid allocation table.",
-		 function );
-
-		return( -1 );
-	}
-	if( allocation_table->cluster_identifiers != NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
-		 "%s: invalid allocation table - cluster identifiers already set.",
 		 function );
 
 		return( -1 );
@@ -214,50 +248,6 @@ int libfsfat_allocation_table_read_file_io_handle(
 		 function );
 
 		return( -1 );
-	}
-	if( ( io_handle->total_number_of_clusters == 0 )
-	 || ( (size_t) io_handle->total_number_of_clusters > (size_t) ( MEMORY_MAXIMUM_ALLOCATION_SIZE / sizeof( uint32_t ) ) ) )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
-		 "%s: invalid IO handle - total number of clusters value out of bounds.",
-		 function );
-
-		return( -1 );
-	}
-	cluster_identifiers_data_size = sizeof( uint32_t ) * io_handle->total_number_of_clusters;
-
-	allocation_table->cluster_identifiers = (uint32_t *) memory_allocate(
-	                                                      cluster_identifiers_data_size );
-
-	if( allocation_table->cluster_identifiers == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_MEMORY,
-		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-		 "%s: unable to create cluster identifiers.",
-		 function );
-
-		goto on_error;
-	}
-	allocation_table->number_of_cluster_identifiers = io_handle->total_number_of_clusters;
-
-	if( memory_set(
-	     allocation_table->cluster_identifiers,
-	     0,
-	     cluster_identifiers_data_size ) == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_MEMORY,
-		 LIBCERROR_MEMORY_ERROR_SET_FAILED,
-		 "%s: unable to clear cluster identifiers.",
-		 function );
-
-		goto on_error;
 	}
 	/* Add 2 bytes to ensure we can read 3 bytes from the table data buffer
 	 */
@@ -313,7 +303,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 
 		while( table_data_offset < read_size )
 		{
-			if( table_index >= allocation_table->number_of_cluster_identifiers )
+			if( table_index >= allocation_table->number_of_cluster_numbers )
 			{
 				break;
 			}
@@ -348,9 +338,9 @@ int libfsfat_allocation_table_read_file_io_handle(
 					}
 				}
 #endif
-				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number & 0x00000fffUL;
+				allocation_table->cluster_numbers[ table_index++ ] = cluster_number & 0x00000fffUL;
 
-				if( table_index >= allocation_table->number_of_cluster_identifiers )
+				if( table_index >= allocation_table->number_of_cluster_numbers )
 				{
 					break;
 				}
@@ -379,7 +369,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 					}
 				}
 #endif
-				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number;
+				allocation_table->cluster_numbers[ table_index++ ] = cluster_number;
 			}
 			else if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
 			{
@@ -412,7 +402,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 					}
 				}
 #endif
-				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number;
+				allocation_table->cluster_numbers[ table_index++ ] = cluster_number;
 			}
 			else
 			{
@@ -459,7 +449,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 				}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
 
-				allocation_table->cluster_identifiers[ table_index++ ] = cluster_number;
+				allocation_table->cluster_numbers[ table_index++ ] = cluster_number;
 			}
 		}
 	}
@@ -481,25 +471,16 @@ on_error:
 		memory_free(
 		 table_data );
 	}
-	if( allocation_table->cluster_identifiers != NULL )
-	{
-		memory_free(
-		 allocation_table->cluster_identifiers );
-
-		allocation_table->cluster_identifiers = NULL;
-	}
-	allocation_table->number_of_cluster_identifiers = 0;
-
 	return( -1 );
 }
 
-/* Retrieves a specific cluster identifier from the allocation table
+/* Retrieves a specific cluster number from the allocation table
  * Returns 1 if successful or -1 on error
  */
-int libfsfat_allocation_table_get_cluster_identifier_by_index(
+int libfsfat_allocation_table_get_cluster_number_by_index(
      libfsfat_allocation_table_t *allocation_table,
      int entry_index,
-     uint32_t *cluster_identifier,
+     uint32_t *cluster_number,
      libcerror_error_t **error )
 {
 	static char *function = "libfsfat_allocation_table_resize";
@@ -516,7 +497,7 @@ int libfsfat_allocation_table_get_cluster_identifier_by_index(
 		return( -1 );
 	}
 	if( ( entry_index < 0 )
-	 || ( entry_index >= allocation_table->number_of_cluster_identifiers ) )
+	 || ( entry_index >= allocation_table->number_of_cluster_numbers ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -527,18 +508,18 @@ int libfsfat_allocation_table_get_cluster_identifier_by_index(
 
 		return( -1 );
 	}
-	if( cluster_identifier == NULL )
+	if( cluster_number == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid cluster identifier.",
+		 "%s: invalid cluster number.",
 		 function );
 
 		return( -1 );
 	}
-	*cluster_identifier = allocation_table->cluster_identifiers[ entry_index ];
+	*cluster_number = allocation_table->cluster_numbers[ entry_index ];
 
 	return( 1 );
 }

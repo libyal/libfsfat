@@ -57,6 +57,7 @@ int fsfat_test_allocation_table_initialize(
 	 */
 	result = libfsfat_allocation_table_initialize(
 	          &allocation_table,
+	          1024,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -93,6 +94,7 @@ int fsfat_test_allocation_table_initialize(
 	 */
 	result = libfsfat_allocation_table_initialize(
 	          NULL,
+	          1024,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -111,6 +113,7 @@ int fsfat_test_allocation_table_initialize(
 
 	result = libfsfat_allocation_table_initialize(
 	          &allocation_table,
+	          1024,
 	          &error );
 
 	FSFAT_TEST_ASSERT_EQUAL_INT(
@@ -139,6 +142,7 @@ int fsfat_test_allocation_table_initialize(
 
 		result = libfsfat_allocation_table_initialize(
 		          &allocation_table,
+		          1024,
 		          &error );
 
 		if( fsfat_test_malloc_attempts_before_fail != -1 )
@@ -181,6 +185,7 @@ int fsfat_test_allocation_table_initialize(
 
 		result = libfsfat_allocation_table_initialize(
 		          &allocation_table,
+		          1024,
 		          &error );
 
 		if( fsfat_test_memset_attempts_before_fail != -1 )

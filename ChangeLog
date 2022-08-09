@@ -1,7 +1,4 @@
 TODO:
-* retrieve file entry by identifier functionality
-  - backtrack cluster block for VFAT name
-  - Windows file ID for FAT is the volume offset
 * add number of file entries support?
 * add docstring about timestamps in local time or UTC
 * error on volume labels outside of root directory

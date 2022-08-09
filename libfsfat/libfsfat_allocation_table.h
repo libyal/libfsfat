@@ -37,17 +37,18 @@ typedef struct libfsfat_allocation_table libfsfat_allocation_table_t;
 
 struct libfsfat_allocation_table
 {
-	/* The number of cluster identifiers
+	/* The number of cluster numbers
 	 */
-	int number_of_cluster_identifiers;
+	int number_of_cluster_numbers;
 
-	/* The cluster identifiers
+	/* The cluster numbers
 	 */
-	uint32_t *cluster_identifiers;
+	uint32_t *cluster_numbers;
 };
 
 int libfsfat_allocation_table_initialize(
      libfsfat_allocation_table_t **allocation_table,
+     uint32_t total_number_of_clusters,
      libcerror_error_t **error );
 
 int libfsfat_allocation_table_free(
@@ -62,10 +63,10 @@ int libfsfat_allocation_table_read_file_io_handle(
      size64_t size,
      libcerror_error_t **error );
 
-int libfsfat_allocation_table_get_cluster_identifier_by_index(
+int libfsfat_allocation_table_get_cluster_number_by_index(
      libfsfat_allocation_table_t *allocation_table,
      int entry_index,
-     uint32_t *cluster_identifier,
+     uint32_t *cluster_number,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )
