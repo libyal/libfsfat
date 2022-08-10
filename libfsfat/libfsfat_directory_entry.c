@@ -435,6 +435,10 @@ int libfsfat_directory_entry_read_data(
 				directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME;
 			}
 		}
+		else if( data[ 0 ] == 0xe5 )
+		{
+			directory_entry->entry_type = LIBFSFAT_DIRECTORY_ENTRY_TYPE_UNALLOCATED;
+		}
 	}
 	if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_TERMINATOR )
 	{
@@ -1474,7 +1478,7 @@ int libfsfat_directory_entry_get_name(
 		     name_data_offset < 8 + 3;
 		     name_data_offset++ )
 		{
-			if( directory_entry->name_data[ name_offset ] == ' ' )
+			if( directory_entry->name_data[ name_data_offset ] == ' ' )
 			{
 				break;
 			}

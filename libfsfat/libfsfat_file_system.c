@@ -525,6 +525,15 @@ int libfsfat_file_system_read_directory(
 	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
 	       &&  ( cluster_number < 0xfffffff0UL ) ) ) )
 	{
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: reading cluster number: %" PRIu32 "\n",
+			 function,
+			 cluster_number );
+		}
+#endif
 		if( libfsfat_block_descriptor_initialize(
 		     &new_block_descriptor,
 		     error ) != 1 )
@@ -626,6 +635,25 @@ int libfsfat_file_system_read_directory(
 					goto on_error;
 				}
 				break;
+			}
+			if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_UNALLOCATED )
+			{
+				if( libfsfat_directory_entry_free(
+				     &directory_entry,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+					 "%s: unable to free directory entry.",
+					 function );
+
+					goto on_error;
+				}
+				cluster_offset += sizeof( fsfat_directory_entry_t );
+
+				continue;
 			}
 			if( ( directory_entry->name_data[ 0 ] == '.' )
 			 && ( directory_entry->name_data[ 1 ] == ' ' )
@@ -1168,6 +1196,25 @@ int libfsfat_file_system_read_directory_by_range(
 			}
 			break;
 		}
+		if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_UNALLOCATED )
+		{
+			if( libfsfat_directory_entry_free(
+			     &directory_entry,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to free directory entry.",
+				 function );
+
+				goto on_error;
+			}
+			file_offset += sizeof( fsfat_directory_entry_t );
+
+			continue;
+		}
 		if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 		{
 			if( directory_entry->file_attribute_flags == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
@@ -1512,6 +1559,15 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 		while( cluster_number > 2 )
 		{
+#if defined( HAVE_DEBUG_OUTPUT )
+			if( libcnotify_verbose != 0 )
+			{
+				libcnotify_printf(
+				 "%s: reading cluster number: %" PRIu32 "\n",
+				 function,
+				 cluster_number );
+			}
+#endif
 			while( cluster_offset <= cluster_end_offset )
 			{
 				if( libfsfat_directory_entry_initialize(
@@ -1545,11 +1601,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 					goto on_error;
 				}
-				if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
-				{
-					result = 0;
-				}
-				else if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
+				if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_VFAT_LONG_NAME )
 				{
 					vfat_sequence_number = safe_directory_entry->vfat_sequence_number & 0x1f;
 
@@ -1587,7 +1639,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 					last_vfat_sequence_number = vfat_sequence_number;
 				}
-				if( safe_directory_entry != NULL )
+				else
 				{
 					if( libfsfat_directory_entry_free(
 					     &safe_directory_entry,
@@ -1602,9 +1654,6 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 						goto on_error;
 					}
-				}
-				if( result == 0 )
-				{
 					break;
 				}
 				cluster_offset -= sizeof( fsfat_directory_entry_t );
@@ -1652,6 +1701,15 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 		do
 		{
+#if defined( HAVE_DEBUG_OUTPUT )
+			if( libcnotify_verbose != 0 )
+			{
+				libcnotify_printf(
+				 "%s: reading cluster number: %" PRIu32 "\n",
+				 function,
+				 cluster_number );
+			}
+#endif
 			while( cluster_offset < cluster_end_offset )
 			{
 				if( libfsfat_directory_entry_initialize(
@@ -1704,10 +1762,6 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 					current_file_entry->data_size          = safe_directory_entry->data_size;
 					current_file_entry->valid_data_size    = safe_directory_entry->valid_data_size;
 				}
-				else if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
-				{
-					result = 0;
-				}
 				else if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY_NAME )
 				{
 					if( libcdata_array_append_entry(
@@ -1727,7 +1781,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 					}
 					safe_directory_entry = NULL;
 				}
-				if( safe_directory_entry != NULL )
+				else
 				{
 					if( libfsfat_directory_entry_free(
 					     &safe_directory_entry,
@@ -1742,9 +1796,6 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 						goto on_error;
 					}
-				}
-				if( result == 0 )
-				{
 					break;
 				}
 				cluster_offset += sizeof( fsfat_directory_entry_t );
