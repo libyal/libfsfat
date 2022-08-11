@@ -340,7 +340,7 @@ int libfsfat_boot_record_read_data(
 			 boot_record->first_cluster_offset );
 
 			libcnotify_printf(
-			 "%s: total number of clusters\t\t: %" PRIu64 "\n",
+			 "%s: total number of clusters\t\t: %" PRIu32 "\n",
 			 function,
 			 boot_record->total_number_of_clusters );
 

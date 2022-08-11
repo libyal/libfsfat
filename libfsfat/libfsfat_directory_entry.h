@@ -47,7 +47,7 @@ struct libfsfat_directory_entry
 
 	/* The name and extension or name segments data
 	 */
-	uint8_t name_data[ 10 + 12 + 4 ];
+	uint8_t name_data[ 32 ];
 
 	/* The name
 	 */

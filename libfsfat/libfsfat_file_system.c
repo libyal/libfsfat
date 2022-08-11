@@ -304,9 +304,7 @@ int libfsfat_file_system_read_allocation_table(
      size64_t size,
      libcerror_error_t **error )
 {
-	static char *function   = "libfsfat_file_system_read_allocation_table";
-	uint32_t cluster_number = 0;
-	int entry_index         = 0;
+	static char *function = "libfsfat_file_system_read_allocation_table";
 
 	if( file_system == NULL )
 	{
@@ -355,8 +353,28 @@ int libfsfat_file_system_read_allocation_table(
 
 		goto on_error;
 	}
+	if( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
+	 || ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
+	 || ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 ) )
+	{
+		if( libfsfat_allocation_table_initialize(
+		     &( file_system->reversed_allocation_table ),
+		     file_system->io_handle->total_number_of_clusters,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create reversed allocation table.",
+			 function );
+
+			goto on_error;
+		}
+	}
 	if( libfsfat_allocation_table_read_file_io_handle(
 	     file_system->allocation_table,
+	     file_system->reversed_allocation_table,
 	     file_system->io_handle,
 	     file_io_handle,
 	     file_offset,
@@ -371,31 +389,6 @@ int libfsfat_file_system_read_allocation_table(
 		 function );
 
 		goto on_error;
-	}
-	if( libfsfat_allocation_table_initialize(
-	     &( file_system->reversed_allocation_table ),
-	     file_system->io_handle->total_number_of_clusters,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create reversed allocation table.",
-		 function );
-
-		goto on_error;
-	}
-	for( entry_index = 0;
-	     entry_index < file_system->allocation_table->number_of_cluster_numbers;
-	     entry_index++ )
-	{
-		cluster_number = file_system->allocation_table->cluster_numbers[ entry_index ];
-
-		if( cluster_number < (uint32_t) file_system->allocation_table->number_of_cluster_numbers )
-		{
-			file_system->reversed_allocation_table->cluster_numbers[ cluster_number ] = entry_index;
-		}
 	}
 	return( 1 );
 
@@ -437,6 +430,7 @@ int libfsfat_file_system_read_directory(
 	static char *function                                  = "libfsfat_file_system_read_directory";
 	off64_t cluster_end_offset                             = 0;
 	off64_t cluster_offset                                 = 0;
+	uint32_t last_cluster_number                           = 0;
 	uint8_t last_vfat_sequence_number                      = 0;
 	uint8_t vfat_sequence_number                           = 0;
 	int entry_index                                        = 0;
@@ -464,6 +458,34 @@ int libfsfat_file_system_read_directory(
 		 function );
 
 		return( -1 );
+	}
+	switch( file_system->io_handle->file_system_format )
+	{
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12:
+			last_cluster_number = 0x00000ff0UL;
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16:
+			last_cluster_number = 0x0000fff0UL;
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32:
+			last_cluster_number = 0x0ffffff0UL;
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT:
+			last_cluster_number = 0xfffffff0UL;
+			break;
+
+		default:
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+			 "%s: unsupported file system format.",
+			 function );
+
+			goto on_error;
 	}
 	if( directory == NULL )
 	{
@@ -516,14 +538,7 @@ int libfsfat_file_system_read_directory(
 		goto on_error;
 	}
 	while( ( cluster_number >= 2 )
-	    && ( ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
-	       &&  ( cluster_number < 0x00000ff0UL ) )
-	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
-	       &&  ( cluster_number < 0x0000fff0UL ) )
-	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
-	       &&  ( cluster_number < 0x0ffffff0UL ) )
-	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
-	       &&  ( cluster_number < 0xfffffff0UL ) ) ) )
+	    && ( cluster_number < last_cluster_number ) )
 	{
 #if defined( HAVE_DEBUG_OUTPUT )
 		if( libcnotify_verbose != 0 )
@@ -1990,6 +2005,7 @@ int libfsfat_file_system_get_data_stream(
 	off64_t cluster_offset                                 = 0;
 	off64_t segment_end_offset                             = 0;
 	off64_t segment_start_offset                           = 0;
+	uint32_t last_cluster_number                           = 0; 
 	int leaf_value_index                                   = 0;
 	int result                                             = 0;
 	int segment_index                                      = 0;
@@ -2015,6 +2031,34 @@ int libfsfat_file_system_get_data_stream(
 		 function );
 
 		return( -1 );
+	}
+	switch( file_system->io_handle->file_system_format )
+	{
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12:
+			last_cluster_number = 0x00000ff0UL;
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16:
+			last_cluster_number = 0x0000fff0UL;
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32:
+			last_cluster_number = 0x0ffffff0UL;
+			break;
+
+		case LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT:
+			last_cluster_number = 0xfffffff0UL;
+			break;
+
+		default:
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+			 "%s: unsupported file system format.",
+			 function );
+
+			goto on_error;
 	}
 	if( ( file_system->io_handle->total_number_of_clusters == 0 )
 	 || ( (size_t) file_system->io_handle->total_number_of_clusters > (size_t) ( MEMORY_MAXIMUM_ALLOCATION_SIZE / sizeof( uint32_t ) ) ) )
@@ -2087,14 +2131,7 @@ int libfsfat_file_system_get_data_stream(
 		goto on_error;
 	}
 	while( ( cluster_number >= 2 )
-	    && ( ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
-	       &&  ( cluster_number < 0x00000ff0UL ) )
-	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
-	       &&  ( cluster_number < 0x0000fff0UL ) )
-	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
-	       &&  ( cluster_number < 0x0ffffff0UL ) )
-	     ||  ( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
-	       &&  ( cluster_number < 0xfffffff0UL ) ) ) )
+	    && ( cluster_number < last_cluster_number ) )
 	{
 		if( size == 0 )
 		{

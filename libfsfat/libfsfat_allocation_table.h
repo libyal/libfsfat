@@ -57,6 +57,7 @@ int libfsfat_allocation_table_free(
 
 int libfsfat_allocation_table_read_file_io_handle(
      libfsfat_allocation_table_t *allocation_table,
+     libfsfat_allocation_table_t *reversed_allocation_table,
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
      off64_t file_offset,

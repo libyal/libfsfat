@@ -201,6 +201,7 @@ int libfsfat_allocation_table_free(
  */
 int libfsfat_allocation_table_read_file_io_handle(
      libfsfat_allocation_table_t *allocation_table,
+     libfsfat_allocation_table_t *reversed_allocation_table,
      libfsfat_io_handle_t *io_handle,
      libbfio_handle_t *file_io_handle,
      off64_t file_offset,
@@ -338,7 +339,14 @@ int libfsfat_allocation_table_read_file_io_handle(
 					}
 				}
 #endif
-				allocation_table->cluster_numbers[ table_index++ ] = cluster_number & 0x00000fffUL;
+				allocation_table->cluster_numbers[ table_index ] = cluster_number & 0x00000fffUL;
+
+				if( ( reversed_allocation_table != NULL )
+				 && ( cluster_number < (uint32_t) allocation_table->number_of_cluster_numbers ) )
+				{
+					reversed_allocation_table->cluster_numbers[ cluster_number & 0x00000fffUL ] = table_index;
+				}
+				table_index++;
 
 				if( table_index >= allocation_table->number_of_cluster_numbers )
 				{
@@ -369,7 +377,6 @@ int libfsfat_allocation_table_read_file_io_handle(
 					}
 				}
 #endif
-				allocation_table->cluster_numbers[ table_index++ ] = cluster_number;
 			}
 			else if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT16 )
 			{
@@ -402,7 +409,6 @@ int libfsfat_allocation_table_read_file_io_handle(
 					}
 				}
 #endif
-				allocation_table->cluster_numbers[ table_index++ ] = cluster_number;
 			}
 			else
 			{
@@ -448,9 +454,15 @@ int libfsfat_allocation_table_read_file_io_handle(
 					}
 				}
 #endif /* defined( HAVE_DEBUG_OUTPUT ) */
-
-				allocation_table->cluster_numbers[ table_index++ ] = cluster_number;
 			}
+			allocation_table->cluster_numbers[ table_index ] = cluster_number;
+
+			if( ( reversed_allocation_table != NULL )
+			 && ( cluster_number < (uint32_t) allocation_table->number_of_cluster_numbers ) )
+			{
+				reversed_allocation_table->cluster_numbers[ cluster_number ] = table_index;
+			}
+			table_index++;
 		}
 	}
 	memory_free(
