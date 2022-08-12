@@ -26,6 +26,7 @@
 #include <types.h>
 
 #include "libfsfat_allocation_table.h"
+#include "libfsfat_block_tree.h"
 #include "libfsfat_directory.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
@@ -81,6 +82,13 @@ int libfsfat_file_system_initialize(
 
 int libfsfat_file_system_free(
      libfsfat_file_system_t **file_system,
+     libcerror_error_t **error );
+
+int libfsfat_file_system_check_if_cluster_block_first_read(
+     libfsfat_file_system_t *file_system,
+     libfsfat_block_tree_t *cluster_block_tree,
+     uint32_t cluster_number,
+     off64_t cluster_offset,
      libcerror_error_t **error );
 
 int libfsfat_file_system_read_allocation_table(

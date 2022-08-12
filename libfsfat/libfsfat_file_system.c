@@ -294,6 +294,95 @@ int libfsfat_file_system_free(
 	return( result );
 }
 
+/* Checks if this is the first time the cluster block is being read
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_file_system_check_if_cluster_block_first_read(
+     libfsfat_file_system_t *file_system,
+     libfsfat_block_tree_t *cluster_block_tree,
+     uint32_t cluster_number,
+     off64_t cluster_offset,
+     libcerror_error_t **error )
+{
+	libfsfat_block_descriptor_t *existing_block_descriptor = NULL;
+	libfsfat_block_descriptor_t *new_block_descriptor      = NULL;
+	libfsfat_block_tree_node_t *leaf_block_tree_node       = NULL;
+	static char *function                                  = "libfsfat_file_system_check_if_cluster_block_first_read";
+	int leaf_value_index                                   = 0;
+	int result                                             = 0;
+
+	if( file_system == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file system.",
+		 function );
+
+		return( -1 );
+	}
+	if( libfsfat_block_descriptor_initialize(
+	     &new_block_descriptor,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create block descriptor.",
+		 function );
+
+		goto on_error;
+	}
+	new_block_descriptor->cluster_number = cluster_number;
+
+	result = libfsfat_block_tree_insert_block_descriptor_by_offset(
+	          cluster_block_tree,
+	          cluster_offset,
+	          new_block_descriptor,
+	          &leaf_value_index,
+	          &leaf_block_tree_node,
+	          &existing_block_descriptor,
+	          error );
+
+	if( result == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+		 "%s: unable to insert block descriptor in cluster block tree.",
+		 function );
+
+		goto on_error;
+	}
+	else if( result == 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid cluster number: %" PRIu32 " value already exists.",
+		 function,
+		 cluster_number );
+
+		goto on_error;
+	}
+	new_block_descriptor = NULL;
+
+	return( 1 );
+
+on_error:
+	if( new_block_descriptor != NULL )
+	{
+		libfsfat_block_descriptor_free(
+		 &new_block_descriptor,
+		 NULL );
+	}
+	return( -1 );
+}
+
 /* Reads an allocation table
  * Returns 1 if successful or -1 on error
  */
@@ -418,24 +507,20 @@ int libfsfat_file_system_read_directory(
      libfsfat_directory_t **directory,
      libcerror_error_t **error )
 {
-	libcdata_array_t *name_entries_array                   = NULL;
-	libfsfat_block_descriptor_t *existing_block_descriptor = NULL;
-	libfsfat_block_descriptor_t *new_block_descriptor      = NULL;
-	libfsfat_block_tree_t *cluster_block_tree              = NULL;
-	libfsfat_block_tree_node_t *leaf_block_tree_node       = NULL;
-	libfsfat_directory_t *safe_directory                   = NULL;
-	libfsfat_directory_entry_t *current_file_entry         = NULL;
-	libfsfat_directory_entry_t *data_stream_entry          = NULL;
-	libfsfat_directory_entry_t *directory_entry            = NULL;
-	static char *function                                  = "libfsfat_file_system_read_directory";
-	off64_t cluster_end_offset                             = 0;
-	off64_t cluster_offset                                 = 0;
-	uint32_t last_cluster_number                           = 0;
-	uint8_t last_vfat_sequence_number                      = 0;
-	uint8_t vfat_sequence_number                           = 0;
-	int entry_index                                        = 0;
-	int leaf_value_index                                   = 0;
-	int result                                             = 0;
+	libcdata_array_t *name_entries_array           = NULL;
+	libfsfat_block_tree_t *cluster_block_tree      = NULL;
+	libfsfat_directory_t *safe_directory           = NULL;
+	libfsfat_directory_entry_t *current_file_entry = NULL;
+	libfsfat_directory_entry_t *data_stream_entry  = NULL;
+	libfsfat_directory_entry_t *directory_entry    = NULL;
+	static char *function                          = "libfsfat_file_system_read_directory";
+	off64_t cluster_end_offset                     = 0;
+	off64_t cluster_offset                         = 0;
+	uint32_t last_cluster_number                   = 0;
+	uint8_t last_vfat_sequence_number              = 0;
+	uint8_t vfat_sequence_number                   = 0;
+	int entry_index                                = 0;
+	int result                                     = 0;
 
 	if( file_system == NULL )
 	{
@@ -549,58 +634,26 @@ int libfsfat_file_system_read_directory(
 			 cluster_number );
 		}
 #endif
-		if( libfsfat_block_descriptor_initialize(
-		     &new_block_descriptor,
+		cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
+		cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
+
+		if( libfsfat_file_system_check_if_cluster_block_first_read(
+		     file_system,
+		     cluster_block_tree,
+		     cluster_number,
+		     cluster_offset,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-			 "%s: unable to create block descriptor.",
-			 function );
-
-			goto on_error;
-		}
-		new_block_descriptor->cluster_number = cluster_number;
-
-		cluster_offset     = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
-		cluster_end_offset = cluster_offset + file_system->io_handle->cluster_block_size;
-
-		result = libfsfat_block_tree_insert_block_descriptor_by_offset(
-		          cluster_block_tree,
-		          cluster_offset,
-		          new_block_descriptor,
-		          &leaf_value_index,
-		          &leaf_block_tree_node,
-		          &existing_block_descriptor,
-		          error );
-
-		if( result == -1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-			 "%s: unable to insert block descriptor in cluster block tree.",
-			 function );
-
-			goto on_error;
-		}
-		else if( result == 0 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid cluster number: %" PRIu32 " value already exists.",
+			 LIBCERROR_RUNTIME_ERROR_GENERIC,
+			 "%s: unable to check if first read of cluster number: %" PRIu32 ".",
 			 function,
 			 cluster_number );
 
 			goto on_error;
 		}
-		new_block_descriptor = NULL;
-
 		while( cluster_offset < cluster_end_offset )
 		{
 			if( libfsfat_directory_entry_initialize(
@@ -1061,12 +1114,6 @@ on_error:
 	{
 		libfsfat_directory_free(
 		 &safe_directory,
-		 NULL );
-	}
-	if( new_block_descriptor != NULL )
-	{
-		libfsfat_block_descriptor_free(
-		 &new_block_descriptor,
 		 NULL );
 	}
 	if( cluster_block_tree != NULL )
@@ -1995,20 +2042,15 @@ int libfsfat_file_system_get_data_stream(
      libfdata_stream_t **data_stream,
      libcerror_error_t **error )
 {
-	libfdata_stream_t *safe_data_stream                    = NULL;
-	libfsfat_block_descriptor_t *existing_block_descriptor = NULL;
-	libfsfat_block_descriptor_t *new_block_descriptor      = NULL;
-	libfsfat_block_tree_t *cluster_block_tree              = NULL;
-	libfsfat_block_tree_node_t *leaf_block_tree_node       = NULL;
-	static char *function                                  = "libfsfat_file_system_get_data_stream";
-	size64_t segment_size                                  = 0;
-	off64_t cluster_offset                                 = 0;
-	off64_t segment_end_offset                             = 0;
-	off64_t segment_start_offset                           = 0;
-	uint32_t last_cluster_number                           = 0; 
-	int leaf_value_index                                   = 0;
-	int result                                             = 0;
-	int segment_index                                      = 0;
+	libfdata_stream_t *safe_data_stream       = NULL;
+	libfsfat_block_tree_t *cluster_block_tree = NULL;
+	static char *function                     = "libfsfat_file_system_get_data_stream";
+	size64_t segment_size                     = 0;
+	off64_t cluster_offset                    = 0;
+	off64_t segment_end_offset                = 0;
+	off64_t segment_start_offset              = 0;
+	uint32_t last_cluster_number              = 0;
+	int segment_index                         = 0;
 
 	if( file_system == NULL )
 	{
@@ -2137,57 +2179,25 @@ int libfsfat_file_system_get_data_stream(
 		{
 			break;
 		}
-		if( libfsfat_block_descriptor_initialize(
-		     &new_block_descriptor,
+		cluster_offset = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
+
+		if( libfsfat_file_system_check_if_cluster_block_first_read(
+		     file_system,
+		     cluster_block_tree,
+		     cluster_number,
+		     cluster_offset,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-			 "%s: unable to create block descriptor.",
-			 function );
-
-			goto on_error;
-		}
-		new_block_descriptor->cluster_number = cluster_number;
-
-		cluster_offset = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
-
-		result = libfsfat_block_tree_insert_block_descriptor_by_offset(
-		          cluster_block_tree,
-		          cluster_offset,
-		          new_block_descriptor,
-		          &leaf_value_index,
-		          &leaf_block_tree_node,
-		          &existing_block_descriptor,
-		          error );
-
-		if( result == -1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-			 "%s: unable to insert block descriptor in cluster block tree.",
-			 function );
-
-			goto on_error;
-		}
-		else if( result == 0 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid cluster number: %" PRIu32 " value already exists.",
+			 LIBCERROR_RUNTIME_ERROR_GENERIC,
+			 "%s: unable to check if first read of cluster number: %" PRIu32 ".",
 			 function,
 			 cluster_number );
 
 			goto on_error;
 		}
-		new_block_descriptor = NULL;
-
 		if( ( segment_start_offset != 0 )
 		 && ( cluster_offset > segment_end_offset ) )
 		{
@@ -2294,12 +2304,6 @@ on_error:
 	{
 		libfdata_stream_free(
 		 &safe_data_stream,
-		 NULL );
-	}
-	if( new_block_descriptor != NULL )
-	{
-		libfsfat_block_descriptor_free(
-		 &new_block_descriptor,
 		 NULL );
 	}
 	if( cluster_block_tree != NULL )
