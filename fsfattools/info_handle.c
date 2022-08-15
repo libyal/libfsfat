@@ -776,7 +776,7 @@ int info_handle_fat_timestamp_value_fprint(
 		 date_time_string,
 		 value_64bit % 100 );
 
-		if( info_handle->format_version == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+		if( info_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
 		{
 			fprintf(
 			 info_handle->notify_stream,
@@ -1403,7 +1403,7 @@ int info_handle_file_entry_value_with_name_fprint(
 		{
 			creation_time += 31553280000;
 		}
-		if( info_handle->format_version == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+		if( info_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
 		{
 			fprintf(
 			 info_handle->bodyfile_stream,
@@ -1896,7 +1896,7 @@ int info_handle_file_entry_fprint_by_identifier(
 	static char *function               = "info_handle_file_entry_fprint_by_identifier";
 	size_t file_entry_name_length       = 0;
 	size_t file_entry_name_size         = 0;
-	uint8_t format_version              = 0;
+	uint8_t file_system_format          = 0;
 	int result                          = 0;
 
 	if( info_handle == NULL )
@@ -1910,16 +1910,16 @@ int info_handle_file_entry_fprint_by_identifier(
 
 		return( -1 );
 	}
-	if( libfsfat_volume_get_format_version(
+	if( libfsfat_volume_get_file_system_format(
 	     info_handle->input_volume,
-	     &format_version,
+	     &file_system_format,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve format version.",
+		 "%s: unable to retrieve file system format.",
 		 function );
 
 		goto on_error;
@@ -2142,16 +2142,16 @@ int info_handle_file_entry_fprint_by_path(
 
 		goto on_error;
 	}
-	if( libfsfat_volume_get_format_version(
+	if( libfsfat_volume_get_file_system_format(
 	     info_handle->input_volume,
-	     &( info_handle->format_version ),
+	     &( info_handle->file_system_format ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve format version.",
+		 "%s: unable to retrieve file system format.",
 		 function );
 
 		goto on_error;
@@ -2266,16 +2266,16 @@ int info_handle_file_system_hierarchy_fprint(
 		 info_handle->notify_stream,
 		 "File system hierarchy:\n" );
 	}
-	if( libfsfat_volume_get_format_version(
+	if( libfsfat_volume_get_file_system_format(
 	     info_handle->input_volume,
-	     &( info_handle->format_version ),
+	     &( info_handle->file_system_format ),
 	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve format version.",
+		 "%s: unable to retrieve file system format.",
 		 function );
 
 		goto on_error;
@@ -2374,7 +2374,7 @@ int info_handle_volume_fprint(
 	static char *function            = "info_handle_volume_fprint";
 	size_t value_string_size         = 0;
 	const char *fshint               = NULL;
-	uint8_t format_version           = 0;
+	uint8_t file_system_format       = 0;
 	int result                       = 0;
 
 	if( info_handle == NULL )
@@ -2396,9 +2396,9 @@ int info_handle_volume_fprint(
 	 info_handle->notify_stream,
 	 "Volume information:\n" );
 
-	if( libfsfat_volume_get_format_version(
+	if( libfsfat_volume_get_file_system_format(
 	     info_handle->input_volume,
-	     &format_version,
+	     &file_system_format,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -2410,7 +2410,7 @@ int info_handle_volume_fprint(
 
 		goto on_error;
 	}
-	switch( format_version )
+	switch( file_system_format )
 	{
 		case LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT:
 			fshint = "exFAT";

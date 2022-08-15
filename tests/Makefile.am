@@ -51,6 +51,7 @@ check_PROGRAMS = \
 	fsfat_test_block_tree \
 	fsfat_test_block_tree_node \
 	fsfat_test_boot_record \
+	fsfat_test_directory \
 	fsfat_test_directory_entry \
 	fsfat_test_error \
 	fsfat_test_file_entry \
@@ -130,6 +131,18 @@ fsfat_test_boot_record_LDADD = \
 	@LIBCNOTIFY_LIBADD@ \
 	@LIBCLOCALE_LIBADD@ \
 	@LIBCDATA_LIBADD@ \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
+
+fsfat_test_directory_SOURCES = \
+	fsfat_test_directory.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_directory_LDADD = \
 	../libfsfat/libfsfat.la \
 	@LIBCERROR_LIBADD@
 

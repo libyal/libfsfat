@@ -50,9 +50,9 @@ struct info_handle
 	 */
 	libfsfat_volume_t *input_volume;
 
-	/* The file system format version
+	/* The file system format
 	 */
-	uint8_t format_version;
+	uint8_t file_system_format;
 
 	/* The root directory identifier
 	 */

@@ -133,6 +133,7 @@ stamp-h[1-9]
 /tests/fsfat_test_block_tree
 /tests/fsfat_test_block_tree_node
 /tests/fsfat_test_boot_record
+/tests/fsfat_test_directory
 /tests/fsfat_test_directory_entry
 /tests/fsfat_test_error
 /tests/fsfat_test_file_entry

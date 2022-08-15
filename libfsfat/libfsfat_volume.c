@@ -1129,16 +1129,16 @@ on_error:
 	return( -1 );
 }
 
-/* Retrieves the format version
+/* Retrieves the file system format
  * Returns 1 if successful or -1 on error
  */
-int libfsfat_volume_get_format_version(
+int libfsfat_volume_get_file_system_format(
      libfsfat_volume_t *volume,
-     uint8_t *format_version,
+     uint8_t *file_system_format,
      libcerror_error_t **error )
 {
 	libfsfat_internal_volume_t *internal_volume = NULL;
-	static char *function                       = "libfsfat_volume_get_format_version";
+	static char *function                       = "libfsfat_volume_get_file_system_format";
 
 	if( volume == NULL )
 	{
@@ -1164,13 +1164,13 @@ int libfsfat_volume_get_format_version(
 
 		return( -1 );
 	}
-	if( format_version == NULL )
+	if( file_system_format == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid format version.",
+		 "%s: invalid file system format.",
 		 function );
 
 		return( -1 );
@@ -1190,7 +1190,7 @@ int libfsfat_volume_get_format_version(
 		return( -1 );
 	}
 #endif
-	*format_version = internal_volume->io_handle->file_system_format;
+	*file_system_format = internal_volume->io_handle->file_system_format;
 
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(

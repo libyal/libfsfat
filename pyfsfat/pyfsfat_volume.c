@@ -79,6 +79,13 @@ PyMethodDef pyfsfat_volume_object_methods[] = {
 	  "\n"
 	  "Closes a volume." },
 
+	{ "get_file_system_format",
+	  (PyCFunction) pyfsfat_volume_get_file_system_format,
+	  METH_NOARGS,
+	  "get_file_system_format() -> Integer\n"
+	  "\n"
+	  "Retrieves the file system format." },
+
 	{ "get_label",
 	  (PyCFunction) pyfsfat_volume_get_label,
 	  METH_NOARGS,
@@ -112,6 +119,12 @@ PyMethodDef pyfsfat_volume_object_methods[] = {
 };
 
 PyGetSetDef pyfsfat_volume_object_get_set_definitions[] = {
+
+	{ "file_system_format",
+	  (getter) pyfsfat_volume_get_file_system_format,
+	  (setter) 0,
+	  "The file system format.",
+	  NULL },
 
 	{ "label",
 	  (getter) pyfsfat_volume_get_label,
@@ -805,6 +818,69 @@ PyObject *pyfsfat_volume_close(
 	 Py_None );
 
 	return( Py_None );
+}
+
+/* Retrieves the file system format
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyfsfat_volume_get_file_system_format(
+           pyfsfat_volume_t *pyfsfat_volume,
+           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
+{
+	PyObject *integer_object   = NULL;
+	libcerror_error_t *error   = NULL;
+	static char *function      = "pyfsfat_volume_get_file_system_format";
+	uint8_t file_system_format = 0;
+	int result                 = 0;
+
+	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
+
+	if( pyfsfat_volume == NULL )
+	{
+		PyErr_Format(
+		 PyExc_ValueError,
+		 "%s: invalid volume.",
+		 function );
+
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libfsfat_volume_get_file_system_format(
+	          pyfsfat_volume->volume,
+	          &file_system_format,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result == -1 )
+	{
+		pyfsfat_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to retrieve file system format.",
+		 function );
+
+		libcerror_error_free(
+		 &error );
+
+		return( NULL );
+	}
+	else if( result == 0 )
+	{
+		Py_IncRef(
+		 Py_None );
+
+		return( Py_None );
+	}
+#if PY_MAJOR_VERSION >= 3
+	integer_object = PyLong_FromLong(
+	                  (long) file_system_format );
+#else
+	integer_object = PyInt_FromLong(
+	                  (long) file_system_format );
+#endif
+	return( integer_object );
 }
 
 /* Retrieves the label

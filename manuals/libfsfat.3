@@ -1,4 +1,4 @@
-.Dd August  5, 2022
+.Dd August 15, 2022
 .Dt libfsfat 3
 .Os libfsfat
 .Sh NAME
@@ -61,7 +61,7 @@ Volume functions
 .Ft int
 .Fn libfsfat_volume_close "libfsfat_volume_t *volume" "libfsfat_error_t **error"
 .Ft int
-.Fn libfsfat_volume_get_format_version "libfsfat_volume_t *volume" "uint8_t *format_version" "libfsfat_error_t **error"
+.Fn libfsfat_volume_get_file_system_format "libfsfat_volume_t *volume" "uint8_t *file_system_format" "libfsfat_error_t **error"
 .Ft int
 .Fn libfsfat_volume_get_utf8_label_size "libfsfat_volume_t *volume" "size_t *utf8_string_size" "libfsfat_error_t **error"
 .Ft int

@@ -77,6 +77,10 @@ PyObject *pyfsfat_volume_close(
            pyfsfat_volume_t *pyfsfat_volume,
            PyObject *arguments );
 
+PyObject *pyfsfat_volume_get_file_system_format(
+           pyfsfat_volume_t *pyfsfat_volume,
+           PyObject *arguments );
+
 PyObject *pyfsfat_volume_get_label(
            pyfsfat_volume_t *pyfsfat_volume,
            PyObject *arguments );

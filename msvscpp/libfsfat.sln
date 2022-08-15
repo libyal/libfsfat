@@ -51,6 +51,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fsfat_test_boot_record", "f
 		{FF9B9505-42C9-4999-AB7E-4D80F4B6FD9E} = {FF9B9505-42C9-4999-AB7E-4D80F4B6FD9E}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fsfat_test_directory", "fsfat_test_directory\fsfat_test_directory.vcproj", "{E24F1A2D-0A93-442A-9243-A8C0371D5DA8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DBCA2B20-F9FC-4FC5-AD1F-F5C9E38D4C5C} = {DBCA2B20-F9FC-4FC5-AD1F-F5C9E38D4C5C}
+		{FF9B9505-42C9-4999-AB7E-4D80F4B6FD9E} = {FF9B9505-42C9-4999-AB7E-4D80F4B6FD9E}
+	EndProjectSection
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fsfat_test_directory_entry", "fsfat_test_directory_entry\fsfat_test_directory_entry.vcproj", "{BA130E31-0262-47A9-A617-ED6798AE59AF}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5C561721-A66D-49A7-8354-608E5C89D8B1} = {5C561721-A66D-49A7-8354-608E5C89D8B1}
@@ -329,6 +335,10 @@ Global
 		{B6D6289D-E1A3-4ACD-8462-8A2D8FB8AA32}.Release|Win32.Build.0 = Release|Win32
 		{B6D6289D-E1A3-4ACD-8462-8A2D8FB8AA32}.VSDebug|Win32.ActiveCfg = VSDebug|Win32
 		{B6D6289D-E1A3-4ACD-8462-8A2D8FB8AA32}.VSDebug|Win32.Build.0 = VSDebug|Win32
+		{E24F1A2D-0A93-442A-9243-A8C0371D5DA8}.Release|Win32.ActiveCfg = Release|Win32
+		{E24F1A2D-0A93-442A-9243-A8C0371D5DA8}.Release|Win32.Build.0 = Release|Win32
+		{E24F1A2D-0A93-442A-9243-A8C0371D5DA8}.VSDebug|Win32.ActiveCfg = VSDebug|Win32
+		{E24F1A2D-0A93-442A-9243-A8C0371D5DA8}.VSDebug|Win32.Build.0 = VSDebug|Win32
 		{BA130E31-0262-47A9-A617-ED6798AE59AF}.Release|Win32.ActiveCfg = Release|Win32
 		{BA130E31-0262-47A9-A617-ED6798AE59AF}.Release|Win32.Build.0 = Release|Win32
 		{BA130E31-0262-47A9-A617-ED6798AE59AF}.VSDebug|Win32.ActiveCfg = VSDebug|Win32

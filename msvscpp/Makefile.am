@@ -4,6 +4,7 @@ MSVSCPP_FILES = \
 	fsfat_test_block_tree/fsfat_test_block_tree.vcproj \
 	fsfat_test_block_tree_node/fsfat_test_block_tree_node.vcproj \
 	fsfat_test_boot_record/fsfat_test_boot_record.vcproj \
+	fsfat_test_directory/fsfat_test_directory.vcproj \
 	fsfat_test_directory_entry/fsfat_test_directory_entry.vcproj \
 	fsfat_test_error/fsfat_test_error.vcproj \
 	fsfat_test_file_entry/fsfat_test_file_entry.vcproj \

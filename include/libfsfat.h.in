@@ -260,13 +260,13 @@ int libfsfat_volume_close(
      libfsfat_volume_t *volume,
      libfsfat_error_t **error );
 
-/* Retrieves the format version
+/* Retrieves the file system format
  * Returns 1 if successful or -1 on error
  */
 LIBFSFAT_EXTERN \
-int libfsfat_volume_get_format_version(
+int libfsfat_volume_get_file_system_format(
      libfsfat_volume_t *volume,
-     uint8_t *format_version,
+     uint8_t *file_system_format,
      libfsfat_error_t **error );
 
 /* Retrieves the size of the UTF-8 encoded label

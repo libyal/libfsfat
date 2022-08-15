@@ -28,6 +28,7 @@
 #endif
 
 #include "fsfat_test_functions.h"
+#include "fsfat_test_libbfio.h"
 #include "fsfat_test_libcerror.h"
 #include "fsfat_test_libfsfat.h"
 #include "fsfat_test_macros.h"

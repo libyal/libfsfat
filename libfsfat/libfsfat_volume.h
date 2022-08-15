@@ -119,9 +119,9 @@ int libfsfat_internal_volume_open_read(
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
-int libfsfat_volume_get_format_version(
+int libfsfat_volume_get_file_system_format(
      libfsfat_volume_t *volume,
-     uint8_t *format_version,
+     uint8_t *file_system_format,
      libcerror_error_t **error );
 
 LIBFSFAT_EXTERN \
