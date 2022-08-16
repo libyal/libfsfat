@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\pyfsfat\pyfsfat_file_system_formats.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\pyfsfat\pyfsfat_integer.c"
 				>
 			</File>
@@ -237,6 +241,10 @@
 			</File>
 			<File
 				RelativePath="..\..\pyfsfat\pyfsfat_file_object_io_handle.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\pyfsfat\pyfsfat_file_system_formats.h"
 				>
 			</File>
 			<File

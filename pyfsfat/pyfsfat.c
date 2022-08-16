@@ -33,6 +33,7 @@
 #include "pyfsfat_file_entries.h"
 #include "pyfsfat_file_entry.h"
 #include "pyfsfat_file_object_io_handle.h"
+#include "pyfsfat_file_system_formats.h"
 #include "pyfsfat_libbfio.h"
 #include "pyfsfat_libcerror.h"
 #include "pyfsfat_libfsfat.h"
@@ -617,6 +618,28 @@ PyMODINIT_FUNC initpyfsfat(
 	 module,
 	 "file_attribute_flags",
 	 (PyObject *) &pyfsfat_file_attribute_flags_type_object );
+
+	/* Setup the file system formats type object
+	 */
+	pyfsfat_file_system_formats_type_object.tp_new = PyType_GenericNew;
+
+	if( pyfsfat_file_system_formats_init_type(
+	     &pyfsfat_file_system_formats_type_object ) != 1 )
+	{
+		goto on_error;
+	}
+	if( PyType_Ready(
+	     &pyfsfat_file_system_formats_type_object ) < 0 )
+	{
+		goto on_error;
+	}
+	Py_IncRef(
+	 (PyObject *) &pyfsfat_file_system_formats_type_object );
+
+	PyModule_AddObject(
+	 module,
+	 "file_system_formats",
+	 (PyObject *) &pyfsfat_file_system_formats_type_object );
 
 	/* Setup the file_entries type object
 	 */

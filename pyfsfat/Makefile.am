@@ -22,6 +22,7 @@ pyfsfat_la_SOURCES = \
 	pyfsfat_file_entries.c pyfsfat_file_entries.h \
 	pyfsfat_file_entry.c pyfsfat_file_entry.h \
 	pyfsfat_file_object_io_handle.c pyfsfat_file_object_io_handle.h \
+	pyfsfat_file_system_formats.c pyfsfat_file_system_formats.h \
 	pyfsfat_integer.c pyfsfat_integer.h \
 	pyfsfat_libbfio.h \
 	pyfsfat_libcerror.h \
