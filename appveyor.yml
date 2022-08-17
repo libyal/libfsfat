@@ -1,4 +1,6 @@
 environment:
+  PYPI_TOKEN:
+    secure: VHuZiUWgTqTciKE2nsv/LvKJJfPeBLTPgeCnqcfEZsiOif2BVEktMDB8GR54NrZwf7+btqaOrqDoL2zaDzQCS6TdkXehXMTH4dRRSpaIR8o1igBBknJ+cjcoAInS6FDDqqthuPOmZDGzYj+pIzjqyn0Ybfo+W0ISQUJJkVJKlpZtKNXNZL6/wtgoO9v906iBreCKZA05CMgco2ltRqGwz/kt8w8EGkP49Ilx/9wSlWOdK5ewOAHjQ9Q5lrJovUpKpFNsEg1hnO02hH+eH5ogmdghfkLdf9tshmlvNjl16QcInqb8Hq95TQkrxlvkFsu0WqeFZmT0SR9/e46Lu8mNErFvU75EiiJ2K2Ccqcxd1gtc8nmHNpvWxa3riwRMx5B3h/TSBaEKR28KNQmTfKwM+Q==
   matrix:
   - TARGET: vs2008
     BUILD_ENVIRONMENT: msbuild
@@ -277,4 +279,9 @@ after_test:
 
 artifacts:
 - path: dist\*.whl
+
+deploy_script:
+- ps: If ($env:APPVEYOR_REPO_TAG -eq "true" -and $isWindows -and $env:BUILD_ENVIRONMENT -eq "python") {
+    Invoke-Expression "${env:PYTHON} -m twine upload dist/*.whl --username __token__ --password ${env:PYPI_TOKEN} --skip-existing" }
+- sh: if test ${APPVEYOR_REPO_TAG} = "true" && test ${BUILD_ENVIRONMENT} = "python"; then ${PYTHON} -m twine upload dist/*.whl --username __token__ --password ${PYPI_TOKEN} --skip-existing; fi
 
