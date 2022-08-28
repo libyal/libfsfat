@@ -1703,6 +1703,10 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 				}
 				else
 				{
+					if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
+					{
+						result = 0;
+					}
 					if( libfsfat_directory_entry_free(
 					     &safe_directory_entry,
 					     error ) != 1 )
@@ -1719,6 +1723,10 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 					break;
 				}
 				cluster_offset -= sizeof( fsfat_directory_entry_t );
+			}
+			if( result == 0 )
+			{
+				break;
 			}
 			if( libfsfat_allocation_table_get_cluster_number_by_index(
 			     file_system->reversed_allocation_table,
@@ -1845,6 +1853,10 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 				}
 				else
 				{
+					if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
+					{
+						result = 0;
+					}
 					if( libfsfat_directory_entry_free(
 					     &safe_directory_entry,
 					     error ) != 1 )
