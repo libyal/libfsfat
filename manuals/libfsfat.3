@@ -1,4 +1,4 @@
-.Dd August 15, 2022
+.Dd September 20, 2022
 .Dt libfsfat 3
 .Os libfsfat
 .Sh NAME
@@ -126,6 +126,10 @@ File entry functions
 .Fn libfsfat_file_entry_get_offset "libfsfat_file_entry_t *file_entry" "off64_t *offset" "libfsfat_error_t **error"
 .Ft int
 .Fn libfsfat_file_entry_get_size "libfsfat_file_entry_t *file_entry" "size64_t *size" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_number_of_extents "libfsfat_file_entry_t *file_entry" "int *number_of_extents" "libfsfat_error_t **error"
+.Ft int
+.Fn libfsfat_file_entry_get_extent_by_index "libfsfat_file_entry_t *file_entry" "int extent_index" "off64_t *extent_offset" "size64_t *extent_size" "uint32_t *extent_flags" "libfsfat_error_t **error"
 .Sh DESCRIPTION
 The
 .Fn libfsfat_get_version

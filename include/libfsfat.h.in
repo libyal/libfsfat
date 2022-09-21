@@ -554,6 +554,27 @@ int libfsfat_file_entry_get_size(
      size64_t *size,
      libfsfat_error_t **error );
 
+/* Retrieves the number of extents
+ * Returns 1 if successful or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_number_of_extents(
+     libfsfat_file_entry_t *file_entry,
+     int *number_of_extents,
+     libfsfat_error_t **error );
+
+/* Retrieves a specific extent
+ * Returns 1 if successful or -1 on error
+ */
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_extent_by_index(
+     libfsfat_file_entry_t *file_entry,
+     int extent_index,
+     off64_t *extent_offset,
+     size64_t *extent_size,
+     uint32_t *extent_flags,
+     libfsfat_error_t **error );
+
 #if defined( __cplusplus )
 }
 #endif

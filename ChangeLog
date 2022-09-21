@@ -10,12 +10,10 @@ TODO:
   - to expose short file name
   - to expose self directory entry
   - to expose parent directory entry
-  - to expose extents
   - to expose volume label last modification time
   - to expose volume identifier
 
 * implement Python bindings
-  - to expose extents
   - to expose volume label last modification time
   - to expose volume identifier
 

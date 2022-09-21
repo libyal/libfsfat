@@ -143,6 +143,19 @@ PyObject *pyfsfat_file_entry_get_size(
            pyfsfat_file_entry_t *pyfsfat_file_entry,
            PyObject *arguments );
 
+PyObject *pyfsfat_file_entry_get_number_of_extents(
+           pyfsfat_file_entry_t *pyfsfat_file_entry,
+           PyObject *arguments );
+
+PyObject *pyfsfat_file_entry_get_extent_by_index(
+           pyfsfat_file_entry_t *pyfsfat_file_entry,
+           int extent_index );
+
+PyObject *pyfsfat_file_entry_get_extent(
+           pyfsfat_file_entry_t *pyfsfat_file_entry,
+           PyObject *arguments,
+           PyObject *keywords );
+
 #if defined( __cplusplus )
 }
 #endif

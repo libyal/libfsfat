@@ -179,6 +179,21 @@ PyMethodDef pyfsfat_file_entry_object_methods[] = {
 	  "\n"
 	  "Retrieves the size of the data." },
 
+	{ "get_number_of_extents",
+	  (PyCFunction) pyfsfat_file_entry_get_number_of_extents,
+	  METH_NOARGS,
+	  "get_number_of_extents() -> Integer\n"
+	  "\n"
+	  "Retrieves the number of extents of the data." },
+
+	{ "get_extent",
+	  (PyCFunction) pyfsfat_file_entry_get_extent,
+	  METH_VARARGS | METH_KEYWORDS,
+	  "get_extent(extent_index) -> Tuple(Integer, Integer, Integer)\n"
+	  "\n"
+	  "Retrieves a specific extent.\t"
+          "The extent is a tuple of offset, size and flags." },
+
 	/* Sentinel */
 	{ NULL, NULL, 0, NULL }
 };
@@ -237,6 +252,12 @@ PyGetSetDef pyfsfat_file_entry_object_get_set_definitions[] = {
 	  (getter) pyfsfat_file_entry_get_size,
 	  (setter) 0,
 	  "The size of the data.",
+	  NULL },
+
+	{ "number_of_extents",
+	  (getter) pyfsfat_file_entry_get_number_of_extents,
+	  (setter) 0,
+	  "The number of extents of the data.",
 	  NULL },
 
 	/* Sentinel */
@@ -1987,5 +2008,195 @@ PyObject *pyfsfat_file_entry_get_size(
 	                  (uint64_t) size );
 
 	return( integer_object );
+}
+
+/* Retrieves the number of extents of the data
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyfsfat_file_entry_get_number_of_extents(
+           pyfsfat_file_entry_t *pyfsfat_file_entry,
+           PyObject *arguments PYFSFAT_ATTRIBUTE_UNUSED )
+{
+	PyObject *integer_object = NULL;
+	libcerror_error_t *error = NULL;
+	static char *function    = "pyfsfat_file_entry_get_number_of_extents";
+	int number_of_extents    = 0;
+	int result               = 0;
+
+	PYFSFAT_UNREFERENCED_PARAMETER( arguments )
+
+	if( pyfsfat_file_entry == NULL )
+	{
+		PyErr_Format(
+		 PyExc_ValueError,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libfsfat_file_entry_get_number_of_extents(
+	          pyfsfat_file_entry->file_entry,
+	          &number_of_extents,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result != 1 )
+	{
+		pyfsfat_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to retrieve number of extents of the data.",
+		 function );
+
+		libcerror_error_free(
+		 &error );
+
+		return( NULL );
+	}
+#if PY_MAJOR_VERSION >= 3
+	integer_object = PyLong_FromLong(
+	                  (long) number_of_extents );
+#else
+	integer_object = PyInt_FromLong(
+	                  (long) number_of_extents );
+#endif
+	return( integer_object );
+}
+
+/* Retrieves a specific extent by index
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyfsfat_file_entry_get_extent_by_index(
+           pyfsfat_file_entry_t *pyfsfat_file_entry,
+           int extent_index )
+{
+	libcerror_error_t *error = NULL;
+	PyObject *integer_object = NULL;
+	PyObject *tuple_object   = NULL;
+	static char *function    = "pyfsfat_file_entry_get_extent_by_index";
+	off64_t extent_offset    = 0;
+	size64_t extent_size     = 0;
+	uint32_t extent_flags    = 0;
+	int result               = 0;
+
+	if( pyfsfat_file_entry == NULL )
+	{
+		PyErr_Format(
+		 PyExc_ValueError,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( NULL );
+	}
+	Py_BEGIN_ALLOW_THREADS
+
+	result = libfsfat_file_entry_get_extent_by_index(
+	          pyfsfat_file_entry->file_entry,
+	          extent_index,
+	          &extent_offset,
+	          &extent_size,
+	          &extent_flags,
+	          &error );
+
+	Py_END_ALLOW_THREADS
+
+	if( result != 1 )
+	{
+		pyfsfat_error_raise(
+		 error,
+		 PyExc_IOError,
+		 "%s: unable to retrieve extent: %d.",
+		 function,
+		 extent_index );
+
+		libcerror_error_free(
+		 &error );
+
+		goto on_error;
+	}
+	tuple_object = PyTuple_New(
+                        3 );
+
+	integer_object = pyfsfat_integer_signed_new_from_64bit(
+	                  (int64_t) extent_offset );
+
+	/* Tuple set item does not increment the reference count of the integer object
+	 */
+	if( PyTuple_SetItem(
+	     tuple_object,
+	     0,
+	     integer_object ) != 0 )
+	{
+		goto on_error;
+	}
+	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
+	                  (uint64_t) extent_size );
+
+	/* Tuple set item does not increment the reference count of the integer object
+	 */
+	if( PyTuple_SetItem(
+	     tuple_object,
+	     1,
+	     integer_object ) != 0 )
+	{
+		goto on_error;
+	}
+	integer_object = pyfsfat_integer_unsigned_new_from_64bit(
+	                  (uint64_t) extent_flags );
+
+	/* Tuple set item does not increment the reference count of the integer object
+	 */
+	if( PyTuple_SetItem(
+	     tuple_object,
+	     2,
+	     integer_object ) != 0 )
+	{
+		goto on_error;
+	}
+	return( tuple_object );
+
+on_error:
+	if( integer_object != NULL )
+	{
+		Py_DecRef(
+		 (PyObject *) integer_object );
+	}
+	if( tuple_object != NULL )
+	{
+		Py_DecRef(
+		 (PyObject *) tuple_object );
+	}
+	return( NULL );
+}
+
+/* Retrieves a specific extent
+ * Returns a Python object if successful or NULL on error
+ */
+PyObject *pyfsfat_file_entry_get_extent(
+           pyfsfat_file_entry_t *pyfsfat_file_entry,
+           PyObject *arguments,
+           PyObject *keywords )
+{
+	PyObject *sequence_object   = NULL;
+	static char *keyword_list[] = { "extent_index", NULL };
+	int extent_index            = 0;
+
+	if( PyArg_ParseTupleAndKeywords(
+	     arguments,
+	     keywords,
+	     "i",
+	     keyword_list,
+	     &extent_index ) == 0 )
+	{
+		return( NULL );
+	}
+	sequence_object = pyfsfat_file_entry_get_extent_by_index(
+	                   pyfsfat_file_entry,
+	                   extent_index );
+
+	return( sequence_object );
 }
 

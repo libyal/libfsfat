@@ -245,6 +245,21 @@ int libfsfat_file_entry_get_size(
      size64_t *size,
      libcerror_error_t **error );
 
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_number_of_extents(
+     libfsfat_file_entry_t *file_entry,
+     int *number_of_extents,
+     libcerror_error_t **error );
+
+LIBFSFAT_EXTERN \
+int libfsfat_file_entry_get_extent_by_index(
+     libfsfat_file_entry_t *file_entry,
+     int extent_index,
+     off64_t *extent_offset,
+     size64_t *extent_size,
+     uint32_t *extent_flags,
+     libcerror_error_t **error );
+
 #if defined( __cplusplus )
 }
 #endif

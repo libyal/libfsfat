@@ -2335,19 +2335,42 @@ int libfsfat_file_entry_get_offset(
 		return( -1 );
 	}
 #endif
-	if( libfdata_stream_get_offset(
-	     internal_file_entry->cluster_block_stream,
-	     offset,
-	     error ) != 1 )
+	if( internal_file_entry->cluster_block_stream == NULL )
 	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve offset from cluster block stream.",
-		 function );
+		if( libfsfat_file_system_get_data_stream(
+		     internal_file_entry->file_system,
+		     internal_file_entry->cluster_number,
+		     internal_file_entry->data_size,
+		     &( internal_file_entry->cluster_block_stream ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve data stream: %" PRIu32 ".",
+			 function,
+			 internal_file_entry->cluster_number );
 
-		result = -1;
+			result = -1;
+		}
+	}
+	if( result != -1 )
+	{
+		if( libfdata_stream_get_offset(
+		     internal_file_entry->cluster_block_stream,
+		     offset,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve offset from cluster block stream.",
+			 function );
+
+			result = -1;
+		}
 	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_release_for_read(
@@ -2435,5 +2458,204 @@ int libfsfat_file_entry_get_size(
 	}
 #endif
 	return( 1 );
+}
+
+/* Retrieves the number of extents of the data
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_file_entry_get_number_of_extents(
+     libfsfat_file_entry_t *file_entry,
+     int *number_of_extents,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
+	static char *function                               = "libfsfat_file_entry_get_number_of_extents";
+	int result                                           = 1;
+
+	if( file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
+
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file_entry->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( internal_file_entry->cluster_block_stream == NULL )
+	{
+		if( libfsfat_file_system_get_data_stream(
+		     internal_file_entry->file_system,
+		     internal_file_entry->cluster_number,
+		     internal_file_entry->data_size,
+		     &( internal_file_entry->cluster_block_stream ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve data stream: %" PRIu32 ".",
+			 function,
+			 internal_file_entry->cluster_number );
+
+			result = -1;
+		}
+	}
+	if( result != -1 )
+	{
+		if( libfdata_stream_get_number_of_segments(
+		     internal_file_entry->cluster_block_stream,
+		     number_of_extents,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve number of segments from cluster block stream.",
+			 function );
+
+			result = -1;
+		}
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file_entry->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
+}
+
+/* Retrieves a specific extent of the data
+ * Returns 1 if successful or -1 on error
+ */
+int libfsfat_file_entry_get_extent_by_index(
+     libfsfat_file_entry_t *file_entry,
+     int extent_index,
+     off64_t *extent_offset,
+     size64_t *extent_size,
+     uint32_t *extent_flags,
+     libcerror_error_t **error )
+{
+	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
+	static char *function                               = "libfsfat_file_entry_get_extent_by_index";
+	int result                                          = 1;
+	int segment_file_index                              = 0;
+
+	if( file_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file entry.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
+
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_grab_for_read(
+	     internal_file_entry->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to grab read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	if( internal_file_entry->cluster_block_stream == NULL )
+	{
+		if( libfsfat_file_system_get_data_stream(
+		     internal_file_entry->file_system,
+		     internal_file_entry->cluster_number,
+		     internal_file_entry->data_size,
+		     &( internal_file_entry->cluster_block_stream ),
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve data stream: %" PRIu32 ".",
+			 function,
+			 internal_file_entry->cluster_number );
+
+			result = -1;
+		}
+	}
+	if( result != -1 )
+	{
+		if( libfdata_stream_get_segment_by_index(
+		     internal_file_entry->cluster_block_stream,
+		     extent_index,
+		     &segment_file_index,
+		     extent_offset,
+		     extent_size,
+		     extent_flags,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+			 "%s: unable to retrieve segment: %d from cluster block stream.",
+			 function,
+			 extent_index );
+
+			result = -1;
+		}
+	}
+#if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
+	if( libcthreads_read_write_lock_release_for_read(
+	     internal_file_entry->read_write_lock,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to release read/write lock for reading.",
+		 function );
+
+		return( -1 );
+	}
+#endif
+	return( result );
 }
 
