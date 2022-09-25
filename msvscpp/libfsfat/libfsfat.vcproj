@@ -218,6 +218,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\libfsfat\libfsfat_extent.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\libfsfat\libfsfat_file_entry.c"
 				>
 			</File>
@@ -305,6 +309,10 @@
 			</File>
 			<File
 				RelativePath="..\..\libfsfat\libfsfat_error.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libfsfat\libfsfat_extent.h"
 				>
 			</File>
 			<File

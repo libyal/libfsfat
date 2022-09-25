@@ -26,10 +26,12 @@
 #include "libfsfat_definitions.h"
 #include "libfsfat_directory.h"
 #include "libfsfat_directory_entry.h"
+#include "libfsfat_extent.h"
 #include "libfsfat_file_entry.h"
 #include "libfsfat_file_system.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
+#include "libfsfat_libcdata.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcthreads.h"
 #include "libfsfat_libfdata.h"
@@ -183,6 +185,20 @@ int libfsfat_file_entry_initialize(
 
 		return( -1 );
 	}
+	if( libcdata_array_initialize(
+	     &( internal_file_entry->data_extents_array ),
+	     0,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+		 "%s: unable to create data extents array.",
+		 function );
+
+		goto on_error;
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_initialize(
 	     &( internal_file_entry->read_write_lock ),
@@ -311,6 +327,20 @@ int libfsfat_file_entry_free(
 
 				result = -1;
 			}
+		}
+		if( libcdata_array_free(
+		     &( internal_file_entry->data_extents_array ),
+		     (int (*)(intptr_t **, libcerror_error_t **)) &libfsfat_extent_free,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to free data extents array.",
+			 function );
+
+			result = -1;
 		}
 		/* The file_io_handle, io_handle and directory_entry references are freed elsewhere
 		 */
@@ -2001,6 +2031,7 @@ ssize_t libfsfat_file_entry_read_buffer(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2116,6 +2147,7 @@ ssize_t libfsfat_file_entry_read_buffer_at_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2230,6 +2262,7 @@ off64_t libfsfat_file_entry_seek_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2341,6 +2374,7 @@ int libfsfat_file_entry_get_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2506,6 +2540,7 @@ int libfsfat_file_entry_get_number_of_extents(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2522,8 +2557,8 @@ int libfsfat_file_entry_get_number_of_extents(
 	}
 	if( result != -1 )
 	{
-		if( libfdata_stream_get_number_of_segments(
-		     internal_file_entry->cluster_block_stream,
+		if( libcdata_array_get_number_of_entries(
+		     internal_file_entry->data_extents_array,
 		     number_of_extents,
 		     error ) != 1 )
 		{
@@ -2566,10 +2601,10 @@ int libfsfat_file_entry_get_extent_by_index(
      uint32_t *extent_flags,
      libcerror_error_t **error )
 {
+	libfsfat_extent_t *extent                           = NULL;
 	libfsfat_internal_file_entry_t *internal_file_entry = NULL;
 	static char *function                               = "libfsfat_file_entry_get_extent_by_index";
 	int result                                          = 1;
-	int segment_file_index                              = 0;
 
 	if( file_entry == NULL )
 	{
@@ -2605,6 +2640,7 @@ int libfsfat_file_entry_get_extent_by_index(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
 		{
@@ -2621,13 +2657,10 @@ int libfsfat_file_entry_get_extent_by_index(
 	}
 	if( result != -1 )
 	{
-		if( libfdata_stream_get_segment_by_index(
-		     internal_file_entry->cluster_block_stream,
+		if( libcdata_array_get_entry_by_index(
+		     internal_file_entry->data_extents_array,
 		     extent_index,
-		     &segment_file_index,
-		     extent_offset,
-		     extent_size,
-		     extent_flags,
+		     (intptr_t **) &extent,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -2639,6 +2672,26 @@ int libfsfat_file_entry_get_extent_by_index(
 			 extent_index );
 
 			result = -1;
+		}
+		if( result == 1 )
+		{
+			if( libfsfat_extent_get_values(
+			     extent,
+			     extent_offset,
+			     extent_size,
+			     extent_flags,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+				 "%s: unable to retrieve extent: %d values.",
+				 function,
+				 extent_index );
+
+				result = -1;
+			}
 		}
 	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )

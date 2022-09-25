@@ -36,6 +36,7 @@ libfsfat_la_SOURCES = \
 	libfsfat_directory.c libfsfat_directory.h \
 	libfsfat_directory_entry.c libfsfat_directory_entry.h \
 	libfsfat_error.c libfsfat_error.h \
+	libfsfat_extent.c libfsfat_extent.h \
 	libfsfat_extern.h \
 	libfsfat_file_entry.c libfsfat_file_entry.h \
 	libfsfat_file_system.c libfsfat_file_system.h \

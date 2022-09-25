@@ -31,6 +31,7 @@
 #include "libfsfat_definitions.h"
 #include "libfsfat_directory.h"
 #include "libfsfat_directory_entry.h"
+#include "libfsfat_extent.h"
 #include "libfsfat_file_entry.h"
 #include "libfsfat_file_system.h"
 #include "libfsfat_libbfio.h"
@@ -2051,17 +2052,20 @@ int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
      uint32_t cluster_number,
      size64_t size,
+     libcdata_array_t *data_extents_array,
      libfdata_stream_t **data_stream,
      libcerror_error_t **error )
 {
 	libfdata_stream_t *safe_data_stream       = NULL;
 	libfsfat_block_tree_t *cluster_block_tree = NULL;
+	libfsfat_extent_t *extent                 = NULL;
 	static char *function                     = "libfsfat_file_system_get_data_stream";
 	size64_t segment_size                     = 0;
 	off64_t cluster_offset                    = 0;
 	off64_t segment_end_offset                = 0;
 	off64_t segment_start_offset              = 0;
 	uint32_t last_cluster_number              = 0;
+	int entry_index                           = 0;
 	int segment_index                         = 0;
 
 	if( file_system == NULL )
@@ -2215,6 +2219,39 @@ int libfsfat_file_system_get_data_stream(
 		{
 			segment_size = segment_end_offset - segment_start_offset;
 
+			if( libfsfat_extent_initialize(
+			     &extent,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+				 "%s: unable to create extent.",
+				 function );
+
+				goto on_error;
+			}
+			extent->offset = segment_start_offset;
+			extent->size   = segment_size;
+
+			if( libcdata_array_append_entry(
+			     data_extents_array,
+			     &entry_index,
+			     (intptr_t *) extent,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+				 "%s: unable to append data extent to array.",
+				 function );
+
+				goto on_error;
+			}
+			extent = NULL;
+
 			if( segment_size > size )
 			{
 				segment_size = size;
@@ -2270,6 +2307,39 @@ int libfsfat_file_system_get_data_stream(
 	{
 		segment_size = segment_end_offset - segment_start_offset;
 
+		if( libfsfat_extent_initialize(
+		     &extent,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create extent.",
+			 function );
+
+			goto on_error;
+		}
+		extent->offset = segment_start_offset;
+		extent->size   = segment_size;
+
+		if( libcdata_array_append_entry(
+		     data_extents_array,
+		     &entry_index,
+		     (intptr_t *) extent,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+			 "%s: unable to append data extent to array.",
+			 function );
+
+			goto on_error;
+		}
+		extent = NULL;
+
 		if( segment_size > size )
 		{
 			segment_size = size;
@@ -2312,6 +2382,12 @@ int libfsfat_file_system_get_data_stream(
 	return( 1 );
 
 on_error:
+	if( extent != NULL )
+	{
+		libfsfat_extent_free(
+		 &extent,
+		 NULL );
+	}
 	if( safe_data_stream != NULL )
 	{
 		libfdata_stream_free(

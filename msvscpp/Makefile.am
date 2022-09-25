@@ -7,6 +7,7 @@ MSVSCPP_FILES = \
 	fsfat_test_directory/fsfat_test_directory.vcproj \
 	fsfat_test_directory_entry/fsfat_test_directory_entry.vcproj \
 	fsfat_test_error/fsfat_test_error.vcproj \
+	fsfat_test_extent/fsfat_test_extent.vcproj \
 	fsfat_test_file_entry/fsfat_test_file_entry.vcproj \
 	fsfat_test_io_handle/fsfat_test_io_handle.vcproj \
 	fsfat_test_name/fsfat_test_name.vcproj \

@@ -31,6 +31,7 @@
 #include "libfsfat_file_system.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
+#include "libfsfat_libcdata.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcthreads.h"
 #include "libfsfat_types.h"
@@ -70,6 +71,10 @@ struct libfsfat_internal_file_entry
 	/* The cluster number
 	 */
 	uint32_t cluster_number;
+
+	/* Data extents array
+	 */
+	libcdata_array_t *data_extents_array;
 
 	/* The cluster block stream
 	 */

@@ -30,6 +30,7 @@
 #include "libfsfat_directory.h"
 #include "libfsfat_io_handle.h"
 #include "libfsfat_libbfio.h"
+#include "libfsfat_libcdata.h"
 #include "libfsfat_libcerror.h"
 #include "libfsfat_libcthreads.h"
 #include "libfsfat_libfcache.h"
@@ -132,6 +133,7 @@ int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
      uint32_t cluster_number,
      size64_t size,
+     libcdata_array_t *data_extents_array,
      libfdata_stream_t **data_stream,
      libcerror_error_t **error );
 

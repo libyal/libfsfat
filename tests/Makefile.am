@@ -54,6 +54,7 @@ check_PROGRAMS = \
 	fsfat_test_directory \
 	fsfat_test_directory_entry \
 	fsfat_test_error \
+	fsfat_test_extent \
 	fsfat_test_file_entry \
 	fsfat_test_io_handle \
 	fsfat_test_name \
@@ -176,6 +177,18 @@ fsfat_test_error_SOURCES = \
 
 fsfat_test_error_LDADD = \
 	../libfsfat/libfsfat.la
+
+fsfat_test_extent_SOURCES = \
+	fsfat_test_extent.c \
+	fsfat_test_libcerror.h \
+	fsfat_test_libfsfat.h \
+	fsfat_test_macros.h \
+	fsfat_test_memory.c fsfat_test_memory.h \
+	fsfat_test_unused.h
+
+fsfat_test_extent_LDADD = \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
 
 fsfat_test_file_entry_SOURCES = \
 	fsfat_test_file_entry.c \
