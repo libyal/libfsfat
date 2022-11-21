@@ -35,6 +35,7 @@ TESTS = \
 
 check_SCRIPTS = \
 	pyfsfat_test_support.py \
+	pyfsfat_test_volume.py \
 	test_fsfatinfo.sh \
 	test_library.sh \
 	test_manpage.sh \
