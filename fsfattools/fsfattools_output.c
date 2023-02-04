@@ -1,7 +1,7 @@
 /*
  * Common output functions for the fsfattools
  *
- * Copyright (C) 2021-2022, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2023, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -108,7 +108,7 @@ void fsfattools_output_copyright_fprint(
 	 */
 	fprintf(
 	 stream,
-	 _( "Copyright (C) 2021-2022, %s.\n" ),
+	 _( "Copyright (C) 2021-2023, %s.\n" ),
 	 _( "Joachim Metz" ) );
 
 	fprintf(
