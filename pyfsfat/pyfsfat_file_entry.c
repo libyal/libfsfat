@@ -991,7 +991,6 @@ PyObject *pyfsfat_file_entry_get_name(
 	PyObject *string_object  = NULL;
 	libcerror_error_t *error = NULL;
 	uint8_t *name            = NULL;
-	const char *errors       = NULL;
 	static char *function    = "pyfsfat_file_entry_get_name";
 	size_t name_size         = 0;
 	int result               = 0;
@@ -1043,7 +1042,7 @@ PyObject *pyfsfat_file_entry_get_name(
 	if( name == NULL )
 	{
 		PyErr_Format(
-		 PyExc_IOError,
+		 PyExc_MemoryError,
 		 "%s: unable to create name.",
 		 function );
 
@@ -1079,7 +1078,7 @@ PyObject *pyfsfat_file_entry_get_name(
 	string_object = PyUnicode_DecodeUTF8(
 			 (char *) name,
 			 (Py_ssize_t) name_size - 1,
-			 errors );
+			 NULL );
 
 	PyMem_Free(
 	 name );
