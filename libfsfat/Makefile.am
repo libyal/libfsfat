@@ -87,11 +87,13 @@ MAINTAINERCLEANFILES = \
 	Makefile.in
 
 distclean: clean
-	/bin/rm -f libfsfat_definitions.h
-	/bin/rm -f libfsfat.rc
-	/bin/rm -f Makefile
+	-rm -f libfsfat_definitions.h
+	-rm -f libfsfat.rc
+	-rm -f Makefile
 
-splint:
+sources-local: $(BUILT_SOURCES)
+
+splint-local:
 	@echo "Running splint on libfsfat ..."
 	-splint -preproc -redef $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(libfsfat_la_SOURCES)
 

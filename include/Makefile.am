@@ -19,9 +19,9 @@ MAINTAINERCLEANFILES = \
 	Makefile.in
 
 distclean: clean
-	/bin/rm -f libfsfat.h
-	/bin/rm -f libfsfat/definitions.h
-	/bin/rm -f libfsfat/features.h
-	/bin/rm -f libfsfat/types.h
-	/bin/rm -f Makefile
+	-rm -f libfsfat.h
+	-rm -f libfsfat/definitions.h
+	-rm -f libfsfat/features.h
+	-rm -f libfsfat/types.h
+	-rm -f Makefile
 
