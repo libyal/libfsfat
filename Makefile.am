@@ -21,8 +21,6 @@ SUBDIRS = \
 	libhmac \
 	fsfattools \
 	pyfsfat \
-	pyfsfat-python2 \
-	pyfsfat-python3 \
 	po \
 	manuals \
 	tests \

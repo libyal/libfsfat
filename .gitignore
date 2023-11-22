@@ -1,6 +1,6 @@
 # Files to ignore by git
 #
-# Version: 20230926
+# Version: 20231119
 
 # Generic auto-generated build files
 *~
@@ -127,7 +127,6 @@ stamp-h[1-9]
 /libfsfat.spec
 /libfsfat/libfsfat.rc
 /libfsfat/libfsfat_definitions.h
-/pyfsfat-python[23]/*.[ch]
 /setup.cfg
 /fsfattools/*.exe
 /fsfattools/fsfatinfo

@@ -40,7 +40,7 @@ void (*fsfattools_signal_signal_handler)( fsfattools_signal_t ) = NULL;
 /* Signal handler for Ctrl+C or Ctrl+Break signals
  */
 BOOL WINAPI fsfattools_signal_handler(
-             unsigned long signal )
+             fsfattools_signal_t signal )
 {
 	static char *function = "fsfattools_signal_handler";
 
@@ -112,7 +112,7 @@ int fsfattools_signal_attach(
 	fsfattools_signal_signal_handler = signal_handler;
 
 	if( SetConsoleCtrlHandler(
-	     fsfattools_signal_handler,
+	     (PHANDLER_ROUTINE) fsfattools_signal_handler,
 	     TRUE ) == 0 )
 	{
 		libcerror_error_set(
@@ -179,7 +179,7 @@ int fsfattools_signal_detach(
 	static char *function = "fsfattools_signal_detach";
 
 	if( SetConsoleCtrlHandler(
-	     fsfattools_signal_handler,
+	     (PHANDLER_ROUTINE) fsfattools_signal_handler,
 	     FALSE ) == 0 )
 	{
 		libcerror_error_set(
