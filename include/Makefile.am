@@ -15,13 +15,11 @@ EXTRA_DIST = \
 	libfsfat/features.h.in \
 	libfsfat/types.h.in
 
-MAINTAINERCLEANFILES = \
+DISTCLEANFILES = \
+	libfsfat.h \
+	libfsfat/definitions.h \
+	libfsfat/features.h \
+	libfsfat/types.h \
+	Makefile \
 	Makefile.in
-
-distclean: clean
-	-rm -f libfsfat.h
-	-rm -f libfsfat/definitions.h
-	-rm -f libfsfat/features.h
-	-rm -f libfsfat/types.h
-	-rm -f Makefile
 
