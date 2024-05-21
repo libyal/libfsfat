@@ -14,6 +14,7 @@ MSVSCPP_FILES = \
 	fsfat_test_notify/fsfat_test_notify.vcproj \
 	fsfat_test_support/fsfat_test_support.vcproj \
 	fsfat_test_tools_info_handle/fsfat_test_tools_info_handle.vcproj \
+	fsfat_test_tools_mount_path_string/fsfat_test_tools_mount_path_string.vcproj \
 	fsfat_test_tools_output/fsfat_test_tools_output.vcproj \
 	fsfat_test_tools_signal/fsfat_test_tools_signal.vcproj \
 	fsfat_test_volume/fsfat_test_volume.vcproj \

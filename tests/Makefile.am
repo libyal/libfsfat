@@ -62,6 +62,7 @@ check_PROGRAMS = \
 	fsfat_test_notify \
 	fsfat_test_support \
 	fsfat_test_tools_info_handle \
+	fsfat_test_tools_mount_path_string \
 	fsfat_test_tools_output \
 	fsfat_test_tools_signal \
 	fsfat_test_volume
@@ -289,6 +290,19 @@ fsfat_test_tools_info_handle_LDADD = \
 	@LIBCERROR_LIBADD@ \
 	@LIBCRYPTO_LIBADD@ \
 	@LIBDL_LIBADD@
+
+fsfat_test_tools_mount_path_string_SOURCES = \
+	../fsfattools/mount_path_string.c ../fsfattools/mount_path_string.h \
+	fsfat_test_libcerror.h \
+	fsfat_test_libcpath.h \
+	fsfat_test_macros.h \
+	fsfat_test_tools_mount_path_string.c \
+	fsfat_test_unused.h
+
+fsfat_test_tools_mount_path_string_LDADD = \
+	@LIBUNA_LIBADD@ \
+	../libfsfat/libfsfat.la \
+	@LIBCERROR_LIBADD@
 
 fsfat_test_tools_output_SOURCES = \
 	../fsfattools/fsfattools_output.c ../fsfattools/fsfattools_output.h \

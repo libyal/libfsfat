@@ -1,5 +1,5 @@
 /*
- * Shows information obtained from a File Allocation Table (FAT) file system volume
+ * Shows information obtained from a File Allocation Table (FAT) file system volume.
  *
  * Copyright (C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>
  *
@@ -162,7 +162,7 @@ int main( int argc, char * const argv[] )
 	 1 );
 
 	if( libclocale_initialize(
-             "fsfattools",
+	     "fsfattools",
 	     &error ) != 1 )
 	{
 		fprintf(
@@ -171,9 +171,9 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-        if( fsfattools_output_initialize(
-             _IONBF,
-             &error ) != 1 )
+	if( fsfattools_output_initialize(
+	     _IONBF,
+	     &error ) != 1 )
 	{
 		fprintf(
 		 stderr,
