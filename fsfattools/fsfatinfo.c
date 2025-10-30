@@ -1,7 +1,7 @@
 /*
  * Shows information obtained from a File Allocation Table (FAT) file system volume.
  *
- * Copyright (C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *

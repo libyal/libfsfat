@@ -1,7 +1,7 @@
 /*
  * Python object definition of the libfsfat file system formats
  *
- * Copyright (C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *

@@ -1,7 +1,7 @@
 /*
  * Mount file entry
  *
- * Copyright (C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -252,13 +252,11 @@ int mount_file_entry_get_creation_time(
      uint64_t *creation_time,
      libcerror_error_t **error )
 {
-	static char *function  = "mount_file_entry_get_creation_time";
-	uint64_t fat_timestamp = 0;
+	static char *function = "mount_file_entry_get_creation_time";
+	uint64_t filetime     = 0;
 
-#if defined( WINAPI )
-	uint64_t filetime      = 0;
-#else
-	int64_t posix_time     = 0;
+#if !defined( WINAPI )
+	int64_t posix_time    = 0;
 #endif
 
 	if( file_entry == NULL )
@@ -285,7 +283,7 @@ int mount_file_entry_get_creation_time(
 	}
 	if( libfsfat_file_entry_get_creation_time(
 	     file_entry->fsfat_file_entry,
-	     &fat_timestamp,
+	     &filetime,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -298,15 +296,13 @@ int mount_file_entry_get_creation_time(
 		return( -1 );
 	}
 #if defined( WINAPI )
-	if( fat_timestamp != 0 )
-	{
-		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
-	}
 	*creation_time = filetime;
 #else
-	if( fat_timestamp != 0 )
+	if( filetime != 0 )
 	{
-		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+		/* Convert the FILETIME timestamp into a POSIX nanoseconds timestamp
+		 */
+		posix_time = ( (int64_t) filetime - 116444736000000000L ) * 100;
 	}
 	*creation_time = (uint64_t) posix_time;
 #endif
@@ -323,13 +319,11 @@ int mount_file_entry_get_access_time(
      uint64_t *access_time,
      libcerror_error_t **error )
 {
-	static char *function  = "mount_file_entry_get_access_time";
-	uint64_t fat_timestamp = 0;
+	static char *function = "mount_file_entry_get_access_time";
+	uint64_t filetime     = 0;
 
-#if defined( WINAPI )
-	uint64_t filetime      = 0;
-#else
-	int64_t posix_time     = 0;
+#if !defined( WINAPI )
+	int64_t posix_time    = 0;
 #endif
 
 	if( file_entry == NULL )
@@ -356,7 +350,7 @@ int mount_file_entry_get_access_time(
 	}
 	if( libfsfat_file_entry_get_access_time(
 	     file_entry->fsfat_file_entry,
-	     &fat_timestamp,
+	     &filetime,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -369,15 +363,13 @@ int mount_file_entry_get_access_time(
 		return( -1 );
 	}
 #if defined( WINAPI )
-	if( fat_timestamp != 0 )
-	{
-		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
-	}
 	*access_time = filetime;
 #else
-	if( fat_timestamp != 0 )
+	if( filetime != 0 )
 	{
-		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+		/* Convert the FILETIME timestamp into a POSIX nanoseconds timestamp
+		 */
+		posix_time = ( (int64_t) filetime - 116444736000000000L ) * 100;
 	}
 	*access_time = (uint64_t) posix_time;
 #endif
@@ -394,13 +386,11 @@ int mount_file_entry_get_modification_time(
      uint64_t *modification_time,
      libcerror_error_t **error )
 {
-	static char *function  = "mount_file_entry_get_modification_time";
-	uint64_t fat_timestamp = 0;
+	static char *function = "mount_file_entry_get_modification_time";
+	uint64_t filetime     = 0;
 
-#if defined( WINAPI )
-	uint64_t filetime      = 0;
-#else
-	int64_t posix_time     = 0;
+#if !defined( WINAPI )
+	int64_t posix_time    = 0;
 #endif
 
 	if( file_entry == NULL )
@@ -427,7 +417,7 @@ int mount_file_entry_get_modification_time(
 	}
 	if( libfsfat_file_entry_get_modification_time(
 	     file_entry->fsfat_file_entry,
-	     &fat_timestamp,
+	     &filetime,
 	     error ) != 1 )
 	{
 		libcerror_error_set(
@@ -440,15 +430,13 @@ int mount_file_entry_get_modification_time(
 		return( -1 );
 	}
 #if defined( WINAPI )
-	if( fat_timestamp != 0 )
-	{
-		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
-	}
 	*modification_time = filetime;
 #else
-	if( fat_timestamp != 0 )
+	if( filetime != 0 )
 	{
-		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+		/* Convert the FILETIME timestamp into a POSIX nanoseconds timestamp
+		 */
+		posix_time = ( (int64_t) filetime - 116444736000000000L ) * 100;
 	}
 	*modification_time = (uint64_t) posix_time;
 #endif
@@ -478,19 +466,20 @@ int mount_file_entry_get_inode_change_time(
 
 		return( -1 );
 	}
-	if( inode_change_time == NULL )
+	if( mount_file_system_get_mounted_timestamp(
+	     file_entry->file_system,
+	     inode_change_time,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid inode change time.",
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve mounted timestamp.",
 		 function );
 
 		return( -1 );
 	}
-	*inode_change_time = 0;
-
 	return( 1 );
 }
 
@@ -502,8 +491,7 @@ int mount_file_entry_get_file_mode(
      uint16_t *file_mode,
      libcerror_error_t **error )
 {
-	static char *function         = "mount_file_entry_get_file_mode";
-	uint16_t file_attribute_flags = 0;
+	static char *function = "mount_file_entry_get_file_mode";
 
 	if( file_entry == NULL )
 	{
@@ -527,21 +515,9 @@ int mount_file_entry_get_file_mode(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_file_attribute_flags(
-	     file_entry->fsfat_file_entry,
-	     &file_attribute_flags,
-	     error ) != 1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-		 "%s: unable to retrieve file attribute flags.",
-		 function );
+/* TODO implement */
 
-		return( -1 );
-	}
-	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
+	if( file_entry->fsfat_file_entry == NULL )
 	{
 		*file_mode = S_IFDIR | 0555;
 	}
@@ -724,9 +700,9 @@ int mount_file_entry_get_sub_file_entry_by_index(
      libcerror_error_t **error )
 {
 	libfsfat_file_entry_t *sub_fsfat_file_entry = NULL;
-	system_character_t *filename                  = NULL;
-	static char *function                         = "mount_file_entry_get_sub_file_entry_by_index";
-	size_t filename_size                          = 0;
+	system_character_t *filename                = NULL;
+	static char *function                       = "mount_file_entry_get_sub_file_entry_by_index";
+	size_t filename_size                        = 0;
 
 	if( file_entry == NULL )
 	{

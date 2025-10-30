@@ -30,6 +30,6 @@ jobs:
         head -n 20 projects/libyal/Dockerfile > projects/libfsfat/Dockerfile
         echo "RUN git clone --depth 1 https://github.com/libyal/libfsfat.git libfsfat" >> projects/libfsfat/Dockerfile
         tail -n 3 projects/libyal/Dockerfile >> projects/libfsfat/Dockerfile
-        python3 infra/helper.py build_image --pull libfsfat 
+        python3 infra/helper.py build_image --pull libfsfat
         python3 infra/helper.py build_fuzzers --sanitizer address libfsfat
         python3 infra/helper.py check_build libfsfat

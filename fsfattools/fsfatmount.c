@@ -1,7 +1,7 @@
 /*
  * Mounts a File Allocation Table (FAT) file system volume.
  *
- * Copyright (C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -64,12 +64,12 @@ void usage_fprint(
 	{
 		return;
 	}
-	fprintf( stream, "Use fsfatmount to mount an Extended File System (ext) volume\n\n" );
+	fprintf( stream, "Use fsfatmount to mount a File Allocation Table (FAT) file system volume\n\n" );
 
-	fprintf( stream, "Usage: fsfatmount [ -o offset ] [ -X extended_options ]\n"
-	                 "                  [ -hvV ] volume mount_point\n\n" );
+	fprintf( stream, "Usage: fsfatmount [ -o offset ] [ -X extended_options ] [ -hvV ] volume\n"
+	                 "                  mount_point\n\n" );
 
-	fprintf( stream, "\tvolume:      an Extended File System (ext) volume\n\n" );
+	fprintf( stream, "\tvolume:      a File Allocation Table (FAT) file system volume\n\n" );
 	fprintf( stream, "\tmount_point: the directory to serve as mount point\n\n" );
 
 	fprintf( stream, "\t-h:          shows this help\n" );
@@ -149,13 +149,13 @@ int main( int argc, char * const argv[] )
 	/* Need to set this to 1 even if there no arguments, otherwise this causes
 	 * fuse: empty argv passed to fuse_session_new()
 	 */
-	char *fuse_argv[ 2 ]                        = { program, NULL };
-	struct fuse_args fsfatmount_fuse_arguments  = FUSE_ARGS_INIT(1, fuse_argv);
+	char *fuse_argv[ 2 ]                       = { program, NULL };
+	struct fuse_args fsfatmount_fuse_arguments = FUSE_ARGS_INIT(1, fuse_argv);
 #else
-	struct fuse_args fsfatmount_fuse_arguments  = FUSE_ARGS_INIT(0, NULL);
-	struct fuse_chan *fsfatmount_fuse_channel   = NULL;
+	struct fuse_args fsfatmount_fuse_arguments = FUSE_ARGS_INIT(0, NULL);
+	struct fuse_chan *fsfatmount_fuse_channel  = NULL;
 #endif
-	struct fuse *fsfatmount_fuse_handle         = NULL;
+	struct fuse *fsfatmount_fuse_handle        = NULL;
 
 #elif defined( HAVE_LIBDOKAN )
 	DOKAN_OPERATIONS fsfatmount_dokan_operations;
@@ -311,6 +311,11 @@ int main( int argc, char * const argv[] )
 #if defined( HAVE_LIBFUSE ) || defined( HAVE_LIBFUSE3 ) || defined( HAVE_LIBOSXFUSE )
 	if( option_extended_options != NULL )
 	{
+#if defined( HAVE_LIBFUSE3 )
+		// fuse_opt_add_arg: Assertion `!args->argv || args->allocated' failed.
+		fsfatmount_fuse_arguments.argc = 0;
+		fsfatmount_fuse_arguments.argv = NULL;
+#endif
 		/* This argument is required but ignored
 		 */
 		if( fuse_opt_add_arg(
@@ -358,13 +363,10 @@ int main( int argc, char * const argv[] )
 	fsfatmount_fuse_operations.open       = &mount_fuse_open;
 	fsfatmount_fuse_operations.read       = &mount_fuse_read;
 	fsfatmount_fuse_operations.release    = &mount_fuse_release;
-	fsfatmount_fuse_operations.getxattr   = NULL;
-	fsfatmount_fuse_operations.listxattr  = NULL;
 	fsfatmount_fuse_operations.opendir    = &mount_fuse_opendir;
 	fsfatmount_fuse_operations.readdir    = &mount_fuse_readdir;
 	fsfatmount_fuse_operations.releasedir = &mount_fuse_releasedir;
 	fsfatmount_fuse_operations.getattr    = &mount_fuse_getattr;
-	fsfatmount_fuse_operations.readlink   = NULL;
 	fsfatmount_fuse_operations.destroy    = &mount_fuse_destroy;
 
 #if defined( HAVE_LIBFUSE3 )
@@ -486,7 +488,6 @@ int main( int argc, char * const argv[] )
 #else
 	fsfatmount_dokan_options.ThreadCount  = 0;
 #endif
-
 	if( verbose != 0 )
 	{
 		fsfatmount_dokan_options.Options |= DOKAN_OPTION_STDERR;
@@ -619,7 +620,7 @@ int main( int argc, char * const argv[] )
 #else
 	fprintf(
 	 stderr,
-	 "No sub system to mount FAT format.\n" );
+	 "No sub system to mount File Allocation Table (FAT) file system format.\n" );
 
 	return( EXIT_FAILURE );
 

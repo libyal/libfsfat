@@ -1,7 +1,7 @@
 /*
  * Mount file system
  *
- * Copyright (C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -260,7 +260,22 @@ int mount_file_system_signal_abort(
 
 		return( -1 );
 	}
-/* TODO implement */
+	if( file_system->fsfat_volume != NULL )
+	{
+		if( libfsfat_volume_signal_abort(
+		     file_system->fsfat_volume,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+			 "%s: unable to signal volume to abort.",
+			 function );
+
+			return( -1 );
+		}
+	}
 	return( 1 );
 }
 

@@ -24,7 +24,7 @@ BEGIN
       VALUE "FileDescription",		"Library to support the File Allocation Table (FAT) file system format\0"
       VALUE "FileVersion",		"@VERSION@" "\0"
       VALUE "InternalName",		"libfsfat.dll\0"
-      VALUE "LegalCopyright",		"(C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>\0"
+      VALUE "LegalCopyright",		"(C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>\0"
       VALUE "OriginalFilename",		"libfsfat.dll\0"
       VALUE "ProductName",		"libfsfat\0"
       VALUE "ProductVersion",		"@VERSION@" "\0"

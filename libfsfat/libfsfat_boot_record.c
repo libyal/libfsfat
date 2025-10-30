@@ -1,7 +1,7 @@
 /*
  * The boot record functions
  *
- * Copyright (C) 2021-2024, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -832,9 +832,7 @@ int libfsfat_boot_record_read_data(
 		boot_record->first_cluster_offset     = (off64_t) number_of_reserved_sectors + ( (off64_t) number_of_allocation_tables * allocation_table_size );
 		boot_record->first_cluster_offset    *= boot_record->bytes_per_sector;
 
-		if( ( number_of_root_directory_entries != 0 )
-		 || ( total_number_of_sectors_16bit != 0 )
-		 || ( allocation_table_size_16bit != 0 ) )
+		if( boot_record->root_directory_cluster == 0 )
 		{
 			boot_record->root_directory_offset = boot_record->first_cluster_offset;
 			boot_record->root_directory_size   = (size64_t) number_of_root_directory_entries * 32;
