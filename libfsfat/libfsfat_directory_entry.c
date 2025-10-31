@@ -1797,7 +1797,7 @@ int libfsfat_directory_entry_get_name_from_vfat_long_file_name_entries(
 		goto on_error;
 	}
 	if( ( number_of_entries == 0 )
-	 || ( number_of_entries > 10 ) )
+	 || ( number_of_entries > 20 ) )
 	{
 		libcerror_error_set(
 		 error,
