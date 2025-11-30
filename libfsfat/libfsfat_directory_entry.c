@@ -321,12 +321,13 @@ int libfsfat_directory_entry_read_data(
      uint8_t file_system_format,
      libcerror_error_t **error )
 {
-	static char *function = "libfsfat_directory_entry_read_data";
+	static char *function             = "libfsfat_directory_entry_read_data";
+	uint16_t data_start_cluster_upper = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
-	uint64_t value_64bit  = 0;
-	uint32_t value_32bit  = 0;
-	uint16_t value_16bit  = 0;
+	uint64_t value_64bit              = 0;
+	uint32_t value_32bit              = 0;
+	uint16_t value_16bit              = 0;
 #endif
 
 	if( directory_entry == NULL )
@@ -499,9 +500,17 @@ int libfsfat_directory_entry_read_data(
 		 directory_entry->modification_time );
 
 		byte_stream_copy_to_uint16_little_endian(
-		 ( (fsfat_directory_entry_t *) data )->data_start_cluster,
+		 ( (fsfat_directory_entry_t *) data )->data_start_cluster_lower,
 		 directory_entry->data_start_cluster );
 
+		if( file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
+		{
+			byte_stream_copy_to_uint16_little_endian(
+			 ( (fsfat_directory_entry_t *) data )->data_start_cluster_upper,
+			 data_start_cluster_upper );
+
+			directory_entry->data_start_cluster |= (uint32_t) data_start_cluster_upper << 16;
+		}
 		byte_stream_copy_to_uint32_little_endian(
 		 ( (fsfat_directory_entry_t *) data )->data_size,
 		 directory_entry->data_size );
@@ -581,13 +590,23 @@ int libfsfat_directory_entry_read_data(
 				return( -1 );
 			}
 			byte_stream_copy_to_uint16_little_endian(
-			 ( (fsfat_directory_entry_t *) data )->unknown3,
-			 value_16bit );
-			libcnotify_printf(
-			 "%s: unknown3\t\t\t\t: 0x%04" PRIx16 "\n",
-			 function,
+			 ( (fsfat_directory_entry_t *) data )->data_start_cluster_upper,
 			 value_16bit );
 
+			if( file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
+			{
+				libcnotify_printf(
+				 "%s: data start cluster (upper)\t\t: %" PRIu16 "\n",
+				 function,
+				 value_16bit );
+			}
+			else
+			{
+				libcnotify_printf(
+				 "%s: unknown3\t\t\t\t: 0x%04" PRIx16 "\n",
+				 function,
+				 value_16bit );
+			}
 			if( libfsfat_debug_print_fat_date_time_value(
 			     function,
 			     "modification time\t\t\t",
@@ -607,11 +626,24 @@ int libfsfat_directory_entry_read_data(
 
 				return( -1 );
 			}
-			libcnotify_printf(
-			 "%s: data start cluster\t\t\t: %" PRIu32 "\n",
-			 function,
-			 directory_entry->data_start_cluster );
+			byte_stream_copy_to_uint16_little_endian(
+			 ( (fsfat_directory_entry_t *) data )->data_start_cluster_lower,
+			 value_16bit );
 
+			if( file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
+			{
+				libcnotify_printf(
+				 "%s: data start cluster (lower)\t\t: %" PRIu16 "\n",
+				 function,
+				 value_16bit );
+			}
+			else
+			{
+				libcnotify_printf(
+				 "%s: data start cluster\t\t\t: %" PRIu16 "\n",
+				 function,
+				 value_16bit );
+			}
 			libcnotify_printf(
 			 "%s: data size\t\t\t\t: %" PRIu64 "\n",
 			 function,

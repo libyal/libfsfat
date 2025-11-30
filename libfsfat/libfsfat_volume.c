@@ -1053,8 +1053,10 @@ int libfsfat_internal_volume_open_read(
 	if( libcnotify_verbose != 0 )
 	{
 		libcnotify_printf(
-		 "%s: reading allocation table.\n",
-		 function );
+		 "%s: reading allocation table at offset: %" PRIi64 " (0x%08" PRIx64 ").\n",
+		 function,
+		 boot_record->allocation_table_offset,
+		 boot_record->allocation_table_offset );
 	}
 #endif
 	if( libfsfat_file_system_read_allocation_table(

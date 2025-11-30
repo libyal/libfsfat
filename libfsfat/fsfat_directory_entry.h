@@ -73,10 +73,10 @@ struct fsfat_directory_entry
 	 */
 	uint8_t access_date[ 2 ];
 
-	/* Unknown
+	/* The data start cluster, upper 16-bits
 	 * Consists of 2 bytes
 	 */
-	uint8_t unknown3[ 2 ];
+	uint8_t data_start_cluster_upper[ 2 ];
 
 	/* The (last) modification time
 	 * Consists of 2 bytes
@@ -88,10 +88,10 @@ struct fsfat_directory_entry
 	 */
 	uint8_t modification_date[ 2 ];
 
-	/* The data start cluster
+	/* The data start cluster, lower 16-bits
 	 * Consists of 2 bytes
 	 */
-	uint8_t data_start_cluster[ 2 ];
+	uint8_t data_start_cluster_lower[ 2 ];
 
 	/* The data size
 	 * Consists of 4 bytes
