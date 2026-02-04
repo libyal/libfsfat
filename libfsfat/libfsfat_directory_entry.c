@@ -1,7 +1,7 @@
 /*
  * The directory entry functions
  *
- * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2026, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -475,8 +475,8 @@ int libfsfat_directory_entry_read_data(
 
 			return( -1 );
 		}
-		directory_entry->file_attribute_flags = ( (fsfat_directory_entry_t *) data )->file_attribute_flags;
-
+		directory_entry->file_attribute_flags   = ( (fsfat_directory_entry_t *) data )->file_attribute_flags;
+		directory_entry->flags                  = ( (fsfat_directory_entry_t *) data )->flags;
 		directory_entry->creation_time_fraction = ( (fsfat_directory_entry_t *) data )->creation_time_fraction;
 
 		byte_stream_copy_to_uint16_little_endian(
@@ -547,9 +547,9 @@ int libfsfat_directory_entry_read_data(
 			 "\n" );
 
 			libcnotify_printf(
-			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: flags\t\t\t\t: 0x%02" PRIx8 "\n",
 			 function,
-			 ( (fsfat_directory_entry_t *) data )->unknown1 );
+			 ( (fsfat_directory_entry_t *) data )->flags );
 
 			if( libfsfat_debug_print_fat_date_time_value(
 			     function,
@@ -1430,6 +1430,7 @@ int libfsfat_directory_entry_get_name(
 	size_t name_data_offset = 0;
 	size_t name_offset      = 0;
 	size_t name_size        = 0;
+	uint8_t byte_value      = 0;
 
 	if( directory_entry == NULL )
 	{
@@ -1504,7 +1505,14 @@ int libfsfat_directory_entry_get_name(
 			{
 				break;
 			}
-			directory_entry->name[ name_offset++ ] = directory_entry->name_data[ name_data_offset ];
+			byte_value = directory_entry->name_data[ name_data_offset ];
+
+			if( ( ( directory_entry->flags & 0x08 ) != 0 )
+			 && ( ( byte_value >= 'A' ) && ( byte_value <= 'Z' ) ) )
+			{
+				byte_value +=  0x20;
+			}
+			directory_entry->name[ name_offset++ ] = byte_value;
 		}
 		for( name_data_offset = 8;
 		     name_data_offset < 8 + 3;
@@ -1519,7 +1527,14 @@ int libfsfat_directory_entry_get_name(
 			{
 				directory_entry->name[ name_offset++ ] = '.';
 			}
-			directory_entry->name[ name_offset++ ] = directory_entry->name_data[ name_data_offset ];
+			byte_value = directory_entry->name_data[ name_data_offset ];
+
+			if( ( ( directory_entry->flags & 0x10 ) != 0 )
+			 && ( ( byte_value >= 'A' ) && ( byte_value <= 'Z' ) ) )
+			{
+				byte_value +=  0x20;
+			}
+			directory_entry->name[ name_offset++ ] = byte_value;
 		}
 		directory_entry->name[ name_offset++ ] = 0;
 		directory_entry->name_size             = name_offset;

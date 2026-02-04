@@ -1,7 +1,7 @@
 /*
  * The directory entry functions
  *
- * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2026, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -128,6 +128,10 @@ struct libfsfat_directory_entry
 	/* The valid data size
 	 */
 	uint64_t valid_data_size;
+
+	/* The flags
+	 */
+	uint8_t flags;
 };
 
 int libfsfat_directory_entry_initialize(

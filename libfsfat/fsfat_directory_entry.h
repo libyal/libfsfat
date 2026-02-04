@@ -1,7 +1,7 @@
 /*
  * Master Boot Record (MBR) directory entry definitions
  *
- * Copyright (C) 2021-2025, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2021-2026, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
@@ -48,10 +48,10 @@ struct fsfat_directory_entry
 	 */
 	uint8_t file_attribute_flags;
 
-	/* Unknown
+	/* Flags
 	 * Consists of 1 byte
 	 */
-	uint8_t unknown1;
+	uint8_t flags;
 
 	/* The creation time fraction of seconds
 	 * Consists of 1 byte
