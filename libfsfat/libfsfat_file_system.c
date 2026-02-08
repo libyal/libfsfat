@@ -1595,6 +1595,17 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 
 		goto on_error;
 	}
+	if( ( current_file_entry->file_attribute_flags & 0x58 ) == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
+		 "%s: unsupported directory entry type.",
+		 function );
+
+		goto on_error;
+	}
 	current_file_entry->identifier = identifier;
 
 	cluster_number     = ( identifier / file_system->io_handle->cluster_block_size );
@@ -2579,7 +2590,7 @@ int libfsfat_file_system_get_root_directory(
 	     file_system->io_handle,
 	     file_io_handle,
 	     file_system,
-	     file_system->io_handle->root_directory_offset,
+	     0,
 	     NULL,
 	     file_system->root_directory,
 	     error ) != 1 )
