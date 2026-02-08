@@ -776,7 +776,7 @@ int libfsfat_file_system_read_directory(
 			}
 			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 			{
-				if( ( directory_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 )
+				if( ( directory_entry->file_attribute_flags & 0x58 ) == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
 				{
 					if( safe_directory->volume_label_entry != NULL )
 					{
@@ -1280,7 +1280,7 @@ int libfsfat_file_system_read_directory_by_range(
 		}
 		if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_SHORT_NAME )
 		{
-			if( directory_entry->file_attribute_flags == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
+			if( ( directory_entry->file_attribute_flags & 0x58 ) == LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL )
 			{
 				if( safe_directory->volume_label_entry != NULL )
 				{
@@ -2633,7 +2633,7 @@ int libfsfat_file_system_get_file_entry_by_identifier(
 
 		return( -1 );
 	}
-	if( (off64_t) identifier == file_system->io_handle->root_directory_offset )
+	if( (off64_t) identifier == 0 )
 	{
 		directory = file_system->root_directory;
 	}
@@ -2862,11 +2862,7 @@ int libfsfat_file_system_get_file_entry_by_utf8_path(
 			goto on_error;
 		}
 	}
-	if( directory_entry == NULL )
-	{
-		identifier = file_system->io_handle->root_directory_offset;
-	}
-	else
+	if( directory_entry != NULL )
 	{
 		if( libfsfat_directory_entry_get_identifier(
 		     directory_entry,
@@ -3103,11 +3099,7 @@ int libfsfat_file_system_get_file_entry_by_utf16_path(
 			goto on_error;
 		}
 	}
-	if( directory_entry == NULL )
-	{
-		identifier = file_system->io_handle->root_directory_offset;
-	}
-	else
+	if( directory_entry != NULL )
 	{
 		if( libfsfat_directory_entry_get_identifier(
 		     directory_entry,
