@@ -748,8 +748,9 @@ int libfsfat_boot_record_read_data(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid bytes per sector value out of bounds.",
-			 function );
+			 "%s: invalid bytes per sector value out of bounds: %" PRIu16 ".",
+			 function,
+			 boot_record->bytes_per_sector );
 
 			return( -1 );
 		}
@@ -778,14 +779,18 @@ int libfsfat_boot_record_read_data(
 		if( ( boot_record->bytes_per_sector != 512 )
 		 && ( boot_record->bytes_per_sector != 1024 )
 		 && ( boot_record->bytes_per_sector != 2048 )
-		 && ( boot_record->bytes_per_sector != 4096 ) )
+		 && ( boot_record->bytes_per_sector != 4096 )
+		 && ( boot_record->bytes_per_sector != 8192 )
+		 && ( boot_record->bytes_per_sector != 16384 )
+		 && ( boot_record->bytes_per_sector != 32768 ) )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid bytes per sector value out of bounds.",
-			 function );
+			 "%s: invalid bytes per sector value out of bounds: %" PRIu16 ".",
+			 function,
+			 boot_record->bytes_per_sector );
 
 			return( -1 );
 		}

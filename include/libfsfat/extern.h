@@ -31,14 +31,17 @@
  */
 #if defined( LIBFSFAT_DLL_EXPORT )
 #define LIBFSFAT_EXTERN __declspec(dllexport)
+#define LIBFSFAT_EXTERN_VARIABLE extern __declspec(dllexport)
 
 #elif defined( LIBFSFAT_DLL_IMPORT )
-#define LIBFSFAT_EXTERN extern __declspec(dllimport)
+#define LIBFSFAT_EXTERN __declspec(dllimport)
+#define LIBFSFAT_EXTERN_VARIABLE extern __declspec(dllimport)
 
 #else
 #define LIBFSFAT_EXTERN extern
+#define LIBFSFAT_EXTERN_VARIABLE extern
 
-#endif
+#endif /* defined( LIBFSFAT_DLL_EXPORT ) */
 
 #endif /* !defined( _LIBFSFAT_EXTERN_H ) */
 

@@ -22,6 +22,10 @@ AM_CPPFLAGS = \
 	@PTHREAD_CPPFLAGS@ \
 	@LIBFSFAT_DLL_IMPORT@
 
+AM_TESTS_ENVIRONMENT = \
+	export PYTHON="@PYTHON@"; \
+	export TESTS_USE_WINAPI="@TESTS_USE_WINAPI@";
+
 if HAVE_PYTHON_TESTS
 TESTS_PYFSFAT = \
 	test_python_module.sh
@@ -313,7 +317,8 @@ fsfat_test_tools_output_SOURCES = \
 
 fsfat_test_tools_output_LDADD = \
 	../libfsfat/libfsfat.la \
-	@LIBCERROR_LIBADD@
+	@LIBCERROR_LIBADD@ \
+	@LIBINTL@
 
 fsfat_test_tools_signal_SOURCES = \
 	../fsfattools/fsfattools_signal.c ../fsfattools/fsfattools_signal.h \

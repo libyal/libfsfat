@@ -477,6 +477,8 @@ int fsfat_test_volume_open(
 	          LIBFSFAT_OPEN_READ,
 	          &error );
 
+FSFAT_TEST_FPRINT_ERROR( error );
+
 	FSFAT_TEST_ASSERT_EQUAL_INT(
 	 "result",
 	 result,
@@ -788,6 +790,10 @@ int fsfat_test_volume_open_file_io_handle(
 	libfsfat_volume_t *volume        = NULL;
 	size_t string_length             = 0;
 	int result                       = 0;
+
+        FSFAT_TEST_ASSERT_IS_NOT_NULL(
+         "source",
+         source );
 
 	/* Initialize test
 	 */
