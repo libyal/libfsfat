@@ -1225,7 +1225,7 @@ int info_handle_file_entry_value_with_name_fprint(
 	          file_entry,
 	          &modification_time,
 	          error );
-       
+
 	if( result == -1 )
 	{
 		libcerror_error_set(
@@ -1241,7 +1241,7 @@ int info_handle_file_entry_value_with_name_fprint(
 	          file_entry,
 	          &access_time,
 	          error );
-       
+
 	if( result == -1 )
 	{
 		libcerror_error_set(
@@ -1257,7 +1257,7 @@ int info_handle_file_entry_value_with_name_fprint(
 	          file_entry,
 	          &creation_time,
 	          error );
-       
+
 	if( result == -1 )
 	{
 		libcerror_error_set(

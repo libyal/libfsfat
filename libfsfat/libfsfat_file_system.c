@@ -295,6 +295,8 @@ int libfsfat_file_system_free(
 	return( result );
 }
 
+/* TODO move libfsfat_file_system_check_if_cluster_block_first_read into block_tree */
+
 /* Checks if this is the first time the cluster block is being read
  * Returns 1 if successful or -1 on error
  */
@@ -1126,6 +1128,8 @@ on_error:
 	}
 	return( -1 );
 }
+
+/* TODO refactor to libfsfat_directory_read_file_io_handle */
 
 /* Reads a directory
  * Returns 1 if successful or -1 on error
