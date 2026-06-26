@@ -13,8 +13,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Conflicts: libfsfat1
 Replaces: libfsfat1
 Suggests: libfsfat-dbg
-Description: Library to support the File Allocation Table (FAT) file system format
- libfsfat is a library to support the File Allocation Table (FAT) file system format.
+Description: Library to access the File Allocation Table (FAT) file system format
+ libfsfat is a library to access the File Allocation Table (FAT) file system format.
 
 Package: libfsfat-dbg
 Architecture: any

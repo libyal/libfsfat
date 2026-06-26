@@ -21,11 +21,8 @@
 
 #include <common.h>
 #include <file_stream.h>
-#include <memory.h>
 #include <system_string.h>
 #include <types.h>
-
-#include <stdio.h>
 
 #if defined( HAVE_FCNTL_H ) || defined( WINAPI )
 #include <fcntl.h>
@@ -63,35 +60,6 @@ enum FSFATINFO_MODES
 
 info_handle_t *fsfatinfo_info_handle = NULL;
 int fsfatinfo_abort                  = 0;
-
-/* Prints the executable usage information
- */
-void usage_fprint(
-      FILE *stream )
-{
-	if( stream == NULL )
-	{
-		return;
-	}
-	fprintf( stream, "Use fsfatinfo to determine information about a File Allocation Table (FAT)\n"
-	                 "file system volume.\n\n" );
-
-	fprintf( stream, "Usage: fsfatinfo [ -B bodyfile ] [ -E identifier ] [ -F file_entry ]\n"
-	                 "                 [ -o offset ] [ -dhHvV ] source\n\n" );
-
-	fprintf( stream, "\tsource: the source file or device\n\n" );
-
-	fprintf( stream, "\t-B:     output file system information as a bodyfile\n" );
-	fprintf( stream, "\t-d:     calculate a MD5 hash of a file entry to include in the\n"
-	                 "\t        bodyfile\n" );
-	fprintf( stream, "\t-E:     show information about a specific identifier.\n" );
-	fprintf( stream, "\t-F:     show information about a specific file entry path.\n" );
-	fprintf( stream, "\t-h:     shows this help\n" );
-	fprintf( stream, "\t-H:     shows the file system hierarchy\n" );
-	fprintf( stream, "\t-o:     specify the volume offset\n" );
-	fprintf( stream, "\t-v:     verbose output to stderr\n" );
-	fprintf( stream, "\t-V:     print version\n" );
-}
 
 /* Signal handler for fsfatinfo
  */
@@ -145,6 +113,23 @@ int wmain( int argc, wchar_t * const argv[] )
 int main( int argc, char * const argv[] )
 #endif
 {
+	const char *description = \
+		"Use fsfatinfo to determine information about a File Allocation Table (FAT) file system volume.";
+
+	fsfattools_option_t options[ ] = {
+		{ 'B', "bodyfile", "output file system information as a bodyfile" },
+		{ 'd', NULL, "calculate a MD5 hash of a file entry to include in the bodyfile" },
+		{ 'E', "inode_number", "show information about a specific file entry identifier" },
+		{ 'F', "path", "show information about a specific file entry path" },
+		{ 'h', NULL, "shows this help" },
+		{ 'H', NULL, "shows the file system hierarchy" },
+		{ 'o', "offset", "specify the volume offset in bytes" },
+		{ 'v', NULL, "verbose output to stderr" },
+		{ 'V', NULL, "print version" },
+		{ 0, "source", "the source volume" },
+	};
+	system_character_t options_string[ 32 ];
+
 	libfsfat_error_t *error                          = NULL;
 	system_character_t *option_bodyfile              = NULL;
 	system_character_t *option_file_entry_identifier = NULL;
@@ -156,6 +141,7 @@ int main( int argc, char * const argv[] )
 	size_t string_length                             = 0;
 	uint64_t file_entry_identifier                   = 0;
 	uint8_t calculate_md5                            = 0;
+	int number_of_options                            = (int) ( sizeof( options ) / sizeof( fsfattools_option_t ) );
 	int option_mode                                  = FSFATINFO_MODE_VOLUME;
 	int verbose                                      = 0;
 
@@ -194,10 +180,22 @@ int main( int argc, char * const argv[] )
 	 stdout,
 	 program );
 
+	if( fsfattools_getopt_get_options_string(
+	     options,
+	     number_of_options,
+	     options_string,
+	     32 ) != 1 )
+	{
+		fprintf(
+		 stderr,
+		 "Unable to determine options string.\n" );
+
+		goto on_error;
+	}
 	while( ( option = fsfattools_getopt(
 	                   argc,
 	                   argv,
-	                   _SYSTEM_STRING( "B:dE:F:hHo:vV" ) ) ) != (system_integer_t) -1 )
+	                   options_string ) ) != (system_integer_t) -1 )
 	{
 		switch( option )
 		{
@@ -208,8 +206,12 @@ int main( int argc, char * const argv[] )
 				 "Invalid argument: %" PRIs_SYSTEM "\n",
 				 argv[ optind - 1 ] );
 
-				usage_fprint(
-				 stdout );
+				fsfattools_getopt_usage_fprint(
+				 stdout,
+				 program,
+				 description,
+				 options,
+				 number_of_options );
 
 				return( EXIT_FAILURE );
 
@@ -236,8 +238,12 @@ int main( int argc, char * const argv[] )
 				break;
 
 			case (system_integer_t) 'h':
-				usage_fprint(
-				 stdout );
+				fsfattools_getopt_usage_fprint(
+				 stdout,
+				 program,
+				 description,
+				 options,
+				 number_of_options );
 
 				return( EXIT_SUCCESS );
 
@@ -267,10 +273,14 @@ int main( int argc, char * const argv[] )
 	{
 		fprintf(
 		 stderr,
-		 "Missing source file or device.\n" );
+		 "Missing source volume.\n" );
 
-		usage_fprint(
-		 stdout );
+		fsfattools_getopt_usage_fprint(
+		 stdout,
+		 program,
+		 description,
+		 options,
+		 number_of_options );
 
 		return( EXIT_FAILURE );
 	}

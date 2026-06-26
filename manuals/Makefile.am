@@ -4,9 +4,7 @@ man_MANS = \
 	libfsfat.3
 
 EXTRA_DIST = \
-	fsfatinfo.1 \
-	fsfatmount.1 \
-	libfsfat.3
+	$(man_MANS)
 
 DISTCLEANFILES = \
 	Makefile \

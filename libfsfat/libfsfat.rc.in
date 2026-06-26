@@ -21,7 +21,7 @@ BEGIN
   BEGIN
     BLOCK "040904E4"
     BEGIN
-      VALUE "FileDescription",		"Library to support the File Allocation Table (FAT) file system format\0"
+      VALUE "FileDescription",		"Library to access the File Allocation Table (FAT) file system format\0"
       VALUE "FileVersion",		"@VERSION@" "\0"
       VALUE "InternalName",		"libfsfat.dll\0"
       VALUE "LegalCopyright",		"(C) 2021-2026, Joachim Metz <joachim.metz@gmail.com>\0"
