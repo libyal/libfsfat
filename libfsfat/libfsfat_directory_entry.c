@@ -1428,6 +1428,7 @@ int libfsfat_directory_entry_get_name(
 {
 	static char *function   = "libfsfat_directory_entry_get_name";
 	size_t name_data_offset = 0;
+	size_t name_data_size   = 0;
 	size_t name_offset      = 0;
 	size_t name_size        = 0;
 	uint8_t byte_value      = 0;
@@ -1495,16 +1496,24 @@ int libfsfat_directory_entry_get_name(
 		}
 		directory_entry->name_size = name_size;
 
-		name_offset = 0;
+		name_data_size = 8;
 
-		for( name_data_offset = 0;
-		     name_data_offset < 8;
-		     name_data_offset++ )
+		do
 		{
-			if( directory_entry->name_data[ name_data_offset ] == ' ' )
+			if( directory_entry->name_data[ name_data_size - 1 ] != ' ' )
 			{
 				break;
 			}
+			name_data_size--;
+		}
+		while( name_data_size > 0 );
+
+		name_offset = 0;
+
+		for( name_data_offset = 0;
+		     name_data_offset < name_data_size;
+		     name_data_offset++ )
+		{
 			byte_value = directory_entry->name_data[ name_data_offset ];
 
 			if( ( ( directory_entry->flags & 0x08 ) != 0 )
@@ -1514,14 +1523,22 @@ int libfsfat_directory_entry_get_name(
 			}
 			directory_entry->name[ name_offset++ ] = byte_value;
 		}
-		for( name_data_offset = 8;
-		     name_data_offset < 8 + 3;
-		     name_data_offset++ )
+		name_data_size = 8 + 3;
+
+		do
 		{
-			if( directory_entry->name_data[ name_data_offset ] == ' ' )
+			if( directory_entry->name_data[ name_data_size - 1 ] != ' ' )
 			{
 				break;
 			}
+			name_data_size--;
+		}
+		while( name_data_size > 8 );
+
+		for( name_data_offset = 8;
+		     name_data_offset < name_data_size;
+		     name_data_offset++ )
+		{
 			if( ( name_data_offset == 8 )
 			 && ( ( directory_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) == 0 ) )
 			{

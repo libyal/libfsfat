@@ -1,5 +1,5 @@
 /*
- * Library to accesss the File Allocation Table (FAT) file system format
+ * Library to access the File Allocation Table (FAT) file system format
  *
  * Copyright (C) 2021-2026, Joachim Metz <joachim.metz@gmail.com>
  *
