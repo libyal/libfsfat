@@ -2223,9 +2223,10 @@ int libfsfat_file_system_get_data_stream(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_GENERIC,
-			 "%s: unable to check if first read of cluster number: %" PRIu32 ".",
+			 "%s: unable to check if first read of cluster number: %" PRIu32 " (offset: %" PRIu64 ").",
 			 function,
-			 cluster_number );
+			 cluster_number,
+			 cluster_offset );
 
 			goto on_error;
 		}

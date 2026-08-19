@@ -210,6 +210,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 {
 	uint8_t *table_data      = NULL;
 	static char *function    = "libfsfat_allocation_table_read_file_io_handle";
+	size_t read_offset       = 0;
 	size_t read_size         = 0;
 	size_t table_data_offset = 0;
 	size_t table_offset      = 0;
@@ -269,17 +270,17 @@ int libfsfat_allocation_table_read_file_io_handle(
 	table_data[ io_handle->bytes_per_sector     ] = 0;
 	table_data[ io_handle->bytes_per_sector + 1 ] = 0;
 
-	read_size = io_handle->bytes_per_sector;
-
 	while( table_offset < size )
 	{
+		read_size = io_handle->bytes_per_sector;
+
 		if( read_size > ( size - table_offset ) )
 		{
 			read_size = (size_t) size - table_offset;
 		}
 		read_count = libbfio_handle_read_buffer_at_offset(
 		              file_io_handle,
-		              table_data,
+		              &( table_data[ read_offset ] ),
 		              read_size,
 		              file_offset,
 		              error );
@@ -297,10 +298,23 @@ int libfsfat_allocation_table_read_file_io_handle(
 
 			goto on_error;
 		}
+#if defined( HAVE_DEBUG_OUTPUT )
+		if( libcnotify_verbose != 0 )
+		{
+			libcnotify_printf(
+			 "%s: allocation table data:\n",
+			 function );
+			libcnotify_print_data(
+			 table_data,
+			 read_size,
+			 LIBCNOTIFY_PRINT_DATA_FLAG_GROUP_DATA );
+		}
+#endif
 		file_offset  += read_size;
 		table_offset += read_size;
 
 		table_data_offset = 0;
+		read_size        += read_offset;
 
 		while( table_data_offset < read_size )
 		{
@@ -319,10 +333,16 @@ int libfsfat_allocation_table_read_file_io_handle(
 #if defined( HAVE_DEBUG_OUTPUT )
 				if( libcnotify_verbose != 0 )
 				{
-					if( ( cluster_number & 0x00000fffUL ) >= 0x00000800UL )
+					libcnotify_printf(
+					 "%s: table data: % 4d number\t: 0x%08" PRIx32 "\n",
+					 function,
+					 table_index,
+					 cluster_number );
+
+					if( ( cluster_number & 0x00000fffUL ) >= 0x00000ff0UL )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: 0x%03" PRIx32 " (%s)\n",
+						 "%s: cluster: % 4d number\t: 0x%03" PRIx32 " (%s)\n",
 						 function,
 						 table_index,
 						 cluster_number & 0x00000fffUL,
@@ -332,7 +352,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 					else if( ( cluster_number & 0x00000fffUL ) != 0 )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: %" PRIu32 "\n",
+						 "%s: cluster: % 4d number\t: %" PRIu32 "\n",
 						 function,
 						 table_index,
 						 cluster_number & 0x00000fffUL );
@@ -357,10 +377,10 @@ int libfsfat_allocation_table_read_file_io_handle(
 #if defined( HAVE_DEBUG_OUTPUT )
 				if( libcnotify_verbose != 0 )
 				{
-					if( cluster_number >= 0x00000800UL )
+					if( cluster_number >= 0x00000ff0UL )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: 0x%03" PRIx32 " (%s)\n",
+						 "%s: cluster: % 4d number\t: 0x%03" PRIx32 " (%s)\n",
 						 function,
 						 table_index,
 						 cluster_number,
@@ -370,7 +390,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 					else if( cluster_number != 0 )
 					{
 						libcnotify_printf(
-						 "%s: cluster: %04d number\t: %" PRIu32 "\n",
+						 "%s: cluster: % 4d number\t: %" PRIu32 "\n",
 						 function,
 						 table_index,
 						 cluster_number );
@@ -389,7 +409,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 #if defined( HAVE_DEBUG_OUTPUT )
 				if( libcnotify_verbose != 0 )
 				{
-					if( cluster_number >= 0x00008000UL )
+					if( cluster_number >= 0x0000fff0UL )
 					{
 						libcnotify_printf(
 						 "%s: cluster: %04d number\t: 0x%04" PRIx32 " (%s)\n",
@@ -421,7 +441,7 @@ int libfsfat_allocation_table_read_file_io_handle(
 #if defined( HAVE_DEBUG_OUTPUT )
 				if( libcnotify_verbose != 0 )
 				{
-					if( cluster_number >= 0x08000000UL )
+					if( cluster_number >= 0x0ffffff0UL )
 					{
 						if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT32 )
 						{
@@ -463,6 +483,23 @@ int libfsfat_allocation_table_read_file_io_handle(
 				reversed_allocation_table->cluster_numbers[ cluster_number ] = table_index;
 			}
 			table_index++;
+
+			if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
+			{
+				if( table_data_offset > ( read_size - 3 ) )
+				{
+					break;
+				}
+			}
+		}
+		if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
+		{
+			read_offset = 0;
+
+			while( table_data_offset < read_size )
+			{
+				table_data[ read_offset++ ] = table_data[ table_data_offset++ ];
+			}
 		}
 	}
 	memory_free(
