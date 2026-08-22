@@ -254,6 +254,7 @@ int mount_file_entry_get_creation_time(
 {
 	static char *function  = "mount_file_entry_get_creation_time";
 	uint64_t fat_timestamp = 0;
+	int result             = 0;
 
 #if defined( WINAPI )
 	uint64_t filetime      = 0;
@@ -283,10 +284,12 @@ int mount_file_entry_get_creation_time(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_creation_time(
-	     file_entry->fsfat_file_entry,
-	     &fat_timestamp,
-	     error ) != 1 )
+	result = libfsfat_file_entry_get_creation_time(
+	          file_entry->fsfat_file_entry,
+	          &fat_timestamp,
+	          error );
+
+	if( result == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -297,19 +300,26 @@ int mount_file_entry_get_creation_time(
 
 		return( -1 );
 	}
+	else if( result == 0 )
+	{
+		*creation_time = 0;
+	}
+	else
+	{
 #if defined( WINAPI )
-	if( fat_timestamp != 0 )
-	{
-		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
-	}
-	*creation_time = filetime;
+		if( fat_timestamp != 0 )
+		{
+			filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
+		}
+		*creation_time = filetime;
 #else
-	if( fat_timestamp != 0 )
-	{
-		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
-	}
-	*creation_time = (uint64_t) posix_time;
+		if( fat_timestamp != 0 )
+		{
+			posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+		}
+		*creation_time = (uint64_t) posix_time;
 #endif
+	}
 	return( 1 );
 }
 
@@ -325,6 +335,7 @@ int mount_file_entry_get_access_time(
 {
 	static char *function  = "mount_file_entry_get_access_time";
 	uint64_t fat_timestamp = 0;
+	int result             = 0;
 
 #if defined( WINAPI )
 	uint64_t filetime      = 0;
@@ -354,10 +365,12 @@ int mount_file_entry_get_access_time(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_access_time(
-	     file_entry->fsfat_file_entry,
-	     &fat_timestamp,
-	     error ) != 1 )
+	result = libfsfat_file_entry_get_access_time(
+	          file_entry->fsfat_file_entry,
+	          &fat_timestamp,
+	          error );
+
+	if( result == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -368,19 +381,26 @@ int mount_file_entry_get_access_time(
 
 		return( -1 );
 	}
+	else if( result == 0 )
+	{
+		*access_time = 0;
+	}
+	else
+	{
 #if defined( WINAPI )
-	if( fat_timestamp != 0 )
-	{
-		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
-	}
-	*access_time = filetime;
+		if( fat_timestamp != 0 )
+		{
+			filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
+		}
+		*access_time = filetime;
 #else
-	if( fat_timestamp != 0 )
-	{
-		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
-	}
-	*access_time = (uint64_t) posix_time;
+		if( fat_timestamp != 0 )
+		{
+			posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+		}
+		*access_time = (uint64_t) posix_time;
 #endif
+	}
 	return( 1 );
 }
 
@@ -396,6 +416,7 @@ int mount_file_entry_get_modification_time(
 {
 	static char *function  = "mount_file_entry_get_modification_time";
 	uint64_t fat_timestamp = 0;
+	int result             = 0;
 
 #if defined( WINAPI )
 	uint64_t filetime      = 0;
@@ -425,10 +446,12 @@ int mount_file_entry_get_modification_time(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_modification_time(
-	     file_entry->fsfat_file_entry,
-	     &fat_timestamp,
-	     error ) != 1 )
+	result = libfsfat_file_entry_get_modification_time(
+	          file_entry->fsfat_file_entry,
+	          &fat_timestamp,
+	          error );
+
+	if( result == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -439,19 +462,26 @@ int mount_file_entry_get_modification_time(
 
 		return( -1 );
 	}
+	else if( result == 0 )
+	{
+		*modification_time = 0;
+	}
+	else
+	{
 #if defined( WINAPI )
-	if( fat_timestamp != 0 )
-	{
-		filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
-	}
-	*modification_time = filetime;
+		if( fat_timestamp != 0 )
+		{
+			filetime = ( fat_timestamp + 1196000640000UL ) * 100000UL;
+		}
+		*modification_time = filetime;
 #else
-	if( fat_timestamp != 0 )
-	{
-		posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
-	}
-	*modification_time = (uint64_t) posix_time;
+		if( fat_timestamp != 0 )
+		{
+			posix_time = (int64_t) ( ( fat_timestamp + 3155328000000UL ) * 10000000UL );
+		}
+		*modification_time = (uint64_t) posix_time;
 #endif
+	}
 	return( 1 );
 }
 
@@ -504,6 +534,7 @@ int mount_file_entry_get_file_mode(
 {
 	static char *function         = "mount_file_entry_get_file_mode";
 	uint16_t file_attribute_flags = 0;
+	int result                    = 0;
 
 	if( file_entry == NULL )
 	{
@@ -527,10 +558,12 @@ int mount_file_entry_get_file_mode(
 
 		return( -1 );
 	}
-	if( libfsfat_file_entry_get_file_attribute_flags(
-	     file_entry->fsfat_file_entry,
-	     &file_attribute_flags,
-	     error ) != 1 )
+	result = libfsfat_file_entry_get_file_attribute_flags(
+	          file_entry->fsfat_file_entry,
+	          &file_attribute_flags,
+	          error );
+
+	if( result == -1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -541,7 +574,8 @@ int mount_file_entry_get_file_mode(
 
 		return( -1 );
 	}
-	if( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
+	if( ( result == 0 )
+	 || ( ( file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 ) )
 	{
 		*file_mode = S_IFDIR | 0555;
 	}

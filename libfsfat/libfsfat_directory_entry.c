@@ -812,6 +812,8 @@ int libfsfat_directory_entry_read_data(
 		 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->valid_data_size,
 		 directory_entry->valid_data_size );
 
+		directory_entry->data_stream_flags = ( (fsfat_directory_entry_exfat_data_stream_t *) data )->entry_flags;
+
 		byte_stream_copy_to_uint32_little_endian(
 		 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->data_start_cluster,
 		 directory_entry->data_start_cluster );
@@ -831,9 +833,9 @@ int libfsfat_directory_entry_read_data(
 			  ( (fsfat_directory_entry_exfat_allocation_bitmap_t *) data )->entry_type ) );
 
 			libcnotify_printf(
-			 "%s: unknown1\t\t\t\t: 0x%02" PRIx8 "\n",
+			 "%s: entry flags\t\t\t\t: 0x%02" PRIx8 "\n",
 			 function,
-			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->unknown1 );
+			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->entry_flags );
 
 			libcnotify_printf(
 			 "%s: unknown2\t\t\t\t: 0x%02" PRIx8 "\n",
@@ -862,6 +864,11 @@ int libfsfat_directory_entry_read_data(
 			 function,
 			 value_16bit );
 
+			libcnotify_printf(
+			 "%s: valid data size\t\t\t: %" PRIu64 "\n",
+			 function,
+			 directory_entry->valid_data_size );
+
 			byte_stream_copy_to_uint32_little_endian(
 			 ( (fsfat_directory_entry_exfat_data_stream_t *) data )->unknown4,
 			 value_32bit );
@@ -869,11 +876,6 @@ int libfsfat_directory_entry_read_data(
 			 "%s: unknown4\t\t\t\t: 0x%08" PRIx32 "\n",
 			 function,
 			 value_32bit );
-
-			libcnotify_printf(
-			 "%s: valid data size\t\t\t: %" PRIu64 "\n",
-			 function,
-			 directory_entry->valid_data_size );
 
 			libcnotify_printf(
 			 "%s: data start cluster\t\t\t: %" PRIu32 "\n",

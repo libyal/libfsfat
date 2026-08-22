@@ -1997,6 +1997,17 @@ ssize_t libfsfat_file_entry_read_buffer(
 	}
 	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
 
+	if( internal_file_entry->directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file entry - missing directory entry.",
+		 function );
+
+		return( -1 );
+	}
 	if( ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 ) )
@@ -2031,6 +2042,7 @@ ssize_t libfsfat_file_entry_read_buffer(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->directory_entry->data_stream_flags,
 		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
@@ -2113,6 +2125,17 @@ ssize_t libfsfat_file_entry_read_buffer_at_offset(
 	}
 	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
 
+	if( internal_file_entry->directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file entry - missing directory entry.",
+		 function );
+
+		return( -1 );
+	}
 	if( ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 ) )
@@ -2147,6 +2170,7 @@ ssize_t libfsfat_file_entry_read_buffer_at_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->directory_entry->data_stream_flags,
 		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
@@ -2228,6 +2252,17 @@ off64_t libfsfat_file_entry_seek_offset(
 	}
 	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
 
+	if( internal_file_entry->directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file entry - missing directory entry.",
+		 function );
+
+		return( -1 );
+	}
 	if( ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 ) )
@@ -2262,6 +2297,7 @@ off64_t libfsfat_file_entry_seek_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->directory_entry->data_stream_flags,
 		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
@@ -2340,6 +2376,17 @@ int libfsfat_file_entry_get_offset(
 	}
 	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
 
+	if( internal_file_entry->directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file entry - missing directory entry.",
+		 function );
+
+		return( -1 );
+	}
 	if( ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DEVICE ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_DIRECTORY ) != 0 )
 	 && ( ( internal_file_entry->file_attribute_flags & LIBFSFAT_FILE_ATTRIBUTE_FLAG_VOLUME_LABEL ) != 0 ) )
@@ -2374,6 +2421,7 @@ int libfsfat_file_entry_get_offset(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->directory_entry->data_stream_flags,
 		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
@@ -2519,6 +2567,17 @@ int libfsfat_file_entry_get_number_of_extents(
 	}
 	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
 
+	if( internal_file_entry->directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file entry - missing directory entry.",
+		 function );
+
+		return( -1 );
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_read(
 	     internal_file_entry->read_write_lock,
@@ -2540,6 +2599,7 @@ int libfsfat_file_entry_get_number_of_extents(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->directory_entry->data_stream_flags,
 		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )
@@ -2619,6 +2679,17 @@ int libfsfat_file_entry_get_extent_by_index(
 	}
 	internal_file_entry = (libfsfat_internal_file_entry_t *) file_entry;
 
+	if( internal_file_entry->directory_entry == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+		 "%s: invalid file entry - missing directory entry.",
+		 function );
+
+		return( -1 );
+	}
 #if defined( HAVE_LIBFSFAT_MULTI_THREAD_SUPPORT )
 	if( libcthreads_read_write_lock_grab_for_read(
 	     internal_file_entry->read_write_lock,
@@ -2640,6 +2711,7 @@ int libfsfat_file_entry_get_extent_by_index(
 		     internal_file_entry->file_system,
 		     internal_file_entry->cluster_number,
 		     internal_file_entry->data_size,
+		     internal_file_entry->directory_entry->data_stream_flags,
 		     internal_file_entry->data_extents_array,
 		     &( internal_file_entry->cluster_block_stream ),
 		     error ) != 1 )

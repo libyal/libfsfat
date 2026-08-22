@@ -129,6 +129,10 @@ struct libfsfat_directory_entry
 	 */
 	uint64_t valid_data_size;
 
+	/* The data stream flags
+	 */
+	uint8_t data_stream_flags;
+
 	/* The flags
 	 */
 	uint8_t flags;

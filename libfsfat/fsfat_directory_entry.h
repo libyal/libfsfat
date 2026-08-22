@@ -183,10 +183,10 @@ struct fsfat_directory_entry_exfat_data_stream
 	 */
 	uint8_t entry_type;
 
-	/* Unknown
+	/* The entry flags
 	 * Consists of 1 byte
 	 */
-	uint8_t unknown1;
+	uint8_t entry_flags;
 
 	/* Unknown
 	 * Consists of 1 byte

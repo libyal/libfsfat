@@ -133,6 +133,7 @@ int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
      uint32_t cluster_number,
      size64_t size,
+     uint8_t data_stream_flags,
      libcdata_array_t *data_extents_array,
      libfdata_stream_t **data_stream,
      libcerror_error_t **error );

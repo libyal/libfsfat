@@ -943,6 +943,7 @@ int libfsfat_file_system_read_directory(
 				current_file_entry->data_start_cluster = directory_entry->data_start_cluster;
 				current_file_entry->data_size          = directory_entry->data_size;
 				current_file_entry->valid_data_size    = directory_entry->valid_data_size;
+				current_file_entry->data_stream_flags  = directory_entry->data_stream_flags;
 			}
 			else if( directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY )
 			{
@@ -1847,6 +1848,7 @@ int libfsfat_file_system_read_directory_entry_by_identifier(
 					current_file_entry->data_start_cluster = safe_directory_entry->data_start_cluster;
 					current_file_entry->data_size          = safe_directory_entry->data_size;
 					current_file_entry->valid_data_size    = safe_directory_entry->valid_data_size;
+					current_file_entry->data_stream_flags  = safe_directory_entry->data_stream_flags;
 				}
 				else if( safe_directory_entry->entry_type == LIBFSFAT_DIRECTORY_ENTRY_TYPE_EXFAT_FILE_ENTRY_NAME )
 				{
@@ -2067,6 +2069,7 @@ int libfsfat_file_system_get_data_stream(
      libfsfat_file_system_t *file_system,
      uint32_t cluster_number,
      size64_t size,
+     uint8_t data_stream_flags,
      libcdata_array_t *data_extents_array,
      libfdata_stream_t **data_stream,
      libcerror_error_t **error )
@@ -2077,6 +2080,7 @@ int libfsfat_file_system_get_data_stream(
 	static char *function                     = "libfsfat_file_system_get_data_stream";
 	size64_t segment_size                     = 0;
 	off64_t cluster_offset                    = 0;
+	off64_t next_cluster_offset               = 0;
 	off64_t segment_end_offset                = 0;
 	off64_t segment_start_offset              = 0;
 	uint32_t last_cluster_number              = 0;
@@ -2203,35 +2207,184 @@ int libfsfat_file_system_get_data_stream(
 
 		goto on_error;
 	}
-	while( ( cluster_number >= 2 )
-	    && ( cluster_number < last_cluster_number ) )
+	if( ( file_system->io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_EXFAT )
+	 && ( ( data_stream_flags & 0x02 ) != 0 ) )
 	{
-		if( size == 0 )
-		{
-			break;
-		}
 		cluster_offset = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
 
-		if( libfsfat_file_system_check_if_cluster_block_first_read(
-		     file_system,
-		     cluster_block_tree,
-		     cluster_number,
-		     cluster_offset,
+		if( libfsfat_extent_initialize(
+		     &extent,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GENERIC,
-			 "%s: unable to check if first read of cluster number: %" PRIu32 " (offset: %" PRIu64 ").",
-			 function,
-			 cluster_number,
-			 cluster_offset );
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unable to create extent.",
+			 function );
 
 			goto on_error;
 		}
-		if( ( segment_start_offset != 0 )
-		 && ( cluster_offset > segment_end_offset ) )
+		extent->offset = cluster_offset;
+		extent->size   = size;
+
+		if( libcdata_array_append_entry(
+		     data_extents_array,
+		     &entry_index,
+		     (intptr_t *) extent,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+			 "%s: unable to append data extent to array.",
+			 function );
+
+			goto on_error;
+		}
+		extent = NULL;
+
+		if( libfdata_stream_append_segment(
+		     safe_data_stream,
+		     &segment_index,
+		     0,
+		     cluster_offset,
+		     size,
+		     0,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+			 "%s: unable to append stream segment.",
+			 function );
+
+			goto on_error;
+		}
+	}
+	else
+	{
+		while( ( cluster_number >= 2 )
+		    && ( cluster_number < last_cluster_number ) )
+		{
+			if( size == 0 )
+			{
+				break;
+			}
+			cluster_offset = file_system->io_handle->first_cluster_offset + ( (off64_t) ( cluster_number - 2 ) * file_system->io_handle->cluster_block_size );
+
+			if( libfsfat_file_system_check_if_cluster_block_first_read(
+			     file_system,
+			     cluster_block_tree,
+			     cluster_number,
+			     cluster_offset,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GENERIC,
+				 "%s: unable to check if first read of cluster number: %" PRIu32 " (offset: %" PRIu64 ").",
+				 function,
+				 cluster_number,
+				 cluster_offset );
+
+				goto on_error;
+			}
+			if( ( segment_start_offset != 0 )
+			 && ( cluster_offset != next_cluster_offset ) )
+			{
+				segment_size = segment_end_offset - segment_start_offset;
+
+				if( libfsfat_extent_initialize(
+				     &extent,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+					 "%s: unable to create extent.",
+					 function );
+
+					goto on_error;
+				}
+				extent->offset = segment_start_offset;
+				extent->size   = segment_size;
+
+				if( libcdata_array_append_entry(
+				     data_extents_array,
+				     &entry_index,
+				     (intptr_t *) extent,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+					 "%s: unable to append data extent to array.",
+					 function );
+
+					goto on_error;
+				}
+				extent = NULL;
+
+				if( segment_size > size )
+				{
+					segment_size = size;
+				}
+				if( libfdata_stream_append_segment(
+				     safe_data_stream,
+				     &segment_index,
+				     0,
+				     segment_start_offset,
+				     segment_size,
+				     0,
+				     error ) != 1 )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
+					 "%s: unable to append stream segment.",
+					 function );
+
+					goto on_error;
+				}
+				size -= segment_size;
+
+				segment_start_offset = 0;
+				next_cluster_offset  = cluster_offset;
+			}
+			if( segment_start_offset == 0 )
+			{
+				segment_start_offset = cluster_offset;
+				segment_end_offset   = cluster_offset;
+			}
+			segment_end_offset  += file_system->io_handle->cluster_block_size;
+			next_cluster_offset += file_system->io_handle->cluster_block_size;
+
+			if( libfsfat_allocation_table_get_cluster_number_by_index(
+			     file_system->allocation_table,
+			     (int) cluster_number,
+			     &cluster_number,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+				 "%s: unable to retrieve cluster number: %" PRIu32 ".",
+				 function,
+				 cluster_number );
+
+				goto on_error;
+			}
+		}
+		if( ( size > 0 )
+		 && ( segment_start_offset != 0 ) )
 		{
 			segment_size = segment_end_offset - segment_start_offset;
 
@@ -2290,93 +2443,6 @@ int libfsfat_file_system_get_data_stream(
 
 				goto on_error;
 			}
-			size -= segment_size;
-
-			segment_start_offset = 0;
-		}
-		if( segment_start_offset == 0 )
-		{
-			segment_start_offset = cluster_offset;
-			segment_end_offset   = cluster_offset;
-		}
-		segment_end_offset += file_system->io_handle->cluster_block_size;
-
-		if( libfsfat_allocation_table_get_cluster_number_by_index(
-		     file_system->allocation_table,
-		     (int) cluster_number,
-		     &cluster_number,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve cluster number: %" PRIu32 ".",
-			 function,
-			 cluster_number );
-
-			goto on_error;
-		}
-	}
-	if( ( size > 0 )
-	 && ( segment_start_offset != 0 ) )
-	{
-		segment_size = segment_end_offset - segment_start_offset;
-
-		if( libfsfat_extent_initialize(
-		     &extent,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-			 "%s: unable to create extent.",
-			 function );
-
-			goto on_error;
-		}
-		extent->offset = segment_start_offset;
-		extent->size   = segment_size;
-
-		if( libcdata_array_append_entry(
-		     data_extents_array,
-		     &entry_index,
-		     (intptr_t *) extent,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-			 "%s: unable to append data extent to array.",
-			 function );
-
-			goto on_error;
-		}
-		extent = NULL;
-
-		if( segment_size > size )
-		{
-			segment_size = size;
-		}
-		if( libfdata_stream_append_segment(
-		     safe_data_stream,
-		     &segment_index,
-		     0,
-		     segment_start_offset,
-		     segment_size,
-		     0,
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_APPEND_FAILED,
-			 "%s: unable to append stream segment.",
-			 function );
-
-			goto on_error;
 		}
 	}
 	if( libfsfat_block_tree_free(
