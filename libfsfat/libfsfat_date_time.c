@@ -150,11 +150,11 @@ int libfsfat_date_time_get_timestamp(
 
 		if( fat_time_utc_offset < 0x40 )
 		{
-			safe_fat_timestamp += (uint64_t) fat_time_utc_offset * 15;
+			safe_fat_timestamp -= (uint64_t) fat_time_utc_offset * 15;
 		}
 		else
 		{
-			safe_fat_timestamp -= (uint64_t) ( 0x80 - fat_time_utc_offset ) * 15;
+			safe_fat_timestamp += (uint64_t) ( 0x80 - fat_time_utc_offset ) * 15;
 		}
 	}
 	safe_fat_timestamp *= 60;

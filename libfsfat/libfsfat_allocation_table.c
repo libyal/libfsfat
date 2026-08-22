@@ -251,10 +251,10 @@ int libfsfat_allocation_table_read_file_io_handle(
 
 		return( -1 );
 	}
-	/* Add 2 bytes to ensure we can read 3 bytes from the table data buffer
+	/* Ensure we can read 3 bytes from the table data buffer
 	 */
 	table_data = (uint8_t *) memory_allocate(
-	                          (size_t) io_handle->bytes_per_sector + 2 );
+	                          (size_t) io_handle->bytes_per_sector + 3 );
 
 	if( table_data == NULL )
 	{
