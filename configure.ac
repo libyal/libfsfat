@@ -2,7 +2,7 @@ AC_PREREQ([2.71])
 
 AC_INIT(
   [libfsfat],
-  [20260823],
+  [20260826],
   [https://github.com/libyal/libfsfat/issues])
 
 AC_CONFIG_SRCDIR(

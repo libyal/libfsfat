@@ -492,6 +492,10 @@ int libfsfat_allocation_table_read_file_io_handle(
 				}
 			}
 		}
+		if( table_index >= allocation_table->number_of_cluster_numbers )
+		{
+			break;
+		}
 		if( io_handle->file_system_format == LIBFSFAT_FILE_SYSTEM_FORMAT_FAT12 )
 		{
 			read_offset = 0;
